@@ -1,5 +1,6 @@
 // server/models/user.model.js
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -52,5 +53,23 @@ const userSchema = new mongoose.Schema(
 // Tạo bộ chỉ mục tìm kiếm nhanh tài khoản qua email
 userSchema.index({ email: 1 });
 
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  return next();
+});
+
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) {
+    return false;
+  }
+
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
 const User = mongoose.model("User", userSchema, "users");
-module.exports = User;
+export default User;
