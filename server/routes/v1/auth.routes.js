@@ -1,10 +1,19 @@
 // routes/auth.routes.js
-const express = require("express");
+import express from "express";
+import {
+  register,
+  login,
+  getProfile,
+} from "../../controllers/auth.controllers.js";
+import verifyToken from "../../middlewares/verifyToken.js";
+
 const router = express.Router();
-const authController = require("../controllers/auth.controller");
 
 // Public routes
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+router.post("/register", register);
+router.post("/login", login);
 
-module.exports = router;
+// Protected routes
+router.get("/profile", verifyToken, getProfile);
+
+export default router;
