@@ -1,5 +1,6 @@
 // server/models/category.model.js
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
 
 const categorySchema = new mongoose.Schema(
   {
@@ -51,4 +52,4 @@ categorySchema.index({ slug: 1 });
 categorySchema.index({ parentId: 1 });
 
 const Category = mongoose.model("Category", categorySchema, "categories");
-module.exports = Category;
+export default Category;

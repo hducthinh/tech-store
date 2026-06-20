@@ -1,5 +1,6 @@
 // server/models/product.model.js
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
 
 const productSchema = new mongoose.Schema(
   {
@@ -107,4 +108,5 @@ productSchema.index(
 );
 
 const Product = mongoose.model("Product", productSchema, "products");
-module.exports = Product;
+export default Product;
+
