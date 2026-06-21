@@ -3,15 +3,10 @@ import { Outlet } from "react-router-dom";
 
 const AuthLayout = () => {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-      }}
-    >
-      <Outlet />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        <Outlet />
+      </div>
     </div>
   );
 };
