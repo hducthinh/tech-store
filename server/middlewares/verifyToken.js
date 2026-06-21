@@ -1,15 +1,16 @@
 import jwt from "jsonwebtoken";
+import AppError from "../utils/appError.js";
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
   if (!token) {
-    return res.status(401).json({ message: "Missing or invalid token." });
+    return next(new AppError("Vui lòng đăng nhập để truy cập tính năng này.", 401));
   }
 
   if (!process.env.JWT_SECRET) {
-    return res.status(500).json({ message: "JWT_SECRET not configured." });
+    return next(new AppError("JWT_SECRET chưa được cấu hình.", 500));
   }
 
   try {
@@ -18,7 +19,7 @@ const verifyToken = (req, res, next) => {
     req.tokenPayload = decoded;
     return next();
   } catch (error) {
-    return res.status(401).json({ message: "Token expired or invalid." });
+    return next(new AppError("Token không hợp lệ hoặc đã hết hạn.", 401));
   }
 };
 
