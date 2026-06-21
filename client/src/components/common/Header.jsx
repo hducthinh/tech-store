@@ -8,10 +8,7 @@ const Header = () => {
   const { user, logout } = useAuth();
 
   return (
-    <header
-      className="sticky top-0 z-50 bg-white shadow-md"
-      style={{ border: "2px solid green" }}
-    >
+    <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
       {/* Top bar: Logo + Search + Cart + Auth */}
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="text-2xl font-bold text-blue-600">

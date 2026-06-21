@@ -3,6 +3,14 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import apiRoutes from "./routes/index.js";
+import dns from "dns";
+
+// Cấu hình DNS mặc định cho Node.js tránh lỗi ECONNREFUSED khi phân giải MongoDB SRV
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
+} catch (e) {
+  console.warn("[Server] Không thể cấu hình DNS Google:", e.message);
+}
 
 dotenv.config();
 
@@ -55,6 +63,8 @@ const startServer = () => {
 };
 
 const mongoUri = process.env.MONGO_URI;
+// THÊM DÒNG NÀY ĐỂ CHECK:
+console.log(">>> Kiểm tra chuỗi kết nối nhận được: ", mongoUri);
 if (!mongoUri) {
   console.warn("[Server] MONGO_URI chưa được cấu hình, bỏ qua kết nối DB.");
   startServer();

@@ -5,11 +5,9 @@ import { Outlet } from "react-router-dom";
 
 const MainLayout = () => {
   return (
-    <div
-      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
-    >
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
-      <main style={{ flex: 1, padding: "1rem" }}>
+      <main className="flex-1 container mx-auto px-4 py-8">
         <Outlet />
       </main>
       <Footer />
