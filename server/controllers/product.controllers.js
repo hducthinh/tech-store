@@ -48,7 +48,8 @@ export const getProducts = catchAsync(async (req, res, next) => {
 
   const products = await Product.find(filter)
     .sort(sort)
-    .select("-costPrice"); // Bảo mật: Không bao giờ trả về giá nhập gốc cho frontend
+    .select("-costPrice")
+    .populate("categoryId", "name slug"); // Lấy thêm thông tin danh mục
 
   res.status(200).json({
     status: "success",

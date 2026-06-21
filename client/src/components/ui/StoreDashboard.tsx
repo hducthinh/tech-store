@@ -20,6 +20,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [categoriesDb, setCategoriesDb] = useState<{_id: string, name: string}[]>([]);
 
   // State for Cart
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -52,34 +53,63 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
   // State for Orders
   const [orders, setOrders] = useState<Order[]>([]);
 
-  // Fetch products on startup from express api
+  // Fetch categories on startup
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/products");
-        const data = await res.json();
-        if (data.products) {
-          setProducts(data.products);
+        const res = await fetch("http://localhost:5000/api/v1/categories");
+        const json = await res.json();
+        if (json.data && json.data.categories) {
+          setCategoriesDb(json.data.categories);
+        }
+      } catch (err) {
+        console.error("Lỗi lấy danh mục:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch products with debounce
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      setLoadingProducts(true);
+      try {
+        const queryParams = new URLSearchParams();
+        if (searchQuery) queryParams.set("search", searchQuery);
+        if (selectedCategory !== "All") queryParams.set("categoryId", selectedCategory);
+        
+        const res = await fetch(`http://localhost:5000/api/v1/products?${queryParams.toString()}`);
+        const json = await res.json();
+        if (json.data && json.data.products) {
+          const normalized = json.data.products.map((p: any) => ({
+            id: p._id,
+            name: p.name,
+            price: p.price,
+            category: p.categoryId?.name || p.categoryName || "Components",
+            specs: Object.entries(p.specs || {}).map(([k, v]) => `${k}: ${v}`).join(", ") || p.shortDescription || "",
+            description: p.description || p.shortDescription || "",
+            inStock: p.stock > 0,
+          }));
+          setProducts(normalized);
+        } else {
+          setProducts([]);
         }
       } catch (err) {
         console.error("Lỗi lấy danh sách sản phẩm:", err);
       } finally {
         setLoadingProducts(false);
       }
-    };
-    fetchProducts();
-    
-    // Load existing orders if any
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCategory]);
+
+  // Load existing orders & cart on startup
+  useEffect(() => {
     const savedOrders = localStorage.getItem(`orders_${userEmail}`);
-    if (savedOrders) {
-      setOrders(JSON.parse(savedOrders));
-    }
-    
-    // Load existing cart if any
+    if (savedOrders) setOrders(JSON.parse(savedOrders));
     const savedCart = localStorage.getItem(`cart_${userEmail}`);
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
+    if (savedCart) setCart(JSON.parse(savedCart));
   }, [userEmail]);
 
   // Persist cart to localStorage
@@ -87,20 +117,17 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
     localStorage.setItem(`cart_${userEmail}`, JSON.stringify(cart));
   }, [cart, userEmail]);
 
-  // Categories list
-  const categories = ["All", "Workstation", "Laptop", "Components", "Monitors", "Accessories"];
-
-  // Filtered products list
-  const filteredProducts = products.filter(p => {
-    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.specs.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // Products are filtered on the backend now.
 
   // Cart operations
   const addToCart = (product: Product) => {
+    if (!userEmail) {
+      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
+      if (onLoginClick) {
+        onLoginClick();
+      }
+      return;
+    }
     const existing = cart.find(item => item.product.id === product.id);
     if (existing) {
       setCart(cart.map(item => 
@@ -413,13 +440,13 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
             <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4">
               {/* Category Filter Pills on Top */}
               <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none w-full xl:w-auto">
-                {categories.map(c => (
+                {[{_id: "All", name: "Tất cả sản phẩm"}, ...categoriesDb].map(c => (
                   <button
-                    key={c}
-                    onClick={() => setSelectedCategory(c)}
-                    className={`px-4 py-2 text-xs font-semibold rounded-full border transition cursor-pointer whitespace-nowrap ${selectedCategory === c ? "bg-[#00236f] border-[#00236f] text-white shadow-sm" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}
+                    key={c._id}
+                    onClick={() => setSelectedCategory(c._id)}
+                    className={`px-4 py-2 text-xs font-semibold rounded-full border transition cursor-pointer whitespace-nowrap ${selectedCategory === c._id ? "bg-[#00236f] border-[#00236f] text-white shadow-sm" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"}`}
                   >
-                    {c === "All" ? "Tất cả sản phẩm" : c}
+                    {c.name}
                   </button>
                 ))}
               </div>
@@ -451,7 +478,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
                 <Loader2 className="w-10 h-10 text-[#0058be] animate-spin" />
                 <p className="text-sm text-slate-500 font-medium">Đang hiệu chuẩn phần cứng TechStore...</p>
               </div>
-            ) : filteredProducts.length === 0 ? (
+            ) : products.length === 0 ? (
               <div className="flex-1 text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
                 <HelpCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <p className="text-lg font-bold text-slate-700">Không tìm thấy sản phẩm phù hợp</p>
@@ -465,7 +492,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredProducts.map(p => (
+                {products.map(p => (
                   <div 
                     key={p.id} 
                     className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-slate-300 transition duration-300 flex flex-col justify-between overflow-hidden group"
