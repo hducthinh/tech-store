@@ -25,7 +25,7 @@ export default function Register() {
       return;
     }
     setError("");
-    
+
     // The backend validation expects fullName, email, phone, password, and confirmPassword
     const result = await register({ fullName, email, phone, password, confirmPassword });
     if (result.success) {
@@ -50,21 +50,11 @@ export default function Register() {
 
           <div className="relative z-10 max-w-md my-auto">
             <h2 className="text-5xl font-bold font-sans tracking-tight leading-[1.15] mb-6">
-              Create Account
+              Tạo tài khoản
             </h2>
             <p className="text-lg text-white/80 leading-relaxed font-sans font-light">
-              Join elite developers and systems engineers around Vietnam in purchasing professional grade gear.
+              Tham gia cùng đội ngũ kỹ sư hệ thống và nhà phát triển hàng đầu Việt Nam để sở hữu thiết bị chuyên nghiệp.
             </p>
-          </div>
-
-          <div className="relative z-10 glass-card p-6 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#2170e4] flex items-center justify-center text-white shadow-inner">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white tracking-wide">Developer Optimized Store</p>
-              <p className="text-xs text-white/75 font-mono">100% Certified Professional Gear</p>
-            </div>
           </div>
 
           <div className="absolute bottom-0 right-0 w-3/4 h-1/2 opacity-25 pointer-events-none transform translate-y-6 translate-x-6">
@@ -110,9 +100,13 @@ export default function Register() {
                   id="fullName"
                   placeholder="Nguyễn Văn A"
                   required
+                  minLength="2"
+                  maxLength="100"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  onInvalid={(e) => e.target.setCustomValidity("Vui lòng nhập họ và tên (từ 2-100 ký tự)")}
+                  onInput={(e) => e.target.setCustomValidity("")}
                 />
               </div>
 
@@ -127,9 +121,13 @@ export default function Register() {
                   id="reg-phone"
                   placeholder="0901234567"
                   required
+                  pattern="[0-9]{10}"
+                  title="Số điện thoại phải chứa 10 chữ số"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Số điện thoại không hợp lệ (phải gồm 10 chữ số)" : "Vui lòng nhập số điện thoại")}
+                  onInput={(e) => e.target.setCustomValidity("")}
                 />
               </div>
 
@@ -147,6 +145,8 @@ export default function Register() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Định dạng email không hợp lệ" : "Vui lòng nhập địa chỉ email")}
+                  onInput={(e) => e.target.setCustomValidity("")}
                 />
               </div>
 
@@ -161,9 +161,12 @@ export default function Register() {
                   id="reg-password"
                   placeholder="••••••••"
                   required
+                  minLength="6"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Mật khẩu phải chứa ít nhất 6 ký tự" : "Vui lòng nhập mật khẩu")}
+                  onInput={(e) => e.target.setCustomValidity("")}
                 />
               </div>
 
@@ -178,9 +181,12 @@ export default function Register() {
                   id="reg-confirm-password"
                   placeholder="••••••••"
                   required
+                  minLength="6"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Xác nhận mật khẩu phải chứa ít nhất 6 ký tự" : "Vui lòng xác nhận mật khẩu")}
+                  onInput={(e) => e.target.setCustomValidity("")}
                 />
               </div>
 
