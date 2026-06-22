@@ -8,10 +8,14 @@ import catchAsync from "../utils/catchAsync.js";
 // @route   POST /api/v1/orders
 // @access  Private
 export const createOrder = catchAsync(async (req, res, next) => {
-  const { shippingAddress, paymentMethod } = req.body;
+  const { shippingAddress, paymentMethod, selectedItemIds } = req.body;
 
   if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address) {
     return next(new AppError("Vui lòng cung cấp đầy đủ địa chỉ giao hàng", 400));
+  }
+
+  if (!selectedItemIds || !Array.isArray(selectedItemIds) || selectedItemIds.length === 0) {
+    return next(new AppError("Vui lòng chọn ít nhất một sản phẩm để thanh toán", 400));
   }
 
   // 1. Lấy giỏ hàng của user hiện tại
@@ -21,16 +25,20 @@ export const createOrder = catchAsync(async (req, res, next) => {
     return next(new AppError("Giỏ hàng của bạn đang trống", 400));
   }
 
+  const selectedItemsToCheckout = cart.items.filter(item => 
+    item.productId && selectedItemIds.includes(item.productId._id.toString())
+  );
+
+  if (selectedItemsToCheckout.length === 0) {
+    return next(new AppError("Không có sản phẩm hợp lệ nào được chọn để thanh toán", 400));
+  }
+
   let totalAmount = 0;
   const orderItems = [];
 
   // 2. Kiểm tra tồn kho và tính tổng tiền
-  for (const item of cart.items) {
+  for (const item of selectedItemsToCheckout) {
     const product = item.productId;
-
-    if (!product) {
-      return next(new AppError("Một sản phẩm trong giỏ hàng không còn tồn tại", 404));
-    }
 
     if (product.stock < item.quantity) {
       return next(new AppError(`Sản phẩm ${product.name} không đủ số lượng trong kho (chỉ còn ${product.stock})`, 400));
@@ -69,8 +77,10 @@ export const createOrder = catchAsync(async (req, res, next) => {
     status: "PENDING",
   });
 
-  // 5. Làm trống giỏ hàng sau khi đặt hàng thành công
-  cart.items = [];
+  // 5. Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
+  cart.items = cart.items.filter(item => 
+    item.productId && !selectedItemIds.includes(item.productId._id.toString())
+  );
   await cart.save();
 
   res.status(201).json({

@@ -6,6 +6,7 @@ export function useCart(userEmail: string) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
   // Lấy giỏ hàng từ server
   useEffect(() => {
@@ -51,6 +52,7 @@ export function useCart(userEmail: string) {
 
     try {
       await api.post("/cart", { productId: product.id, quantity: 1 });
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi khi thêm vào giỏ hàng trên DB:", error);
       // rollback UI if needed
@@ -67,6 +69,7 @@ export function useCart(userEmail: string) {
 
     try {
       await api.patch("/cart/update-quantity", { productId, quantity });
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi cập nhật giỏ hàng DB:", error);
       setCart(previousCart); // rollback
@@ -76,9 +79,11 @@ export function useCart(userEmail: string) {
   const removeFromCart = useCallback(async (productId: string) => {
     const previousCart = [...cart];
     setCart(cart.filter(item => item.product.id !== productId));
+    setSelectedItemIds(prev => prev.filter(id => id !== productId));
 
     try {
       await api.delete(`/cart/${productId}`);
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi xóa sản phẩm DB:", error);
       setCart(previousCart); // rollback
@@ -93,6 +98,28 @@ export function useCart(userEmail: string) {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   }, [cart]);
 
+  const getSelectedTotal = useCallback(() => {
+    return cart
+      .filter(item => selectedItemIds.includes(item.product.id))
+      .reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  }, [cart, selectedItemIds]);
+
+  const toggleItemSelection = useCallback((productId: string) => {
+    setSelectedItemIds(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  }, []);
+
+  const toggleAllSelection = useCallback((isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedItemIds(cart.map(item => item.product.id));
+    } else {
+      setSelectedItemIds([]);
+    }
+  }, [cart]);
+
   return {
     cart,
     setCart,
@@ -103,6 +130,11 @@ export function useCart(userEmail: string) {
     removeFromCart,
     getTotal,
     getCartCount,
-    toastMessage
+    toastMessage,
+    selectedItemIds,
+    setSelectedItemIds,
+    toggleItemSelection,
+    toggleAllSelection,
+    getSelectedTotal
   };
 }

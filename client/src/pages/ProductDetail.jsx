@@ -76,8 +76,8 @@ const ProductDetail = () => {
     return (
       <div className="text-center py-20 bg-white rounded-lg border border-gray-100 shadow-sm mt-8">
         <p className="text-red-500 text-lg">{error}</p>
-        <button onClick={() => navigate("/products")} className="mt-4 text-blue-600 hover:underline">
-          Quay lại danh sách sản phẩm
+        <button onClick={() => navigate("/")} className="mt-4 text-blue-600 hover:underline">
+          Quay lại trang chủ
         </button>
       </div>
     );

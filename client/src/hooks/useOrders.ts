@@ -37,9 +37,14 @@ export function useOrders(userEmail: string, setCart: (cart: any[]) => void) {
     }
   }, [userEmail]);
 
-  const handlePlaceOrder = async (cart: any[]) => {
+  const handlePlaceOrder = async (cart: any[], selectedItemIds: string[]) => {
     if (!shippingName || !shippingPhone || !shippingAddress) {
       alert("Vui lòng điền đầy đủ thông tin giao nhận.");
+      return;
+    }
+
+    if (!selectedItemIds || selectedItemIds.length === 0) {
+      alert("Vui lòng chọn ít nhất một sản phẩm để thanh toán.");
       return;
     }
 
@@ -56,15 +61,21 @@ export function useOrders(userEmail: string, setCart: (cart: any[]) => void) {
           phone: shippingPhone,
           address: shippingAddress
         },
-        paymentMethod: pmMap[paymentMethod] || "COD"
+        paymentMethod: pmMap[paymentMethod] || "COD",
+        selectedItemIds
       });
 
       if (res.data.status === "success") {
         const o = res.data.data.order;
+        const checkedItems = cart.filter(item => selectedItemIds.includes(item.product.id));
+
         const newOrder: Order = {
           id: o._id,
           date: new Date(o.createdAt).toLocaleDateString("vi-VN") + " " + new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-          items: [...cart],
+          items: checkedItems.map(item => ({
+            product: { id: item.product.id, name: item.product.name, image: item.product.image || item.product.thumbnail, price: item.product.price },
+            quantity: item.quantity
+          })),
           total: o.totalAmount,
           fullName: o.shippingAddress.fullName,
           address: o.shippingAddress.address,
@@ -74,7 +85,7 @@ export function useOrders(userEmail: string, setCart: (cart: any[]) => void) {
         };
 
         setOrders([newOrder, ...orders]);
-        setCart([]);
+        setCart(cart.filter(item => !selectedItemIds.includes(item.product.id)));
         setCheckoutStep(3);
       }
     } catch (error: any) {

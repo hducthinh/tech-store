@@ -7,7 +7,7 @@ import catchAsync from "../utils/catchAsync.js";
 // @route   GET /api/v1/cart
 // @access  Private
 export const getCart = catchAsync(async (req, res, next) => {
-  let cart = await Cart.findOne({ userId: req.userId }).populate("items.productId", "name price images thumbnail stock");
+  let cart = await Cart.findOne({ userId: req.userId }).populate("items.productId", "name price images thumbnail stock slug");
 
   // Nếu user chưa có giỏ hàng, tạo mới một giỏ trống
   if (!cart) {
@@ -64,7 +64,7 @@ export const addToCart = catchAsync(async (req, res, next) => {
   await cart.save();
 
   // Populate lại để trả về thông tin đầy đủ cho frontend
-  await cart.populate("items.productId", "name price images thumbnail stock");
+  await cart.populate("items.productId", "name price images thumbnail stock slug");
 
   res.status(200).json({
     status: "success",
@@ -106,7 +106,7 @@ export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
   if (itemIndex > -1) {
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
-    await cart.populate("items.productId", "name price images thumbnail stock");
+    await cart.populate("items.productId", "name price images thumbnail stock slug");
 
     res.status(200).json({
       status: "success",
@@ -132,7 +132,7 @@ export const removeFromCart = catchAsync(async (req, res, next) => {
 
   cart.items = cart.items.filter(item => item.productId.toString() !== productId);
   await cart.save();
-  await cart.populate("items.productId", "name price images thumbnail stock");
+  await cart.populate("items.productId", "name price images thumbnail stock slug");
 
   res.status(200).json({
     status: "success",

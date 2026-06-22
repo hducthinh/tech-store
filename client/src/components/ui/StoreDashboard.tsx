@@ -13,7 +13,6 @@ import { Catalog } from "./Catalog";
 import { TechCopilot } from "./TechCopilot";
 import { OrderHistory } from "./OrderHistory";
 import { CartDrawer } from "./CartDrawer";
-import { CheckoutModal } from "./CheckoutModal";
 
 interface StoreDashboardProps {
   userEmail: string;
@@ -24,7 +23,6 @@ interface StoreDashboardProps {
 
 export default function StoreDashboard({ userEmail, onLogout, onLoginClick, children }: StoreDashboardProps) {
   const [activeTab, setActiveTab] = useState<"catalog" | "ai" | "history">("catalog");
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -51,7 +49,11 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     removeFromCart,
     updateQuantity,
     getTotal: getSubtotal,
-    toastMessage
+    toastMessage,
+    selectedItemIds,
+    toggleItemSelection,
+    toggleAllSelection,
+    getSelectedTotal
   } = useCart(userEmail);
 
   const {
@@ -64,8 +66,11 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
 
   useEffect(() => {
     const handleOpenCart = () => setIsCartOpen(true);
+
     window.addEventListener("openCart", handleOpenCart);
-    return () => window.removeEventListener("openCart", handleOpenCart);
+    return () => {
+      window.removeEventListener("openCart", handleOpenCart);
+    };
   }, [setIsCartOpen]);
 
   const {
@@ -100,7 +105,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
         <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-2">
           
-          <div className="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0" onClick={() => { setActiveTab("catalog"); setSelectedCategory("All"); setSearchQuery(""); navigate("/"); }}>
+          <div className="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0" onClick={() => { setActiveTab("catalog"); setSelectedCategory("All"); setSearchQuery(""); setIsCartOpen(false); navigate("/"); }}>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00236f] to-[#0058be] rounded-xl flex items-center justify-center shadow-md transform transition hover:rotate-12">
               <Database className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
@@ -245,7 +250,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
         ) : (
           <>
             {/* TAB 1: Shopping Catalog View */}
-            {activeTab === "catalog" && !isCheckoutOpen && (
+            {activeTab === "catalog" && (
           <Catalog
             products={products}
             loadingProducts={loadingProducts}
@@ -264,7 +269,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
         )}
 
         {/* TAB 2: AI Tech Assistant Workspace */}
-        {activeTab === "ai" && !isCheckoutOpen && (
+        {activeTab === "ai" && (
           <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
             <TechCopilot
               chatMessages={chatMessages}
@@ -279,7 +284,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
         )}
 
         {/* TAB 3: Placed orders history */}
-        {activeTab === "history" && !isCheckoutOpen && (
+        {activeTab === "history" && (
           <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
             <OrderHistory
               orders={orders}
@@ -289,34 +294,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
           </div>
         )}
 
-        {/* 3. STEP BY STEP CHECKOUT MODULE VIEW */}
-        {isCheckoutOpen && (
-          <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
-            <CheckoutModal
-              isCheckoutOpen={isCheckoutOpen}
-              setIsCheckoutOpen={setIsCheckoutOpen}
-              checkoutStep={checkoutStep}
-              setCheckoutStep={setCheckoutStep}
-              cart={cart}
-              getSubtotal={getSubtotal}
-              shippingName={shippingName}
-              setShippingName={setShippingName}
-              shippingPhone={shippingPhone}
-              setShippingPhone={setShippingPhone}
-              shippingAddress={shippingAddress}
-              setShippingAddress={setShippingAddress}
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-              handlePlaceOrder={() => handlePlaceOrder(cart).then(res => {
-                if (res) {
-                  setCheckoutStep(3);
-                }
-              })}
-              setActiveTab={setActiveTab}
-            />
-          </div>
-        )}
-        </>
+          </>
         )}
       </section>
 
@@ -327,11 +305,14 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
         cart={cart}
         updateCartQuantity={updateQuantity}
         removeFromCart={removeFromCart}
-        getSubtotal={getSubtotal}
+        getSubtotal={getSelectedTotal}
         onProceedToCheckout={() => {
           setIsCartOpen(false);
-          setIsCheckoutOpen(true);
+          navigate("/checkout", { state: { selectedItemIds } });
         }}
+        selectedItemIds={selectedItemIds}
+        toggleItemSelection={toggleItemSelection}
+        toggleAllSelection={toggleAllSelection}
       />
 
       {/* 5. TOAST NOTIFICATION */}
