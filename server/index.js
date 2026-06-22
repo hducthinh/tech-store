@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+import rateLimit from "express-rate-limit";
 import apiRoutes from "./routes/index.js";
 import dns from "dns";
 
@@ -17,8 +20,31 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
+// 1. Bảo vệ HTTP Headers với Helmet
+app.use(helmet());
+
+// 2. Cấu hình CORS chặt chẽ
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
+}));
+
+// 3. Giới hạn số lượng request (Rate Limiting) chống Brute-force/DDoS
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  limit: 100, // Mỗi IP tối đa 100 request
+  message: {
+    status: "fail",
+    message: "Hệ thống phát hiện quá nhiều yêu cầu từ IP của bạn. Vui lòng thử lại sau 15 phút."
+  }
+});
+app.use("/api", limiter);
+
+// 4. Phân tích body JSON
+app.use(express.json({ limit: "10kb" })); // Giới hạn payload size
+
+// 5. Phòng chống NoSQL Query Injection (Sanitize dữ liệu đầu vào)
+app.use(mongoSanitize());
 
 // Đường dẫn thử nghiệm chạy gốc
 app.get("/", (req, res) => {
