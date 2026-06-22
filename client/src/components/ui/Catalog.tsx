@@ -2,6 +2,7 @@ import React from "react";
 import { Search, Loader2, HelpCircle, ArrowRight } from "lucide-react";
 import { Product } from "../../types";
 import { ProductCard } from "./ProductCard";
+import { ProductSkeleton } from "./ProductSkeleton";
 
 interface CatalogProps {
   products: Product[];
@@ -91,9 +92,10 @@ export function Catalog({
 
       {/* Catalog content section */}
       {loadingProducts ? (
-        <div className="flex-1 flex flex-col items-center justify-center py-20 gap-4">
-          <Loader2 className="w-10 h-10 text-[#0058be] animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">Đang hiệu chuẩn phần cứng TechStore...</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <ProductSkeleton key={i} />
+          ))}
         </div>
       ) : products.length === 0 ? (
         <div className="flex-1 text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
