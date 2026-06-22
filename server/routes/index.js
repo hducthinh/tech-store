@@ -6,6 +6,7 @@ import brandRoutes from "./v1/brand.routes.js";
 import cartRoutes from "./v1/cart.routes.js";
 import orderRoutes from "./v1/order.routes.js";
 import dashboardRoutes from "./v1/dashboard.routes.js";
+import userRoutes from "./v1/user.routes.js";
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use("/v1/brands", brandRoutes);
 router.use("/v1/cart", cartRoutes);
 router.use("/v1/orders", orderRoutes);
 router.use("/v1/dashboard", dashboardRoutes);
+router.use("/v1/users", userRoutes);
 
 export default router;
