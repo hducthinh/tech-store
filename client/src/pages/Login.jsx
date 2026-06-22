@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import { Terminal, Mail, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, isLoading, error: authError } = useAuth();
+
+  useDocumentMeta("Đăng nhập", "Đăng nhập tài khoản TechStore để mua sắm thiết bị chuyên nghiệp.");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

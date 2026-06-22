@@ -28,6 +28,8 @@ Dự án hiện đã hoàn thiện phần lớn cấu trúc cơ bản và các A
 ### 1.3. Bảo mật & Tối ưu hóa
 - [x] Day 22: Kiểm tra dữ liệu đầu vào chặt chẽ cả ở Client (HTML5 Validation) và Server (Mongoose/Validators) trước khi ghi DB.
 - [x] Day 23: Cấu hình CORS, rate limit chống brute-force, phòng chống NoSQL query injection.
+- [x] Day 24: Phân trang dữ liệu server-side (skip, limit) và thanh số trang trên UI.
+- [x] Day 25: Cập nhật title/description meta tags động bằng JS thuần (useEffect) không dùng lib.
 
 ---
 

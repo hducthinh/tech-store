@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 const ProductDetail = () => {
   const { slug } = useParams();
@@ -14,6 +15,11 @@ const ProductDetail = () => {
 
   const [addingToCart, setAddingToCart] = useState(false);
   const [addSuccess, setAddSuccess] = useState(false);
+
+  useDocumentMeta(
+    product ? product.name : "Đang tải...",
+    product ? (product.description?.substring(0, 150) + "...") : "Chi tiết sản phẩm TechStore"
+  );
 
   const { user } = useAuth();
   const [reviews, setReviews] = useState([]);
