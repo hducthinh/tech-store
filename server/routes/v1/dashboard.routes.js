@@ -45,7 +45,13 @@ router.get("/stats", catchAsync(async (req, res, next) => {
 router.get("/chart", catchAsync(async (req, res, next) => {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-  sevenDaysAgo.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 của 7 ngày trước
+  sevenDaysAgo.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 của 7 ngày trước (Local Time)
+
+  // Tính timezone offset của server (ví dụ: +07:00)
+  const tzOffset = new Date().getTimezoneOffset();
+  const tzHours = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, '0');
+  const tzMins = String(Math.abs(tzOffset) % 60).padStart(2, '0');
+  const tzString = (tzOffset <= 0 ? '+' : '-') + tzHours + ':' + tzMins;
 
   const chartData = await Order.aggregate([
     {
@@ -56,7 +62,7 @@ router.get("/chart", catchAsync(async (req, res, next) => {
     },
     {
       $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: tzString } },
         revenue: { $sum: "$totalAmount" },
         orders: { $sum: 1 }
       }
@@ -69,7 +75,9 @@ router.get("/chart", catchAsync(async (req, res, next) => {
   for (let i = 0; i < 7; i++) {
     const d = new Date(sevenDaysAgo);
     d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
+    // Convert to local date string YYYY-MM-DD
+    const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
+    const dateStr = localDate.toISOString().split("T")[0];
     const existing = chartData.find(item => item._id === dateStr);
     
     filledData.push({

@@ -95,3 +95,50 @@ export const getMyOrders = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// @desc    Lấy toàn bộ danh sách đơn hàng cho Admin
+// @route   GET /api/v1/orders/admin
+// @access  Private/Admin
+export const getAdminOrders = catchAsync(async (req, res, next) => {
+  const orders = await Order.find()
+    .populate("userId", "fullName email phone")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    status: "success",
+    results: orders.length,
+    data: {
+      orders,
+    },
+  });
+});
+
+// @desc    Cập nhật trạng thái đơn hàng
+// @route   PATCH /api/v1/orders/admin/:id/status
+// @access  Private/Admin
+export const updateOrderStatus = catchAsync(async (req, res, next) => {
+  const { status } = req.body;
+  const validStatuses = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+
+  if (!validStatuses.includes(status)) {
+    return next(new AppError("Trạng thái đơn hàng không hợp lệ", 400));
+  }
+
+  const order = await Order.findByIdAndUpdate(
+    req.params.id,
+    { status },
+    { new: true, runValidators: true }
+  );
+
+  if (!order) {
+    return next(new AppError("Không tìm thấy đơn hàng", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "Đã cập nhật trạng thái đơn hàng",
+    data: {
+      order,
+    },
+  });
+});
