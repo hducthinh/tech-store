@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, Loader2, Database, CheckCircle2 } from "lucide-react";
+import { User, LogOut, Loader2, Database, CheckCircle2, Search, ChevronDown } from "lucide-react";
 import { Product } from "../../types";
 
 import { useProducts } from "../../hooks/useProducts";
@@ -18,9 +18,10 @@ interface StoreDashboardProps {
   userEmail: string;
   onLogout: () => void;
   onLoginClick?: () => void;
+  children?: React.ReactNode;
 }
 
-export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: StoreDashboardProps) {
+export default function StoreDashboard({ userEmail, onLogout, onLoginClick, children }: StoreDashboardProps) {
   const [activeTab, setActiveTab] = useState<"catalog" | "ai" | "history">("catalog");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const navigate = useNavigate();
@@ -80,9 +81,9 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
       
       {/* 1. MAIN NAVIGATION HEADER BLOCK */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
-        <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-2">
           
-          <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={() => setActiveTab("catalog")}>
+          <div className="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0" onClick={() => { setActiveTab("catalog"); setSelectedCategory("All"); setSearchQuery(""); navigate("/"); }}>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00236f] to-[#0058be] rounded-xl flex items-center justify-center shadow-md transform transition hover:rotate-12">
               <Database className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
@@ -92,11 +93,55 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
             </div>
           </div>
 
-          <div className="flex items-center gap-1 md:gap-2">
-            <nav className="hidden md:flex bg-slate-100/80 p-1 rounded-xl">
+          <div className="hidden lg:flex items-center gap-3 flex-1 justify-center px-4 max-w-xl">
+            <div className="relative group shrink-0">
+              <button className="flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-[#0058be] px-2 whitespace-nowrap">
+                Danh mục
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+                <button 
+                  onClick={() => { setSelectedCategory("All"); setActiveTab("catalog"); navigate("/"); }}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be]"
+                >
+                  Tất cả sản phẩm
+                </button>
+                {categoriesDb.map(cat => (
+                  <button 
+                    key={cat._id}
+                    onClick={() => { setSelectedCategory(cat._id); setActiveTab("catalog"); navigate("/"); }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be]"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                setActiveTab("catalog");
+                navigate("/");
+              }}
+              className="flex items-center flex-1 bg-slate-100 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#0058be]"
+            >
+              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm sản phẩm..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm w-full ml-2 text-slate-700 h-6"
+              />
+            </form>
+          </div>
+
+          <div className="flex items-center gap-1 md:gap-2 shrink-0">
+            <nav className="hidden xl:flex bg-slate-100/80 p-1 rounded-xl">
               {[
                 { id: "catalog", label: "Cửa Hàng" },
-                { id: "ai", label: "Hỏi AI Copilot", highlight: true },
+                { id: "ai", label: "Hỏi AI", highlight: true },
                 { id: "history", label: "Đơn Hàng" }
               ].map(tab => (
                 <button
@@ -104,9 +149,10 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
                   onClick={() => {
                     setActiveTab(tab.id as any);
                     setIsCheckoutOpen(false);
+                    navigate("/");
                   }}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    activeTab === tab.id 
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === tab.id && !children
                       ? "bg-white text-[#0058be] shadow-sm" 
                       : tab.highlight 
                         ? "text-amber-600 hover:bg-white/50" 
@@ -168,8 +214,12 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
       {/* 2. DYNAMIC MAIN CONTENT SECTIONS */}
       <section className="flex-1 flex flex-col relative py-6">
         
-        {/* TAB 1: Shopping Catalog View */}
-        {activeTab === "catalog" && !isCheckoutOpen && (
+        {children ? (
+          children
+        ) : (
+          <>
+            {/* TAB 1: Shopping Catalog View */}
+            {activeTab === "catalog" && !isCheckoutOpen && (
           <Catalog
             products={products}
             loadingProducts={loadingProducts}
@@ -236,6 +286,8 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
               setActiveTab={setActiveTab}
             />
           </div>
+        )}
+        </>
         )}
       </section>
 

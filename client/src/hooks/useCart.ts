@@ -9,17 +9,25 @@ export function useCart(userEmail: string) {
 
   // Lấy giỏ hàng từ server
   useEffect(() => {
-    if (userEmail) {
-      api.get("/cart")
-        .then(res => {
-          const items = res.data.data.cart.items.map((item: any) => ({
-            product: { ...item.productId, id: item.productId._id },
-            quantity: item.quantity
-          }));
-          setCart(items);
-        })
-        .catch(err => console.error("Lỗi tải giỏ hàng:", err));
-    }
+    const fetchCart = () => {
+      if (userEmail) {
+        api.get("/cart")
+          .then(res => {
+            const items = res.data.data.cart.items.map((item: any) => ({
+              product: { ...item.productId, id: item.productId._id },
+              quantity: item.quantity
+            }));
+            setCart(items);
+          })
+          .catch(err => console.error("Lỗi tải giỏ hàng:", err));
+      }
+    };
+    
+    fetchCart();
+    
+    // Lắng nghe sự kiện cartUpdated để đồng bộ giỏ hàng khi thêm từ các trang khác
+    window.addEventListener("cartUpdated", fetchCart);
+    return () => window.removeEventListener("cartUpdated", fetchCart);
   }, [userEmail]);
 
   const addToCart = useCallback(async (product: Product) => {

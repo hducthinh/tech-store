@@ -31,7 +31,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/products" element={<ProductList />} />
-        <Route path="/products/:slug" element={<ProductDetail />} />
+        <Route path="/products/:slug" element={<Home><ProductDetail /></Home>} />
 
         {/* Admin Routes Protected by AdminRoute & AdminLayout */}
         <Route path="/admin" element={<AdminRoute />}>

@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import StoreDashboard from "../components/ui/StoreDashboard";
 import { useNavigate } from "react-router-dom";
 
-export default function Home() {
+export default function Home({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -12,6 +12,8 @@ export default function Home() {
       userEmail={user?.email || ""} 
       onLogout={logout} 
       onLoginClick={() => navigate("/login")}
-    />
+    >
+      {children}
+    </StoreDashboard>
   );
 }
