@@ -34,6 +34,7 @@ export function useProducts() {
           const fetchedProducts = res.data.data.products.map((p: any) => ({
             id: p._id,
             name: p.name,
+            slug: p.slug,
             price: p.price,
             originalPrice: p.price * 1.2,
             rating: 4.5,

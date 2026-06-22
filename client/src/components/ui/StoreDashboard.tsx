@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { User, LogOut, Loader2, Database, CheckCircle2 } from "lucide-react";
 import { Product } from "../../types";
 
@@ -22,7 +23,7 @@ interface StoreDashboardProps {
 export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: StoreDashboardProps) {
   const [activeTab, setActiveTab] = useState<"catalog" | "ai" | "history">("catalog");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const navigate = useNavigate();
 
   const {
     products,
@@ -178,7 +179,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
             setSelectedCategory={setSelectedCategory}
             categoriesDb={categoriesDb}
             onAddToCart={addToCart}
-            onSelectProduct={setSelectedProduct}
+            onSelectProduct={(p) => navigate(`/products/${p.slug}`)}
             onNavigateToAi={onNavigateToAi}
           />
         )}
