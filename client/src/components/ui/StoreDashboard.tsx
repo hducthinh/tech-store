@@ -6,6 +6,7 @@ import {
   ArrowLeft, Info, Send, Loader2, ArrowRight
 } from "lucide-react";
 import { Product, CartItem, Order, Message } from "../types";
+import api from "../../services/api";
 
 interface StoreDashboardProps {
   userEmail: string;
@@ -108,19 +109,26 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
   useEffect(() => {
     const savedOrders = localStorage.getItem(`orders_${userEmail}`);
     if (savedOrders) setOrders(JSON.parse(savedOrders));
-    const savedCart = localStorage.getItem(`cart_${userEmail}`);
-    if (savedCart) setCart(JSON.parse(savedCart));
+    
+    if (userEmail) {
+      api.get("/cart")
+        .then(res => {
+          const items = res.data.data.cart.items.map((item: any) => ({
+            product: { ...item.productId, id: item.productId._id },
+            quantity: item.quantity
+          }));
+          setCart(items);
+        })
+        .catch(err => console.error("Lỗi tải giỏ hàng:", err));
+    } else {
+      setCart([]);
+    }
   }, [userEmail]);
-
-  // Persist cart to localStorage
-  useEffect(() => {
-    localStorage.setItem(`cart_${userEmail}`, JSON.stringify(cart));
-  }, [cart, userEmail]);
 
   // Products are filtered on the backend now.
 
   // Cart operations
-  const addToCart = (product: Product) => {
+  const addToCart = async (product: Product) => {
     if (!userEmail) {
       alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
       if (onLoginClick) {
@@ -128,40 +136,60 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
       }
       return;
     }
-    const existing = cart.find(item => item.product.id === product.id);
-    if (existing) {
-      setCart(cart.map(item => 
-        item.product.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-    } else {
-      setCart([...cart, { product, quantity: 1 }]);
+
+    try {
+      const res = await api.post("/cart", { productId: product.id, quantity: 1 });
+      const items = res.data.data.cart.items.map((item: any) => ({
+        product: { ...item.productId, id: item.productId._id },
+        quantity: item.quantity
+      }));
+      setCart(items);
+      
+      // Show quick mini confirmation alert
+      const toast = document.createElement("div");
+      toast.className = "fixed bottom-5 right-5 bg-[#0058be] text-white py-3 px-5 rounded-lg text-xs font-semibold shadow-2xl z-50 transition-all duration-300 animate-slide-in";
+      toast.innerHTML = ` đã thêm <strong>${product.name}</strong> vào giỏ hàng thành công!`;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add("opacity-0");
+        setTimeout(() => toast.remove(), 400);
+      }, 2500);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Lỗi khi thêm vào giỏ hàng");
     }
+  };
+
+  const updateCartQuantity = async (productId: string, delta: number) => {
+    const item = cart.find(i => i.product.id === productId);
+    if (!item) return;
     
-    // Show quick mini confirmation alert
-    const toast = document.createElement("div");
-    toast.className = "fixed bottom-5 right-5 bg-[#0058be] text-white py-3 px-5 rounded-lg text-xs font-semibold shadow-2xl z-50 transition-all duration-300 animate-slide-in";
-    toast.innerHTML = ` đã thêm <strong>${product.name}</strong> vào giỏ hàng thành công!`;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.classList.add("opacity-0");
-      setTimeout(() => toast.remove(), 400);
-    }, 2500);
+    const newQty = item.quantity + delta;
+    if (newQty < 1) return; // Nếu < 1 thì không update, người dùng dùng nút thùng rác để xóa
+
+    // Optimistic UI update
+    setCart(cart.map(i => i.product.id === productId ? { ...i, quantity: newQty } : i));
+
+    try {
+      await api.patch("/cart/update-quantity", { productId, quantity: newQty });
+    } catch (error: any) {
+      console.error("Lỗi update số lượng:", error);
+      // Revert if error
+      setCart(cart.map(i => i.product.id === productId ? { ...i, quantity: item.quantity } : i));
+      alert(error.response?.data?.message || "Lỗi cập nhật số lượng");
+    }
   };
 
-  const updateCartQuantity = (productId: string, delta: number) => {
-    setCart(cart.map(item => {
-      if (item.product.id === productId) {
-        const newQty = item.quantity + delta;
-        return { ...item, quantity: newQty < 1 ? 1 : newQty };
-      }
-      return item;
-    }));
-  };
-
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = async (productId: string) => {
+    const backupCart = [...cart];
     setCart(cart.filter(item => item.product.id !== productId));
+    
+    try {
+      await api.delete(`/cart/${productId}`);
+    } catch (error: any) {
+      console.error("Lỗi xóa khỏi giỏ:", error);
+      setCart(backupCart);
+      alert(error.response?.data?.message || "Lỗi khi xóa khỏi giỏ hàng");
+    }
   };
 
   const getSubtotal = () => {
