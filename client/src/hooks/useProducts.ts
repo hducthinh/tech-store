@@ -27,7 +27,7 @@ export function useProducts() {
         setLoadingProducts(true);
         const params: any = {};
         if (searchQuery) params.search = searchQuery;
-        if (selectedCategory && selectedCategory !== "All") params.category = selectedCategory;
+        if (selectedCategory && selectedCategory !== "All") params.categoryId = selectedCategory;
 
         const res = await api.get("/products", { params });
         if (res.data.status === "success") {

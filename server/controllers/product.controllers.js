@@ -1,7 +1,9 @@
 import Product from "../models/product.model.js";
+import Category from "../models/category.model.js";
+import Brand from "../models/brand.model.js";
 import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
-
+import slugify from "../utils/slugify.js";
 // @desc    Lấy danh sách sản phẩm (hỗ trợ lọc, sắp xếp)
 // @route   GET /api/v1/products
 // @access  Public
@@ -98,6 +100,128 @@ export const getProductBySlug = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
+    data: {
+      product,
+    },
+  });
+});
+
+// @desc    Lấy toàn bộ sản phẩm cho Admin (Bao gồm cả sản phẩm đã xóa mềm)
+// @route   GET /api/v1/products/admin
+// @access  Private/Admin
+export const getAdminProducts = catchAsync(async (req, res, next) => {
+  const products = await Product.find()
+    .sort({ createdAt: -1 })
+    .populate("categoryId", "name")
+    .populate("brandId", "name");
+
+  res.status(200).json({
+    status: "success",
+    results: products.length,
+    data: {
+      products,
+    },
+  });
+});
+
+// @desc    Tạo sản phẩm mới (Admin)
+// @route   POST /api/v1/products
+// @access  Private/Admin
+export const createProduct = catchAsync(async (req, res, next) => {
+  const { name, categoryId, brandId, price, stock, description, thumbnail } = req.body;
+
+  // Validate basic
+  if (!name || !categoryId || !brandId || price === undefined || stock === undefined) {
+    return next(new AppError("Vui lòng điền đủ thông tin cơ bản của sản phẩm.", 400));
+  }
+
+  // Lấy tên Category & Brand
+  const category = await Category.findById(categoryId);
+  if (!category) return next(new AppError("Danh mục không tồn tại.", 404));
+
+  const brand = await Brand.findById(brandId);
+  if (!brand) return next(new AppError("Thương hiệu không tồn tại.", 404));
+
+  const slug = slugify(name);
+
+  const newProduct = await Product.create({
+    name,
+    slug,
+    categoryId,
+    categoryName: category.name,
+    brandId,
+    brandName: brand.name,
+    price,
+    stock,
+    description,
+    thumbnail: thumbnail || "",
+  });
+
+  res.status(201).json({
+    status: "success",
+    data: {
+      product: newProduct,
+    },
+  });
+});
+
+// @desc    Cập nhật sản phẩm (Admin)
+// @route   PATCH /api/v1/products/:id
+// @access  Private/Admin
+export const updateProduct = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  // Nếu cập nhật category/brand, ta phải cập nhật cả name của chúng
+  const updateData = { ...req.body };
+  if (updateData.name) {
+    updateData.slug = slugify(updateData.name);
+  }
+
+  if (updateData.categoryId) {
+    const category = await Category.findById(updateData.categoryId);
+    if (category) updateData.categoryName = category.name;
+  }
+
+  if (updateData.brandId) {
+    const brand = await Brand.findById(updateData.brandId);
+    if (brand) updateData.brandName = brand.name;
+  }
+
+  const product = await Product.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!product) {
+    return next(new AppError("Không tìm thấy sản phẩm", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      product,
+    },
+  });
+});
+
+// @desc    Xóa mềm / Khôi phục sản phẩm (Toggle isActive) (Admin)
+// @route   DELETE /api/v1/products/:id
+// @access  Private/Admin
+export const deleteProduct = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const product = await Product.findById(id);
+
+  if (!product) {
+    return next(new AppError("Không tìm thấy sản phẩm", 404));
+  }
+
+  // Toggle trạng thái
+  product.isActive = !product.isActive;
+  await product.save();
+
+  res.status(200).json({
+    status: "success",
+    message: product.isActive ? "Đã khôi phục sản phẩm" : "Đã vô hiệu hóa sản phẩm",
     data: {
       product,
     },
