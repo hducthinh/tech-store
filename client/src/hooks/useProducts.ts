@@ -48,8 +48,8 @@ export function useProducts() {
             slug: p.slug,
             price: p.price,
             originalPrice: p.price * 1.2,
-            rating: 4.5,
-            reviews: p.soldCount || Math.floor(Math.random() * 500),
+            rating: p.rating || 0,
+            reviewCount: p.reviewCount || 0,
             image: p.thumbnail || (p.images && p.images.length > 0 ? p.images[0] : "https://via.placeholder.com/300"),
             description: p.description,
             specs: [

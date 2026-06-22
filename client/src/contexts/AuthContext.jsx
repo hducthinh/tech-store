@@ -110,6 +110,27 @@ export const AuthProvider = ({ children }) => {
     [fetchProfile],
   );
 
+  const updateProfile = useCallback(async (payload) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.put("/auth/profile", payload);
+      const userPayload = response?.data?.data?.user;
+      if (userPayload) {
+        setUser(userPayload);
+      } else {
+        await fetchProfile();
+      }
+      return { success: true, data: response.data };
+    } catch (err) {
+      const message = getErrorMessage(err);
+      setError(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchProfile]);
+
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     delete api.defaults.headers.common["Authorization"];
@@ -118,7 +139,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, error, isInitialized, register, login, logout }}
+      value={{ user, isLoading, error, isInitialized, register, login, logout, updateProfile }}
     >
       {children}
     </AuthContext.Provider>

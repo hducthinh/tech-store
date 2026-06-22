@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, LogOut, Loader2, Database, CheckCircle2, Search, ChevronDown } from "lucide-react";
 import { Product } from "../../types";
@@ -7,6 +7,7 @@ import { useProducts } from "../../hooks/useProducts";
 import { useCart } from "../../hooks/useCart";
 import { useOrders } from "../../hooks/useOrders";
 import { useCopilot } from "../../hooks/useCopilot";
+import { useAuth } from "../../contexts/AuthContext";
 
 import { Catalog } from "./Catalog";
 import { TechCopilot } from "./TechCopilot";
@@ -24,7 +25,9 @@ interface StoreDashboardProps {
 export default function StoreDashboard({ userEmail, onLogout, onLoginClick, children }: StoreDashboardProps) {
   const [activeTab, setActiveTab] = useState<"catalog" | "ai" | "history">("catalog");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const {
     products,
@@ -55,6 +58,17 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     orders,
     checkoutStep,
     setCheckoutStep,
+    handleCheckout,
+    orderId
+  } = useOrders(userEmail, setCart);
+
+  useEffect(() => {
+    const handleOpenCart = () => setIsCartOpen(true);
+    window.addEventListener("openCart", handleOpenCart);
+    return () => window.removeEventListener("openCart", handleOpenCart);
+  }, [setIsCartOpen]);
+
+  const {
     shippingName,
     setShippingName,
     shippingPhone,
@@ -143,9 +157,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
           <div className="flex items-center gap-1 md:gap-2 shrink-0">
             <nav className="hidden xl:flex bg-slate-100/80 p-1 rounded-xl">
               {[
-                { id: "catalog", label: "Cửa Hàng" },
-                { id: "ai", label: "Hỏi AI", highlight: true },
-                { id: "history", label: "Đơn Hàng" }
+                { id: "ai", label: "Tư vấn với AI", highlight: true },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -184,15 +196,26 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
 
             {userEmail ? (
               <div className="flex items-center gap-2 border-l border-slate-200 pl-3 ml-1">
-                <div className="w-8 h-8 bg-[#00236f] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-inner">
-                  {userEmail.substring(0,2).toUpperCase()}
-                </div>
-                <div className="hidden lg:block mr-2">
-                  <p className="text-xs font-bold text-slate-700 leading-tight">Mức hạng: Bạc</p>
-                  <p className="text-[10px] text-slate-500 truncate max-w-[100px]">{userEmail}</p>
+                <div 
+                  className="flex items-center gap-2 cursor-pointer group"
+                  onClick={() => navigate("/profile")}
+                  title="Xem hồ sơ cá nhân"
+                >
+                  <div className="w-8 h-8 bg-[#00236f] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-inner group-hover:bg-[#0058be] transition-colors">
+                    {userEmail.substring(0,2).toUpperCase()}
+                  </div>
+                  <div className="hidden lg:block mr-2 group-hover:opacity-80 transition-opacity">
+                    <p className="text-xs font-bold text-slate-500 leading-tight">Xin chào,</p>
+                    <p className="text-sm font-bold text-slate-800 truncate max-w-[120px]">
+                      {user?.fullName 
+                        ? (user.fullName.length > 20 ? user.fullName.split(' ').pop() : user.fullName) 
+                        : "Khách"
+                      }
+                    </p>
+                  </div>
                 </div>
                 <button 
-                  onClick={onLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   title="Đăng xuất"
                   className="p-2 text-slate-400 hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition duration-250 cursor-pointer"
                 >
@@ -316,6 +339,38 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
         <div className="fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-lg font-semibold text-sm z-50 animate-slide-up flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           {toastMessage}
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <LogOut className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Xác nhận đăng xuất</h3>
+              <p className="text-sm text-slate-500">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?</p>
+            </div>
+            <div className="p-4 bg-slate-50 flex gap-3 border-t border-slate-100">
+              <button 
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={() => {
+                  setShowLogoutModal(false);
+                  onLogout();
+                }}
+                className="flex-1 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
