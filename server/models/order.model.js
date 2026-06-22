@@ -30,7 +30,7 @@ const orderSchema = new mongoose.Schema(
         paymentMethod: {
             type: String,
             required: true,
-            enum: ["COD", "BANK_TRANSFER"],
+            enum: ["COD", "BANK_TRANSFER", "CREDIT_CARD"],
             default: "COD",
         },
         totalAmount: {

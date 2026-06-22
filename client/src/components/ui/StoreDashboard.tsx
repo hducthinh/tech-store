@@ -107,8 +107,30 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
 
   // Load existing orders & cart on startup
   useEffect(() => {
-    const savedOrders = localStorage.getItem(`orders_${userEmail}`);
-    if (savedOrders) setOrders(JSON.parse(savedOrders));
+    if (userEmail) {
+      // Tải lịch sử đơn hàng
+      api.get("/orders")
+        .then(res => {
+          if (res.data.status === "success") {
+            const mappedOrders = res.data.data.orders.map((o: any) => ({
+              id: o._id,
+              date: new Date(o.createdAt).toLocaleDateString("vi-VN") + " " + new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+              items: o.items.map((i: any) => ({
+                product: { id: i.productId, name: i.name, image: i.image, price: i.price },
+                quantity: i.quantity
+              })),
+              total: o.totalAmount,
+              fullName: o.shippingAddress.fullName,
+              address: o.shippingAddress.address,
+              phone: o.shippingAddress.phone,
+              paymentMethod: o.paymentMethod,
+              status: o.status
+            }));
+            setOrders(mappedOrders);
+          }
+        })
+        .catch(err => console.error("Lỗi lấy đơn hàng:", err));
+    }
     
     if (userEmail) {
       api.get("/cart")
@@ -219,31 +241,52 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
     }
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!shippingName || !shippingPhone || !shippingAddress) {
       alert("Vui lòng điền đầy đủ thông tin giao nhận.");
       return;
     }
 
-    const newOrder: Order = {
-      id: "TS-" + Math.floor(100000 + Math.random() * 900000),
-      date: new Date().toLocaleDateString("vi-VN") + " " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-      items: [...cart],
-      total: getTotal(),
-      fullName: shippingName,
-      address: shippingAddress,
-      phone: shippingPhone,
-      paymentMethod: paymentMethod,
-      status: "Chờ xử lý"
-    };
+    try {
+      const pmMap: Record<string, string> = {
+        "Bank Transfer": "BANK_TRANSFER",
+        "COD": "COD",
+        "Credit Card": "CREDIT_CARD"
+      };
 
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    localStorage.setItem(`orders_${userEmail}`, JSON.stringify(updatedOrders));
+      const res = await api.post("/orders", {
+        shippingAddress: {
+          fullName: shippingName,
+          phone: shippingPhone,
+          address: shippingAddress
+        },
+        paymentMethod: pmMap[paymentMethod] || "COD"
+      });
 
-    // Reset checkout & cart
-    setCart([]);
-    setCheckoutStep(3);
+      if (res.data.status === "success") {
+        const o = res.data.data.order;
+        const newOrder: Order = {
+          id: o._id,
+          date: new Date(o.createdAt).toLocaleDateString("vi-VN") + " " + new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
+          items: [...cart],
+          total: o.totalAmount,
+          fullName: o.shippingAddress.fullName,
+          address: o.shippingAddress.address,
+          phone: o.shippingAddress.phone,
+          paymentMethod: paymentMethod, // Hiển thị nguyên văn tiếng Việt/Anh
+          status: o.status
+        };
+
+        setOrders([newOrder, ...orders]);
+        
+        // Reset checkout & cart
+        setCart([]);
+        setCheckoutStep(3);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Có lỗi xảy ra khi tạo đơn hàng");
+    }
   };
 
   // Chat with Gemini API
