@@ -39,4 +39,52 @@ router.get("/stats", catchAsync(async (req, res, next) => {
   });
 }));
 
+// @desc    Lấy dữ liệu biểu đồ doanh thu (7 ngày gần nhất)
+// @route   GET /api/v1/dashboard/chart
+// @access  Private/Admin
+router.get("/chart", catchAsync(async (req, res, next) => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 của 7 ngày trước
+
+  const chartData = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: sevenDaysAgo },
+        status: { $ne: "CANCELLED" }
+      }
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        revenue: { $sum: "$totalAmount" },
+        orders: { $sum: 1 }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+
+  // Fill những ngày không có đơn hàng (doanh thu = 0)
+  const filledData = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sevenDaysAgo);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split("T")[0];
+    const existing = chartData.find(item => item._id === dateStr);
+    
+    filledData.push({
+      date: dateStr,
+      revenue: existing ? existing.revenue : 0,
+      orders: existing ? existing.orders : 0
+    });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      chart: filledData
+    }
+  });
+}));
+
 export default router;
