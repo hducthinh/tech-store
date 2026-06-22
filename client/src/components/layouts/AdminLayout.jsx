@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Box, Users, LogOut, Terminal } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Box, Users, LogOut, Terminal, FolderTree, Tag } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function AdminLayout() {
@@ -16,6 +16,8 @@ export default function AdminLayout() {
     { name: "Tổng quan", path: "/admin", icon: LayoutDashboard },
     { name: "Đơn hàng", path: "/admin/orders", icon: ShoppingCart },
     { name: "Sản phẩm", path: "/admin/products", icon: Box },
+    { name: "Danh mục", path: "/admin/categories", icon: FolderTree },
+    { name: "Thương hiệu", path: "/admin/brands", icon: Tag },
     { name: "Khách hàng", path: "/admin/users", icon: Users },
   ];
 

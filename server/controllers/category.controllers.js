@@ -3,7 +3,22 @@ import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
 import slugify from "../utils/slugify.js";
 
-// @desc    Lấy tất cả danh mục (dạng cây phẳng, frontend tự build tree nếu cần)
+// @desc    Lấy tất cả danh mục cho Admin (Bao gồm danh mục ẩn)
+// @route   GET /api/v1/categories/admin
+// @access  Private (Admin)
+export const getAdminCategories = catchAsync(async (req, res) => {
+  const categories = await Category.find()
+    .sort({ displayOrder: 1, name: 1 })
+    .lean();
+
+  res.status(200).json({
+    status: "success",
+    results: categories.length,
+    data: { categories },
+  });
+});
+
+// @desc    Lấy tất cả danh mục đang active
 // @route   GET /api/v1/categories
 // @access  Public
 export const getCategories = catchAsync(async (req, res) => {
@@ -106,23 +121,22 @@ export const updateCategory = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Xóa mềm danh mục (isActive = false)
+// @desc    Xóa mềm danh mục (Toggle isActive)
 // @route   DELETE /api/v1/categories/:id
 // @access  Private (Admin)
 export const deleteCategory = catchAsync(async (req, res, next) => {
-  // ponytail: soft delete, hard delete khi cần thì sửa sau
-  const category = await Category.findByIdAndUpdate(
-    req.params.id,
-    { isActive: false },
-    { new: true },
-  );
+  const category = await Category.findById(req.params.id);
 
   if (!category) {
     return next(new AppError("Không tìm thấy danh mục", 404));
   }
 
+  category.isActive = !category.isActive;
+  await category.save();
+
   res.status(200).json({
     status: "success",
-    message: "Đã xóa danh mục",
+    message: category.isActive ? "Đã khôi phục danh mục" : "Đã vô hiệu hóa danh mục",
+    data: { category }
   });
 });

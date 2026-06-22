@@ -3,7 +3,22 @@ import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
 import slugify from "../utils/slugify.js";
 
-// @desc    Lấy tất cả thương hiệu
+// @desc    Lấy tất cả thương hiệu cho Admin (Bao gồm thương hiệu ẩn)
+// @route   GET /api/v1/brands/admin
+// @access  Private (Admin)
+export const getAdminBrands = catchAsync(async (req, res) => {
+  const brands = await Brand.find()
+    .sort({ displayOrder: 1, name: 1 })
+    .lean();
+
+  res.status(200).json({
+    status: "success",
+    results: brands.length,
+    data: { brands },
+  });
+});
+
+// @desc    Lấy tất cả thương hiệu đang active
 // @route   GET /api/v1/brands
 // @access  Public
 export const getBrands = catchAsync(async (req, res) => {
@@ -82,22 +97,22 @@ export const updateBrand = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc    Xóa mềm thương hiệu
+// @desc    Xóa mềm thương hiệu (Toggle isActive)
 // @route   DELETE /api/v1/brands/:id
 // @access  Private (Admin)
 export const deleteBrand = catchAsync(async (req, res, next) => {
-  const brand = await Brand.findByIdAndUpdate(
-    req.params.id,
-    { isActive: false },
-    { new: true },
-  );
+  const brand = await Brand.findById(req.params.id);
 
   if (!brand) {
     return next(new AppError("Không tìm thấy thương hiệu", 404));
   }
 
+  brand.isActive = !brand.isActive;
+  await brand.save();
+
   res.status(200).json({
     status: "success",
-    message: "Đã xóa thương hiệu",
+    message: brand.isActive ? "Đã khôi phục thương hiệu" : "Đã vô hiệu hóa thương hiệu",
+    data: { brand }
   });
 });

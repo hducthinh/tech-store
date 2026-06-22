@@ -17,6 +17,8 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminOrders from "./pages/admin/Orders";
 import AdminProducts from "./pages/admin/Products";
+import AdminCategories from "./pages/admin/Categories";
+import AdminBrands from "./pages/admin/Brands";
 import AdminUsers from "./pages/admin/Users";
 
 function App() {
@@ -37,6 +39,8 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="brands" element={<AdminBrands />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
         </Route>
