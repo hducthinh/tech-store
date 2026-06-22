@@ -15,6 +15,9 @@ interface CatalogProps {
   onAddToCart: (product: Product) => void;
   onSelectProduct: (product: Product) => void;
   onNavigateToAi: () => void;
+  page: number;
+  setPage: (page: any) => void;
+  totalPages: number;
 }
 
 export function Catalog({
@@ -27,7 +30,10 @@ export function Catalog({
   categoriesDb,
   onAddToCart,
   onSelectProduct,
-  onNavigateToAi
+  onNavigateToAi,
+  page,
+  setPage,
+  totalPages
 }: CatalogProps) {
   return (
     <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
@@ -120,6 +126,43 @@ export function Catalog({
               onNavigateToAi={onNavigateToAi}
             />
           ))}
+        </div>
+      )}
+
+      {/* Pagination Bar */}
+      {!loadingProducts && totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8">
+          <button
+            onClick={() => setPage((p: number) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+          >
+            Trang trước
+          </button>
+          
+          <div className="flex items-center gap-1">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+                  page === i + 1 
+                    ? "bg-[#00236f] text-white shadow-md" 
+                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 text-sm font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+          >
+            Trang sau
+          </button>
         </div>
       )}
     </div>

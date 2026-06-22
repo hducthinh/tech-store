@@ -8,7 +8,10 @@ import slugify from "../utils/slugify.js";
 // @route   GET /api/v1/products
 // @access  Public
 export const getProducts = catchAsync(async (req, res, next) => {
-  const { categoryId, brandId, minPrice, maxPrice, sortBy, search } = req.query;
+  const { categoryId, brandId, minPrice, maxPrice, sortBy, search, page = 1, limit = 12 } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const skip = (pageNum - 1) * limitNum;
 
   // Xây dựng bộ lọc thủ công (Ponytail: Đơn giản, không dùng thư viện query builder cồng kềnh)
   const filter = { isActive: true };
@@ -48,14 +51,23 @@ export const getProducts = catchAsync(async (req, res, next) => {
     }
   }
 
+  const total = await Product.countDocuments(filter);
   const products = await Product.find(filter)
     .sort(sort)
+    .skip(skip)
+    .limit(limitNum)
     .select("-costPrice")
     .populate("categoryId", "name slug"); // Lấy thêm thông tin danh mục
 
   res.status(200).json({
     status: "success",
     results: products.length,
+    pagination: {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+    },
     data: {
       products,
     },

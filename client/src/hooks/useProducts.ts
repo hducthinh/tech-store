@@ -21,16 +21,27 @@ export function useProducts() {
       .catch(err => console.error("Lỗi tải danh mục:", err));
   }, []);
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    // Reset page to 1 when search or category changes
+    setPage(1);
+  }, [searchQuery, selectedCategory]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        const params: any = {};
+        const params: any = { page, limit: 12 };
         if (searchQuery) params.search = searchQuery;
         if (selectedCategory && selectedCategory !== "All") params.categoryId = selectedCategory;
 
         const res = await api.get("/products", { params });
         if (res.data.status === "success") {
+          if (res.data.pagination) {
+            setTotalPages(res.data.pagination.totalPages || 1);
+          }
           const fetchedProducts = res.data.data.products.map((p: any) => ({
             id: p._id,
             name: p.name,
@@ -61,7 +72,7 @@ export function useProducts() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, page]);
 
   return {
     products,
@@ -72,6 +83,9 @@ export function useProducts() {
     setSelectedCategory,
     categoriesDb,
     selectedProduct,
-    setSelectedProduct
+    setSelectedProduct,
+    page,
+    setPage,
+    totalPages
   };
 }

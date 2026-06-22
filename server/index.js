@@ -44,7 +44,13 @@ app.use("/api", limiter);
 app.use(express.json({ limit: "10kb" })); // Giới hạn payload size
 
 // 5. Phòng chống NoSQL Query Injection (Sanitize dữ liệu đầu vào)
-app.use(mongoSanitize());
+// Fix Express 5 error (Cannot set property query which has only a getter)
+app.use((req, res, next) => {
+  if (req.body) mongoSanitize.sanitize(req.body);
+  if (req.params) mongoSanitize.sanitize(req.params);
+  if (req.query) mongoSanitize.sanitize(req.query);
+  next();
+});
 
 // Đường dẫn thử nghiệm chạy gốc
 app.get("/", (req, res) => {

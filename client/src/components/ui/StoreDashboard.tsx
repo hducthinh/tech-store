@@ -33,7 +33,10 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    categoriesDb
+    categoriesDb,
+    page,
+    setPage,
+    totalPages
   } = useProducts();
 
   const {
@@ -228,6 +231,9 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             categoriesDb={categoriesDb}
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
             onAddToCart={addToCart}
             onSelectProduct={(p) => navigate(`/products/${p.slug}`)}
             onNavigateToAi={onNavigateToAi}
