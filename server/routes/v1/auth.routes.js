@@ -4,6 +4,7 @@ import {
   register,
   login,
   getProfile,
+  updateProfile
 } from "../../controllers/auth.controllers.js";
 import verifyToken from "../../middlewares/verifyToken.js";
 
@@ -15,5 +16,6 @@ router.post("/login", login);
 
 // Protected routes
 router.get("/profile", verifyToken, getProfile);
+router.put("/profile", verifyToken, updateProfile);
 
 export default router;

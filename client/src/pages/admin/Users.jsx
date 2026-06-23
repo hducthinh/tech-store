@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, Loader2, Lock, Unlock, UserCheck, UserX } from "lucide-react";
+import { Users, Loader2, UserCheck, UserX } from "lucide-react";
 import { useAdminUsers } from "../../hooks/useAdminUsers";
 
 export default function AdminUsers() {

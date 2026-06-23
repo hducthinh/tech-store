@@ -18,7 +18,10 @@ if (!useMock) {
     (error) => {
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
-        window.location.href = "/login";
+        // Chỉ redirect nếu không phải đang ở trang login, để tránh việc bị load lại trang làm mất input
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
       }
       return Promise.reject(error);
     },

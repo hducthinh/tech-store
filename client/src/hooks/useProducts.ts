@@ -9,6 +9,7 @@ export function useProducts() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [categoriesDb, setCategoriesDb] = useState<{_id: string, name: string}[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Tải danh mục
@@ -21,24 +22,39 @@ export function useProducts() {
       .catch(err => console.error("Lỗi tải danh mục:", err));
   }, []);
 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    // Reset page to 1 when search or category changes
+    setPage(1);
+  }, [searchQuery, selectedCategory]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        const params: any = {};
+        setError(null);
+        const params: any = { page, limit: 12 };
         if (searchQuery) params.search = searchQuery;
         if (selectedCategory && selectedCategory !== "All") params.categoryId = selectedCategory;
 
         const res = await api.get("/products", { params });
         if (res.data.status === "success") {
+          if (res.data.pagination) {
+            setTotalPages(res.data.pagination.totalPages || 1);
+          }
           const fetchedProducts = res.data.data.products.map((p: any) => ({
             id: p._id,
             name: p.name,
+            slug: p.slug,
             price: p.price,
             originalPrice: p.price * 1.2,
-            rating: 4.5,
-            reviews: p.soldCount || Math.floor(Math.random() * 500),
+            rating: p.rating || 0,
+            reviewCount: p.reviewCount || 0,
             image: p.thumbnail || (p.images && p.images.length > 0 ? p.images[0] : "https://via.placeholder.com/300"),
+            thumbnail: p.thumbnail,
+            images: p.images,
             description: p.description,
             specs: [
               "Hàng chính hãng",
@@ -48,8 +64,13 @@ export function useProducts() {
           }));
           setProducts(fetchedProducts);
         }
-      } catch (error) {
-        console.error("Lỗi khi tải sản phẩm:", error);
+      } catch (err: any) {
+        console.error("Lỗi khi tải sản phẩm:", err);
+        if (err.response?.status === 429) {
+          setError(err.response?.data?.message || "Hệ thống phát hiện quá nhiều yêu cầu từ IP của bạn. Vui lòng thử lại sau.");
+        } else {
+          setError("Không thể kết nối đến máy chủ.");
+        }
       } finally {
         setLoadingProducts(false);
       }
@@ -60,7 +81,7 @@ export function useProducts() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, page]);
 
   return {
     products,
@@ -71,6 +92,10 @@ export function useProducts() {
     setSelectedCategory,
     categoriesDb,
     selectedProduct,
-    setSelectedProduct
+    setSelectedProduct,
+    page,
+    setPage,
+    totalPages,
+    error
   };
 }

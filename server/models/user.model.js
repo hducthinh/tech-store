@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
       required: [true, "Số điện thoại là bắt buộc"],
       match: [/^[0-9]{10,11}$/, "Số điện thoại phải chứa từ 10 đến 11 chữ số"],
     },
+    address: {
+      type: String,
+      trim: true,
+      maxlength: [200, "Địa chỉ không được vượt quá 200 ký tự"],
+    },
     role: {
       type: String,
       enum: ["customer", "admin", "staff"],

@@ -129,3 +129,28 @@ export const getProfile = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// @desc    Cập nhật thông tin tài khoản hiện tại
+// @route   PUT /api/v1/auth/profile
+// @access  Private
+export const updateProfile = catchAsync(async (req, res, next) => {
+  const { fullName, phone, address } = req.body;
+  
+  // Ponytail: chỉ cho phép cập nhật các trường cụ thể, dùng { new: true, runValidators: true }
+  const user = await User.findByIdAndUpdate(
+    req.userId,
+    { fullName, phone, address },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) {
+    return next(new AppError("Không tìm thấy tài khoản", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+});

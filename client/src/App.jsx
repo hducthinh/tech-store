@@ -10,6 +10,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 // merges ProductList and Cart into the StoreDashboard (Home).
 import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
+import Profile from "./pages/Profile";
+import Checkout from "./pages/Checkout";
 
 // Admin Imports
 import AdminRoute from "./components/AdminRoute";
@@ -31,7 +33,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/products" element={<ProductList />} />
-        <Route path="/products/:slug" element={<ProductDetail />} />
+        <Route path="/products/:slug" element={<Home><ProductDetail /></Home>} />
+        <Route path="/profile" element={<Home><Profile /></Home>} />
+        <Route path="/checkout" element={<Checkout />} />
 
         {/* Admin Routes Protected by AdminRoute & AdminLayout */}
         <Route path="/admin" element={<AdminRoute />}>

@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Terminal, Mail, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Terminal, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useDocumentMeta } from "../hooks/useDocumentMeta";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, isLoading, error: authError } = useAuth();
+
+  useDocumentMeta("Đăng nhập", "Đăng nhập tài khoản TechStore để mua sắm thiết bị chuyên nghiệp.");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +26,12 @@ export default function Login() {
     
     const result = await login({ email, password });
     if (result.success) {
-      navigate("/");
+      const user = result.data?.data?.user || result.data?.user;
+      if (user?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } else {
       setError(result.error || "Đăng nhập thất bại");
     }
@@ -45,21 +53,11 @@ export default function Login() {
 
           <div className="relative z-10 max-w-md my-auto">
             <h2 className="text-5xl font-bold font-sans tracking-tight leading-[1.15] mb-6">
-              Welcome Back
+              Chào mừng trở lại
             </h2>
             <p className="text-lg text-white/80 leading-relaxed font-sans font-light">
-              Log in to access your professional hardware and cutting-edge tools.
+              Đăng nhập để truy cập vào kho phần cứng và công cụ chuyên nghiệp.
             </p>
-          </div>
-
-          <div id="trusted-badge" className="relative z-10 glass-card p-6 rounded-2xl flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#2170e4] flex items-center justify-center text-white shadow-inner">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white tracking-wide">Trusted by Professionals</p>
-              <p className="text-xs text-white/75 font-mono">Secure Access Protocol Enabled</p>
-            </div>
           </div>
 
           <div className="absolute bottom-0 right-0 w-3/4 h-1/2 opacity-25 pointer-events-none transform translate-y-6 translate-x-6">
@@ -110,6 +108,8 @@ export default function Login() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Định dạng email không hợp lệ" : "Vui lòng nhập địa chỉ email")}
+                    onInput={(e) => e.target.setCustomValidity("")}
                   />
                 </div>
               </div>
@@ -138,6 +138,8 @@ export default function Login() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onInvalid={(e) => e.target.setCustomValidity("Vui lòng nhập mật khẩu")}
+                    onInput={(e) => e.target.setCustomValidity("")}
                   />
                   <button 
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"

@@ -1,28 +1,31 @@
-import React, { useState } from "react";
-import { User, LogOut, Loader2, Database, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, LogOut, Loader2, Database, CheckCircle2, Search, ChevronDown } from "lucide-react";
 import { Product } from "../../types";
 
 import { useProducts } from "../../hooks/useProducts";
 import { useCart } from "../../hooks/useCart";
 import { useOrders } from "../../hooks/useOrders";
 import { useCopilot } from "../../hooks/useCopilot";
+import { useAuth } from "../../contexts/AuthContext";
 
 import { Catalog } from "./Catalog";
 import { TechCopilot } from "./TechCopilot";
 import { OrderHistory } from "./OrderHistory";
 import { CartDrawer } from "./CartDrawer";
-import { CheckoutModal } from "./CheckoutModal";
 
 interface StoreDashboardProps {
   userEmail: string;
   onLogout: () => void;
   onLoginClick?: () => void;
+  children?: React.ReactNode;
 }
 
-export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: StoreDashboardProps) {
+export default function StoreDashboard({ userEmail, onLogout, onLoginClick, children }: StoreDashboardProps) {
   const [activeTab, setActiveTab] = useState<"catalog" | "ai" | "history">("catalog");
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const {
     products,
@@ -31,7 +34,11 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
-    categoriesDb
+    categoriesDb,
+    page,
+    setPage,
+    totalPages,
+    error
   } = useProducts();
 
   const {
@@ -43,13 +50,31 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
     removeFromCart,
     updateQuantity,
     getTotal: getSubtotal,
-    toastMessage
+    toastMessage,
+    selectedItemIds,
+    toggleItemSelection,
+    toggleAllSelection,
+    getSelectedTotal
   } = useCart(userEmail);
 
   const {
     orders,
     checkoutStep,
     setCheckoutStep,
+    handleCheckout,
+    orderId
+  } = useOrders(userEmail, setCart);
+
+  useEffect(() => {
+    const handleOpenCart = () => setIsCartOpen(true);
+
+    window.addEventListener("openCart", handleOpenCart);
+    return () => {
+      window.removeEventListener("openCart", handleOpenCart);
+    };
+  }, [setIsCartOpen]);
+
+  const {
     shippingName,
     setShippingName,
     shippingPhone,
@@ -79,9 +104,9 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
       
       {/* 1. MAIN NAVIGATION HEADER BLOCK */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
-        <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1280px] w-full mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-2">
           
-          <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={() => setActiveTab("catalog")}>
+          <div className="flex items-center gap-2 md:gap-3 cursor-pointer shrink-0" onClick={() => { setActiveTab("catalog"); setSelectedCategory("All"); setSearchQuery(""); setIsCartOpen(false); navigate("/"); }}>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#00236f] to-[#0058be] rounded-xl flex items-center justify-center shadow-md transform transition hover:rotate-12">
               <Database className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
@@ -91,21 +116,64 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
             </div>
           </div>
 
-          <div className="flex items-center gap-1 md:gap-2">
-            <nav className="hidden md:flex bg-slate-100/80 p-1 rounded-xl">
+          <div className="hidden lg:flex items-center gap-3 flex-1 justify-center px-4 max-w-xl">
+            <div className="relative group shrink-0">
+              <button className="flex items-center gap-1 text-sm font-semibold text-slate-600 hover:text-[#0058be] px-2 whitespace-nowrap">
+                Danh mục
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
+                <button 
+                  onClick={() => { setSelectedCategory("All"); setActiveTab("catalog"); navigate("/"); }}
+                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be]"
+                >
+                  Tất cả sản phẩm
+                </button>
+                {categoriesDb.map(cat => (
+                  <button 
+                    key={cat._id}
+                    onClick={() => { setSelectedCategory(cat._id); setActiveTab("catalog"); navigate("/"); }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be]"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                setActiveTab("catalog");
+                navigate("/");
+              }}
+              className="flex items-center flex-1 bg-slate-100 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#0058be]"
+            >
+              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm sản phẩm..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm w-full ml-2 text-slate-700 h-6"
+              />
+            </form>
+          </div>
+
+          <div className="flex items-center gap-1 md:gap-2 shrink-0">
+            <nav className="hidden xl:flex bg-slate-100/80 p-1 rounded-xl">
               {[
-                { id: "catalog", label: "Cửa Hàng" },
-                { id: "ai", label: "Hỏi AI Copilot", highlight: true },
-                { id: "history", label: "Đơn Hàng" }
+                { id: "ai", label: "Tư vấn với AI", highlight: true },
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => {
                     setActiveTab(tab.id as any);
                     setIsCheckoutOpen(false);
+                    navigate("/");
                   }}
-                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    activeTab === tab.id 
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                    activeTab === tab.id && !children
                       ? "bg-white text-[#0058be] shadow-sm" 
                       : tab.highlight 
                         ? "text-amber-600 hover:bg-white/50" 
@@ -134,15 +202,26 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
 
             {userEmail ? (
               <div className="flex items-center gap-2 border-l border-slate-200 pl-3 ml-1">
-                <div className="w-8 h-8 bg-[#00236f] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-inner">
-                  {userEmail.substring(0,2).toUpperCase()}
-                </div>
-                <div className="hidden lg:block mr-2">
-                  <p className="text-xs font-bold text-slate-700 leading-tight">Mức hạng: Bạc</p>
-                  <p className="text-[10px] text-slate-500 truncate max-w-[100px]">{userEmail}</p>
+                <div 
+                  className="flex items-center gap-2 cursor-pointer group"
+                  onClick={() => navigate("/profile")}
+                  title="Xem hồ sơ cá nhân"
+                >
+                  <div className="w-8 h-8 bg-[#00236f] text-white rounded-full flex items-center justify-center font-bold text-xs shadow-inner group-hover:bg-[#0058be] transition-colors">
+                    {userEmail.substring(0,2).toUpperCase()}
+                  </div>
+                  <div className="hidden lg:block mr-2 group-hover:opacity-80 transition-opacity">
+                    <p className="text-xs font-bold text-slate-500 leading-tight">Xin chào,</p>
+                    <p className="text-sm font-bold text-slate-800 truncate max-w-[120px]">
+                      {user?.fullName 
+                        ? (user.fullName.length > 20 ? user.fullName.split(' ').pop() : user.fullName) 
+                        : "Khách"
+                      }
+                    </p>
+                  </div>
                 </div>
                 <button 
-                  onClick={onLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   title="Đăng xuất"
                   className="p-2 text-slate-400 hover:text-[#ba1a1a] hover:bg-red-50 rounded-lg transition duration-250 cursor-pointer"
                 >
@@ -167,8 +246,12 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
       {/* 2. DYNAMIC MAIN CONTENT SECTIONS */}
       <section className="flex-1 flex flex-col relative py-6">
         
-        {/* TAB 1: Shopping Catalog View */}
-        {activeTab === "catalog" && !isCheckoutOpen && (
+        {children ? (
+          children
+        ) : (
+          <>
+            {/* TAB 1: Shopping Catalog View */}
+            {activeTab === "catalog" && (
           <Catalog
             products={products}
             loadingProducts={loadingProducts}
@@ -177,14 +260,18 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             categoriesDb={categoriesDb}
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
+            error={error}
             onAddToCart={addToCart}
-            onSelectProduct={setSelectedProduct}
+            onSelectProduct={(p) => navigate(`/products/${p.slug}`)}
             onNavigateToAi={onNavigateToAi}
           />
         )}
 
         {/* TAB 2: AI Tech Assistant Workspace */}
-        {activeTab === "ai" && !isCheckoutOpen && (
+        {activeTab === "ai" && (
           <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
             <TechCopilot
               chatMessages={chatMessages}
@@ -199,7 +286,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
         )}
 
         {/* TAB 3: Placed orders history */}
-        {activeTab === "history" && !isCheckoutOpen && (
+        {activeTab === "history" && (
           <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
             <OrderHistory
               orders={orders}
@@ -209,32 +296,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
           </div>
         )}
 
-        {/* 3. STEP BY STEP CHECKOUT MODULE VIEW */}
-        {isCheckoutOpen && (
-          <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
-            <CheckoutModal
-              isCheckoutOpen={isCheckoutOpen}
-              setIsCheckoutOpen={setIsCheckoutOpen}
-              checkoutStep={checkoutStep}
-              setCheckoutStep={setCheckoutStep}
-              cart={cart}
-              getSubtotal={getSubtotal}
-              shippingName={shippingName}
-              setShippingName={setShippingName}
-              shippingPhone={shippingPhone}
-              setShippingPhone={setShippingPhone}
-              shippingAddress={shippingAddress}
-              setShippingAddress={setShippingAddress}
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-              handlePlaceOrder={() => handlePlaceOrder(cart).then(res => {
-                if (res) {
-                  setCheckoutStep(3);
-                }
-              })}
-              setActiveTab={setActiveTab}
-            />
-          </div>
+          </>
         )}
       </section>
 
@@ -245,11 +307,14 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
         cart={cart}
         updateCartQuantity={updateQuantity}
         removeFromCart={removeFromCart}
-        getSubtotal={getSubtotal}
+        getSubtotal={getSelectedTotal}
         onProceedToCheckout={() => {
           setIsCartOpen(false);
-          setIsCheckoutOpen(true);
+          navigate("/checkout", { state: { selectedItemIds } });
         }}
+        selectedItemIds={selectedItemIds}
+        toggleItemSelection={toggleItemSelection}
+        toggleAllSelection={toggleAllSelection}
       />
 
       {/* 5. TOAST NOTIFICATION */}
@@ -257,6 +322,39 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick }: St
         <div className="fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-lg font-semibold text-sm z-50 animate-slide-up flex items-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           {toastMessage}
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <LogOut className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Xác nhận đăng xuất</h3>
+              <p className="text-sm text-slate-500">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?</p>
+            </div>
+            <div className="p-4 bg-slate-50 flex gap-3 border-t border-slate-100">
+              <button 
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={() => {
+                  setShowLogoutModal(false);
+                  onLogout();
+                  navigate("/");
+                }}
+                className="flex-1 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

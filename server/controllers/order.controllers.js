@@ -3,15 +3,20 @@ import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
 import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
+import mongoose from "mongoose";
 
 // @desc    Tạo đơn hàng mới (Checkout)
 // @route   POST /api/v1/orders
 // @access  Private
 export const createOrder = catchAsync(async (req, res, next) => {
-  const { shippingAddress, paymentMethod } = req.body;
+  const { shippingAddress, paymentMethod, selectedItemIds } = req.body;
 
   if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address) {
     return next(new AppError("Vui lòng cung cấp đầy đủ địa chỉ giao hàng", 400));
+  }
+
+  if (!selectedItemIds || !Array.isArray(selectedItemIds) || selectedItemIds.length === 0) {
+    return next(new AppError("Vui lòng chọn ít nhất một sản phẩm để thanh toán", 400));
   }
 
   // 1. Lấy giỏ hàng của user hiện tại
@@ -21,64 +26,95 @@ export const createOrder = catchAsync(async (req, res, next) => {
     return next(new AppError("Giỏ hàng của bạn đang trống", 400));
   }
 
-  let totalAmount = 0;
-  const orderItems = [];
+  const selectedItemsToCheckout = cart.items.filter(item => 
+    item.productId && selectedItemIds.includes(item.productId._id.toString())
+  );
 
-  // 2. Kiểm tra tồn kho và tính tổng tiền
-  for (const item of cart.items) {
-    const product = item.productId;
-
-    if (!product) {
-      return next(new AppError("Một sản phẩm trong giỏ hàng không còn tồn tại", 404));
-    }
-
-    if (product.stock < item.quantity) {
-      return next(new AppError(`Sản phẩm ${product.name} không đủ số lượng trong kho (chỉ còn ${product.stock})`, 400));
-    }
-
-    // Tính tiền
-    totalAmount += product.price * item.quantity;
-
-    // Chuẩn bị item cho Order
-    orderItems.push({
-      productId: product._id,
-      name: product.name,
-      image: product.thumbnail || (product.images && product.images.length > 0 ? product.images[0] : ""),
-      price: product.price, // Chốt giá tại thời điểm mua
-      quantity: item.quantity,
-    });
+  if (selectedItemsToCheckout.length === 0) {
+    return next(new AppError("Không có sản phẩm hợp lệ nào được chọn để thanh toán", 400));
   }
 
-  // 3. Trừ kho sản phẩm
-  for (const item of orderItems) {
-    await Product.findByIdAndUpdate(item.productId, {
-      $inc: {
-        stock: -item.quantity,
-        soldCount: item.quantity,
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    let totalAmount = 0;
+    const orderItems = [];
+
+    // 2 & 3. Kiểm tra tồn kho, trừ kho an toàn (Atomic + Transaction) và tính tổng tiền
+    for (const item of selectedItemsToCheckout) {
+      const product = item.productId;
+      if (!product || !product.isActive) {
+        throw new AppError(`Sản phẩm ${product?.name || 'đã chọn'} hiện đã ngừng kinh doanh hoặc bị ẩn.`, 400);
+      }
+
+      // Trừ kho nguyên tử. Nếu trong tíc tắc có người mua mất, updatedProduct sẽ null
+      const updatedProduct = await Product.findOneAndUpdate(
+        { 
+          _id: product._id, 
+          stock: { $gte: item.quantity },
+          isActive: true
+        },
+        {
+          $inc: {
+            stock: -item.quantity,
+            soldCount: item.quantity,
+          },
+        },
+        { new: true, session }
+      );
+
+      if (!updatedProduct) {
+        throw new AppError(`Đặt hàng thất bại do sản phẩm ${product.name} vừa hết hàng hoặc không đủ số lượng.`, 400);
+      }
+
+      // Tính tiền
+      totalAmount += product.price * item.quantity;
+
+      // Chuẩn bị item cho Order
+      orderItems.push({
+        productId: product._id,
+        name: product.name,
+        image: product.thumbnail || (product.images && product.images.length > 0 ? product.images[0] : ""),
+        price: product.price, // Chốt giá tại thời điểm mua
+        quantity: item.quantity,
+      });
+    }
+
+    // 4. Tạo Order
+    // Lưu ý: create() khi truyền session phải nhận array data []
+    const [order] = await Order.create([{
+      userId: req.userId,
+      items: orderItems,
+      shippingAddress,
+      paymentMethod,
+      totalAmount,
+      status: "PENDING",
+    }], { session });
+
+    // 5. Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
+    cart.items = cart.items.filter(item => 
+      item.productId && !selectedItemIds.includes(item.productId._id.toString())
+    );
+    await cart.save({ session });
+
+    // Commit toàn bộ giao dịch
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      status: "success",
+      data: {
+        order,
       },
     });
+
+  } catch (error) {
+    // Nếu có bất kỳ lỗi nào, Rollback lại toàn bộ
+    await session.abortTransaction();
+    session.endSession();
+    return next(error);
   }
-
-  // 4. Tạo Order
-  const order = await Order.create({
-    userId: req.userId,
-    items: orderItems,
-    shippingAddress,
-    paymentMethod,
-    totalAmount,
-    status: "PENDING",
-  });
-
-  // 5. Làm trống giỏ hàng sau khi đặt hàng thành công
-  cart.items = [];
-  await cart.save();
-
-  res.status(201).json({
-    status: "success",
-    data: {
-      order,
-    },
-  });
 });
 
 // @desc    Lấy danh sách đơn hàng của user đang đăng nhập
@@ -118,25 +154,83 @@ export const getAdminOrders = catchAsync(async (req, res, next) => {
 // @access  Private/Admin
 export const updateOrderStatus = catchAsync(async (req, res, next) => {
   const { status } = req.body;
-  const validStatuses = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+  const validStatuses = ["PENDING_PAYMENT", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED", "CANCELLED"];
 
   if (!validStatuses.includes(status)) {
     return next(new AppError("Trạng thái đơn hàng không hợp lệ", 400));
   }
 
-  const order = await Order.findByIdAndUpdate(
-    req.params.id,
-    { status },
-    { new: true, runValidators: true }
-  );
+  const order = await Order.findById(req.params.id);
+  if (!order) {
+    return next(new AppError("Không tìm thấy đơn hàng", 404));
+  }
+
+  // Chặn đi lùi nếu đơn hàng đã đóng (COMPLETED hoặc CANCELLED)
+  if (order.status === "COMPLETED" || order.status === "CANCELLED") {
+    return next(new AppError(`Không thể thay đổi trạng thái vì đơn hàng đã được chốt là ${order.status}`, 400));
+  }
+
+  const currentIndex = validStatuses.indexOf(order.status);
+  const newIndex = validStatuses.indexOf(status);
+
+  // Chặn đi lùi trạng thái (trừ trường hợp hủy đơn - CANCELLED có thể nhảy từ bất kỳ đâu trước khi COMPLETED)
+  if (newIndex <= currentIndex && status !== "CANCELLED") {
+    return next(new AppError("Không thể lùi trạng thái hoặc cập nhật lại trạng thái hiện tại", 400));
+  }
+
+  order.status = status;
+  await order.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Đã cập nhật trạng thái đơn hàng",
+    data: {
+      order,
+    },
+  });
+});
+
+// @desc    Khách hàng tự hủy đơn hàng
+// @route   POST /api/v1/orders/:id/cancel
+// @access  Private
+export const cancelOrder = catchAsync(async (req, res, next) => {
+  const orderId = req.params.id;
+  const userId = req.userId;
+
+  const order = await Order.findOne({ _id: orderId, userId });
 
   if (!order) {
     return next(new AppError("Không tìm thấy đơn hàng", 404));
   }
 
+  // Các trạng thái được phép hủy
+  const cancellableStatuses = ["PENDING_PAYMENT", "PENDING", "CONFIRMED"];
+
+  if (!cancellableStatuses.includes(order.status)) {
+    return next(new AppError("Đơn hàng đang trong trạng thái không thể hủy", 400));
+  }
+
+  // Hoàn lại stock và giảm soldCount
+  for (const item of order.items) {
+    await Product.findByIdAndUpdate(item.productId, {
+      $inc: {
+        stock: item.quantity,
+        soldCount: -item.quantity,
+      },
+    });
+  }
+
+  order.status = "CANCELLED";
+  order.statusHistory.push({
+    status: "CANCELLED",
+    note: "Khách hàng tự hủy đơn hàng",
+  });
+  
+  await order.save();
+
   res.status(200).json({
     status: "success",
-    message: "Đã cập nhật trạng thái đơn hàng",
+    message: "Đã hủy đơn hàng thành công",
     data: {
       order,
     },

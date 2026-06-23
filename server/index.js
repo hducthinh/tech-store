@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import helmet from "helmet";
+import mongoSanitize from "express-mongo-sanitize";
+import rateLimit from "express-rate-limit";
 import apiRoutes from "./routes/index.js";
 import dns from "dns";
 
@@ -17,8 +20,37 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
+// 1. Bảo vệ HTTP Headers với Helmet
+app.use(helmet());
+
+// 2. Cấu hình CORS chặt chẽ
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
+}));
+
+// 3. Giới hạn số lượng request (Rate Limiting) chống Brute-force/DDoS
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  limit: 1000, // Mỗi IP tối đa 100 request
+  message: {
+    status: "fail",
+    message: "Hệ thống phát hiện quá nhiều yêu cầu từ IP của bạn. Vui lòng thử lại sau 15 phút."
+  }
+});
+app.use("/api", limiter);
+
+// 4. Phân tích body JSON
+app.use(express.json({ limit: "10kb" })); // Giới hạn payload size
+
+// 5. Phòng chống NoSQL Query Injection (Sanitize dữ liệu đầu vào)
+// Fix Express 5 error (Cannot set property query which has only a getter)
+app.use((req, res, next) => {
+  if (req.body) mongoSanitize.sanitize(req.body);
+  if (req.params) mongoSanitize.sanitize(req.params);
+  if (req.query) mongoSanitize.sanitize(req.query);
+  next();
+});
 
 // Đường dẫn thử nghiệm chạy gốc
 app.get("/", (req, res) => {
@@ -37,18 +69,43 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const payload = {
-    status: err.status || "error",
-    message: err.message || "Có lỗi xảy ra.",
-  };
+  let statusCode = err.statusCode || 500;
+  let status = err.status || "error";
+  let message = err.message || "Có lỗi xảy ra.";
 
-  if (err.errors) {
-    payload.errors = err.errors;
+  // 1. Lỗi Mongoose Validation (Để trống hoặc giá trị âm)
+  if (err.name === "ValidationError") {
+    statusCode = 400;
+    status = "fail";
+    const errors = Object.values(err.errors).map((el) => el.message);
+    message = `Dữ liệu không hợp lệ: ${errors.join(". ")}`;
   }
+
+  // 2. Lỗi trùng lặp dữ liệu (Duplicate Key - Ví dụ: SKU trùng)
+  if (err.code === 11000) {
+    statusCode = 400;
+    status = "fail";
+    const field = Object.keys(err.keyValue)[0];
+    const value = err.keyValue[field];
+    message = `Dữ liệu bị trùng lặp: ${field} = '${value}'. Vui lòng sử dụng giá trị khác.`;
+  }
+
+  // 3. Lỗi upload ảnh sai định dạng (Multer/Cloudinary)
+  if (err.message && err.message.includes("allowed_formats")) {
+    statusCode = 400;
+    status = "fail";
+    message = "File không đúng định dạng. Chỉ chấp nhận các định dạng ảnh: jpg, png, jpeg, webp.";
+  } else if (err.name === "MulterError") {
+    statusCode = 400;
+    status = "fail";
+    message = `Lỗi tải file lên: ${err.message}`;
+  }
+
+  const payload = { status, message };
 
   if (process.env.NODE_ENV === "development") {
     payload.stack = err.stack;
+    if (err.errors) payload.rawErrors = err.errors;
   }
 
   res.status(statusCode).json(payload);
@@ -63,8 +120,6 @@ const startServer = () => {
 };
 
 const mongoUri = process.env.MONGO_URI;
-// THÊM DÒNG NÀY ĐỂ CHECK:
-console.log(">>> Kiểm tra chuỗi kết nối nhận được: ", mongoUri);
 if (!mongoUri) {
   console.warn("[Server] MONGO_URI chưa được cấu hình, bỏ qua kết nối DB.");
   startServer();
@@ -80,3 +135,5 @@ if (!mongoUri) {
       process.exitCode = 1;
     });
 }
+// Trigger nodemon restart
+// 

@@ -4,11 +4,29 @@ import Brand from "../models/brand.model.js";
 import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
 import slugify from "../utils/slugify.js";
+import { v2 as cloudinary } from "cloudinary";
+
+// Helper bóc tách public_id từ URL Cloudinary
+// VD: https://res.cloudinary.com/demo/image/upload/v1234567/tech-store/products/abc.png -> tech-store/products/abc
+const getCloudinaryPublicId = (imageUrl) => {
+  if (!imageUrl || !imageUrl.includes("cloudinary.com")) return null;
+  const parts = imageUrl.split("/");
+  const uploadIndex = parts.indexOf("upload");
+  if (uploadIndex === -1) return null;
+  const hasVersion = parts[uploadIndex + 1].startsWith("v");
+  const publicIdParts = parts.slice(uploadIndex + (hasVersion ? 2 : 1));
+  const fullPath = publicIdParts.join("/");
+  return fullPath.split(".")[0];
+};
+
 // @desc    Lấy danh sách sản phẩm (hỗ trợ lọc, sắp xếp)
 // @route   GET /api/v1/products
 // @access  Public
 export const getProducts = catchAsync(async (req, res, next) => {
-  const { categoryId, brandId, minPrice, maxPrice, sortBy, search } = req.query;
+  const { categoryId, brandId, minPrice, maxPrice, sortBy, search, page = 1, limit = 12 } = req.query;
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = parseInt(limit, 10) || 12;
+  const skip = (pageNum - 1) * limitNum;
 
   // Xây dựng bộ lọc thủ công (Ponytail: Đơn giản, không dùng thư viện query builder cồng kềnh)
   const filter = { isActive: true };
@@ -48,14 +66,23 @@ export const getProducts = catchAsync(async (req, res, next) => {
     }
   }
 
+  const total = await Product.countDocuments(filter);
   const products = await Product.find(filter)
     .sort(sort)
+    .skip(skip)
+    .limit(limitNum)
     .select("-costPrice")
     .populate("categoryId", "name slug"); // Lấy thêm thông tin danh mục
 
   res.status(200).json({
     status: "success",
     results: products.length,
+    pagination: {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+    },
     data: {
       products,
     },
@@ -128,7 +155,20 @@ export const getAdminProducts = catchAsync(async (req, res, next) => {
 // @route   POST /api/v1/products
 // @access  Private/Admin
 export const createProduct = catchAsync(async (req, res, next) => {
-  const { name, categoryId, brandId, price, stock, description, thumbnail } = req.body;
+  const { name, categoryId, brandId, price, stock, description } = req.body;
+
+  // Xử lý ảnh upload
+  let thumbnail = req.body.thumbnail || "";
+  let images = [];
+
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail.length > 0) {
+      thumbnail = req.files.thumbnail[0].path;
+    }
+    if (req.files.images && req.files.images.length > 0) {
+      images = req.files.images.map((f) => f.path);
+    }
+  }
 
   // Validate basic
   if (!name || !categoryId || !brandId || price === undefined || stock === undefined) {
@@ -144,6 +184,15 @@ export const createProduct = catchAsync(async (req, res, next) => {
 
   const slug = slugify(name);
 
+  let parsedSpecs = {};
+  if (req.body.specs) {
+    try {
+      parsedSpecs = JSON.parse(req.body.specs);
+    } catch (e) {
+      console.error("Lỗi parse specs:", e);
+    }
+  }
+
   const newProduct = await Product.create({
     name,
     slug,
@@ -154,7 +203,9 @@ export const createProduct = catchAsync(async (req, res, next) => {
     price,
     stock,
     description,
+    specs: parsedSpecs,
     thumbnail: thumbnail || "",
+    images: images,
   });
 
   res.status(201).json({
@@ -171,8 +222,63 @@ export const createProduct = catchAsync(async (req, res, next) => {
 export const updateProduct = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
+  // 1. Tìm sản phẩm cũ để lấy URL ảnh cũ
+  const oldProduct = await Product.findById(id);
+  if (!oldProduct) {
+    return next(new AppError("Không tìm thấy sản phẩm", 404));
+  }
+
   // Nếu cập nhật category/brand, ta phải cập nhật cả name của chúng
   const updateData = { ...req.body };
+  const imagesToDelete = [];
+  
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail.length > 0) {
+      updateData.thumbnail = req.files.thumbnail[0].path;
+      // Nếu có ảnh mới và ảnh cũ khác nhau, đánh dấu ảnh cũ để xóa
+      if (oldProduct.thumbnail && oldProduct.thumbnail !== updateData.thumbnail) {
+        imagesToDelete.push(oldProduct.thumbnail);
+      }
+    }
+  }
+
+  if (req.body.clearThumbnail === "true") {
+    updateData.thumbnail = "";
+    if (oldProduct.thumbnail) {
+      imagesToDelete.push(oldProduct.thumbnail);
+    }
+  }
+
+  // Handle mixing existing images and new images
+  if (req.body.existingImages !== undefined || (req.files && req.files.images && req.files.images.length > 0)) {
+    let existing = [];
+    if (req.body.existingImages) {
+      existing = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages];
+    }
+    const newImgs = req.files && req.files.images ? req.files.images.map((f) => f.path) : [];
+    updateData.images = [...existing, ...newImgs].filter(Boolean);
+
+    // Xác định những ảnh phụ nào của product cũ đã bị xóa khỏi existing
+    if (oldProduct.images && oldProduct.images.length > 0) {
+      oldProduct.images.forEach(oldImg => {
+        if (!existing.includes(oldImg)) {
+          imagesToDelete.push(oldImg);
+        }
+      });
+    }
+  }
+
+  // 2. Thực hiện xóa rác trên Cloudinary (Bắt lỗi nhưng không block quá trình cập nhật db)
+  if (imagesToDelete.length > 0) {
+    imagesToDelete.forEach(imgUrl => {
+      const publicId = getCloudinaryPublicId(imgUrl);
+      if (publicId) {
+        cloudinary.uploader.destroy(publicId)
+          .catch(err => console.error("Lỗi xóa ảnh Cloudinary:", err));
+      }
+    });
+  }
+
   if (updateData.name) {
     updateData.slug = slugify(updateData.name);
   }
@@ -185,6 +291,15 @@ export const updateProduct = catchAsync(async (req, res, next) => {
   if (updateData.brandId) {
     const brand = await Brand.findById(updateData.brandId);
     if (brand) updateData.brandName = brand.name;
+  }
+
+  if (updateData.specs) {
+    try {
+      updateData.specs = JSON.parse(updateData.specs);
+    } catch (e) {
+      console.error("Lỗi parse specs update:", e);
+      delete updateData.specs;
+    }
   }
 
   const product = await Product.findByIdAndUpdate(id, updateData, {
@@ -224,6 +339,38 @@ export const deleteProduct = catchAsync(async (req, res, next) => {
     message: product.isActive ? "Đã khôi phục sản phẩm" : "Đã vô hiệu hóa sản phẩm",
     data: {
       product,
+    },
+  });
+});
+
+// @desc    Lấy sản phẩm tương tự
+// @route   GET /api/v1/products/:slug/similar
+// @access  Public
+export const getSimilarProducts = catchAsync(async (req, res, next) => {
+  const { slug } = req.params;
+
+  const currentProduct = await Product.findOne({ slug, isActive: true });
+  if (!currentProduct) {
+    return next(new AppError("Không tìm thấy sản phẩm", 404));
+  }
+
+  // Lấy 4 sản phẩm cùng danh mục, khác ID sản phẩm hiện tại
+  const products = await Product.find({
+    categoryId: currentProduct.categoryId,
+    _id: { $ne: currentProduct._id },
+    isActive: true
+  })
+    .sort({ createdAt: -1 })
+    .limit(4)
+    .select("-costPrice")
+    .populate("categoryId", "name slug")
+    .populate("brandId", "name slug");
+
+  res.status(200).json({
+    status: "success",
+    results: products.length,
+    data: {
+      products,
     },
   });
 });

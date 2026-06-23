@@ -10,6 +10,9 @@ interface CartDrawerProps {
   removeFromCart: (productId: string) => void;
   getSubtotal: () => number;
   onProceedToCheckout: () => void;
+  selectedItemIds: string[];
+  toggleItemSelection: (productId: string) => void;
+  toggleAllSelection: (isSelected: boolean) => void;
 }
 
 export function CartDrawer({
@@ -19,7 +22,10 @@ export function CartDrawer({
   updateCartQuantity,
   removeFromCart,
   getSubtotal,
-  onProceedToCheckout
+  onProceedToCheckout,
+  selectedItemIds,
+  toggleItemSelection,
+  toggleAllSelection
 }: CartDrawerProps) {
   if (!isCartOpen) return null;
 
@@ -47,6 +53,21 @@ export function CartDrawer({
           </button>
         </div>
 
+        {cart.length > 0 && (
+          <div className="flex items-center gap-2 mt-4 px-1">
+            <input 
+              type="checkbox"
+              id="selectAllDrawer"
+              checked={cart.length > 0 && selectedItemIds.length === cart.length}
+              onChange={(e) => toggleAllSelection(e.target.checked)}
+              className="w-4 h-4 rounded border-slate-300 text-[#0058be] focus:ring-[#0058be]"
+            />
+            <label htmlFor="selectAllDrawer" className="text-sm text-slate-600 font-medium cursor-pointer select-none">
+              Chọn tất cả
+            </label>
+          </div>
+        )}
+
         {/* List items inside cart drawer */}
         <div className="flex-1 overflow-y-auto py-4 space-y-4">
           {cart.length === 0 ? (
@@ -57,8 +78,15 @@ export function CartDrawer({
             </div>
           ) : (
             cart.map((item) => (
-              <div key={item.product.id} className="flex gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-150">
+              <div key={item.product.id} className="flex gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-150 items-center">
                 
+                <input 
+                  type="checkbox"
+                  checked={selectedItemIds.includes(item.product.id)}
+                  onChange={() => toggleItemSelection(item.product.id)}
+                  className="w-4 h-4 rounded border-slate-300 text-[#0058be] focus:ring-[#0058be] cursor-pointer"
+                />
+
                 <div className="flex-1 text-left">
                   <h5 className="font-bold text-xs text-slate-800 line-clamp-2">{item.product.name}</h5>
                   <span className="text-xs text-[#ba1a1a] font-semibold block mt-1">{formatVND(item.product.price)}</span>
@@ -97,19 +125,16 @@ export function CartDrawer({
         {cart.length > 0 && (
           <div className="border-t border-slate-200 pt-4 space-y-4">
             <div className="flex justify-between items-baseline">
-              <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Tổng cộng ban đầu</span>
+              <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Tổng tiền tạm tính</span>
               <span className="text-lg font-display font-extrabold text-[#ba1a1a]">{formatVND(getSubtotal())}</span>
-            </div>
-            
-            <div className="p-3 bg-amber-50 text-amber-900 border border-amber-100/50 rounded-lg text-xs leading-normal">
-              💡 Bạn có thể áp dụng mã code giảm giá <strong>15%</strong> ở bước đặt hàng tiếp theo để được tối ưu ngân sách tốt nhất!
             </div>
 
             <button 
               onClick={onProceedToCheckout}
-              className="w-full py-3 bg-[#0058be] hover:bg-[#00236f] text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer text-sm"
+              disabled={selectedItemIds.length === 0}
+              className="w-full py-3 bg-[#0058be] hover:bg-[#00236f] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-lg shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.98] cursor-pointer text-sm"
             >
-              Tiếp tục đến Thanh toán
+              Tiếp tục đến Thanh toán {selectedItemIds.length > 0 ? `(${selectedItemIds.length})` : ""}
               <ShoppingCart className="w-4 h-4" />
             </button>
           </div>

@@ -6,20 +6,29 @@ export function useCart(userEmail: string) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
   // Lấy giỏ hàng từ server
   useEffect(() => {
-    if (userEmail) {
-      api.get("/cart")
-        .then(res => {
-          const items = res.data.data.cart.items.map((item: any) => ({
-            product: { ...item.productId, id: item.productId._id },
-            quantity: item.quantity
-          }));
-          setCart(items);
-        })
-        .catch(err => console.error("Lỗi tải giỏ hàng:", err));
-    }
+    const fetchCart = () => {
+      if (userEmail) {
+        api.get("/cart")
+          .then(res => {
+            const items = res.data.data.cart.items.map((item: any) => ({
+              product: { ...item.productId, id: item.productId._id },
+              quantity: item.quantity
+            }));
+            setCart(items);
+          })
+          .catch(err => console.error("Lỗi tải giỏ hàng:", err));
+      }
+    };
+    
+    fetchCart();
+    
+    // Lắng nghe sự kiện cartUpdated để đồng bộ giỏ hàng khi thêm từ các trang khác
+    window.addEventListener("cartUpdated", fetchCart);
+    return () => window.removeEventListener("cartUpdated", fetchCart);
   }, [userEmail]);
 
   const addToCart = useCallback(async (product: Product) => {
@@ -43,6 +52,7 @@ export function useCart(userEmail: string) {
 
     try {
       await api.post("/cart", { productId: product.id, quantity: 1 });
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi khi thêm vào giỏ hàng trên DB:", error);
       // rollback UI if needed
@@ -59,6 +69,7 @@ export function useCart(userEmail: string) {
 
     try {
       await api.patch("/cart/update-quantity", { productId, quantity });
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi cập nhật giỏ hàng DB:", error);
       setCart(previousCart); // rollback
@@ -68,9 +79,11 @@ export function useCart(userEmail: string) {
   const removeFromCart = useCallback(async (productId: string) => {
     const previousCart = [...cart];
     setCart(cart.filter(item => item.product.id !== productId));
+    setSelectedItemIds(prev => prev.filter(id => id !== productId));
 
     try {
       await api.delete(`/cart/${productId}`);
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi xóa sản phẩm DB:", error);
       setCart(previousCart); // rollback
@@ -85,6 +98,28 @@ export function useCart(userEmail: string) {
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   }, [cart]);
 
+  const getSelectedTotal = useCallback(() => {
+    return cart
+      .filter(item => selectedItemIds.includes(item.product.id))
+      .reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  }, [cart, selectedItemIds]);
+
+  const toggleItemSelection = useCallback((productId: string) => {
+    setSelectedItemIds(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  }, []);
+
+  const toggleAllSelection = useCallback((isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedItemIds(cart.map(item => item.product.id));
+    } else {
+      setSelectedItemIds([]);
+    }
+  }, [cart]);
+
   return {
     cart,
     setCart,
@@ -95,6 +130,11 @@ export function useCart(userEmail: string) {
     removeFromCart,
     getTotal,
     getCartCount,
-    toastMessage
+    toastMessage,
+    selectedItemIds,
+    setSelectedItemIds,
+    toggleItemSelection,
+    toggleAllSelection,
+    getSelectedTotal
   };
 }

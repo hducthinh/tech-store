@@ -24,7 +24,7 @@ const ProductList = () => {
         const query = new URLSearchParams(searchParams).toString();
         const res = await api.get(`/products?${query}`);
         setProducts(res.data.data.products);
-      } catch (err) {
+      } catch (_err) {
         setError("Không thể tải danh sách sản phẩm.");
       } finally {
         setIsLoading(false);
