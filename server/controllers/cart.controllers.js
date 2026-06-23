@@ -37,8 +37,12 @@ export const addToCart = catchAsync(async (req, res, next) => {
     return next(new AppError("Không tìm thấy sản phẩm", 404));
   }
 
+  if (!product.isActive) {
+    return next(new AppError("Sản phẩm này hiện đã ngừng kinh doanh hoặc bị ẩn", 400));
+  }
+
   if (product.stock < quantity) {
-    return next(new AppError("Sản phẩm không đủ số lượng trong kho", 400));
+    return next(new AppError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
   }
 
   let cart = await Cart.findOne({ userId: req.userId });
@@ -53,7 +57,7 @@ export const addToCart = catchAsync(async (req, res, next) => {
     // Nếu có rồi, cộng thêm số lượng
     const newQuantity = cart.items[itemIndex].quantity + quantity;
     if (newQuantity > product.stock) {
-      return next(new AppError("Số lượng vượt quá số lượng tồn kho", 400));
+      return next(new AppError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
     }
     cart.items[itemIndex].quantity = newQuantity;
   } else {
@@ -93,8 +97,12 @@ export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
     return next(new AppError("Không tìm thấy sản phẩm", 404));
   }
 
+  if (!product.isActive) {
+    return next(new AppError("Sản phẩm này hiện đã ngừng kinh doanh hoặc bị ẩn", 400));
+  }
+
   if (product.stock < quantity) {
-    return next(new AppError(`Chỉ còn ${product.stock} sản phẩm trong kho`, 400));
+    return next(new AppError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
   }
 
   const cart = await Cart.findOne({ userId: req.userId });

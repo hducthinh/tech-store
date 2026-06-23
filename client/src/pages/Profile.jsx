@@ -147,8 +147,7 @@ export default function Profile() {
       const api = (await import("../services/api")).default;
       const res = await api.post(`/orders/${orderId}/cancel`);
       if (res.data.status === "success") {
-        alert("Đã hủy đơn hàng thành công!");
-        // Update local state to reflect cancellation
+        // Cập nhật state nội bộ để phản ánh việc hủy
         setOrders(prev => prev.map(o => {
           if (o.rawId === orderId) {
             return {
@@ -161,13 +160,10 @@ export default function Profile() {
           }
           return o;
         }));
-        setSelectedOrder(prev => ({
-          ...prev,
-          rawStatus: "CANCELLED",
-          status: "Đã hủy",
-          statusColor: "bg-red-100 text-red-700",
-          dot: "bg-red-500"
-        }));
+        
+        // Đóng cả modal chi tiết và modal xác nhận
+        setSelectedOrder(null);
+        setShowCancelModal(false);
       }
     } catch (error) {
       console.error(error);

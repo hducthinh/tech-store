@@ -22,8 +22,11 @@ const storage = new CloudinaryStorage({
       return "tech-store/reviews";
     },
     allowed_formats: ["jpg", "png", "jpeg", "webp"], // Các định dạng cho phép
-    // transformation: [{ width: 800, height: 800, crop: "limit" }] // Có thể tự động resize nếu muốn
-  },
+    transformation: [
+      { fetch_format: "auto", quality: "auto" }, // Tự động nén và chuyển sang webp cho nhẹ
+      { width: 1000, height: 1000, crop: "limit" } // Giới hạn kích thước tối đa tránh user up ảnh 4K
+    ]
+  }
 });
 
 const upload = multer({ storage });

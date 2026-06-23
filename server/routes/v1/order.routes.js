@@ -1,5 +1,5 @@
 import express from "express";
-import { createOrder, getMyOrders, getAdminOrders, updateOrderStatus } from "../../controllers/order.controllers.js";
+import { createOrder, getMyOrders, getAdminOrders, updateOrderStatus, cancelOrder } from "../../controllers/order.controllers.js";
 import verifyToken from "../../middlewares/verifyToken.js";
 import verifyAdmin from "../../middlewares/verifyAdmin.js";
 
@@ -15,5 +15,7 @@ router.patch("/admin/:id/status", verifyAdmin, updateOrderStatus);
 router.route("/")
   .post(createOrder)
   .get(getMyOrders);
+
+router.post("/:id/cancel", cancelOrder);
 
 export default router;

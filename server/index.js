@@ -69,18 +69,43 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const payload = {
-    status: err.status || "error",
-    message: err.message || "Có lỗi xảy ra.",
-  };
+  let statusCode = err.statusCode || 500;
+  let status = err.status || "error";
+  let message = err.message || "Có lỗi xảy ra.";
 
-  if (err.errors) {
-    payload.errors = err.errors;
+  // 1. Lỗi Mongoose Validation (Để trống hoặc giá trị âm)
+  if (err.name === "ValidationError") {
+    statusCode = 400;
+    status = "fail";
+    const errors = Object.values(err.errors).map((el) => el.message);
+    message = `Dữ liệu không hợp lệ: ${errors.join(". ")}`;
   }
+
+  // 2. Lỗi trùng lặp dữ liệu (Duplicate Key - Ví dụ: SKU trùng)
+  if (err.code === 11000) {
+    statusCode = 400;
+    status = "fail";
+    const field = Object.keys(err.keyValue)[0];
+    const value = err.keyValue[field];
+    message = `Dữ liệu bị trùng lặp: ${field} = '${value}'. Vui lòng sử dụng giá trị khác.`;
+  }
+
+  // 3. Lỗi upload ảnh sai định dạng (Multer/Cloudinary)
+  if (err.message && err.message.includes("allowed_formats")) {
+    statusCode = 400;
+    status = "fail";
+    message = "File không đúng định dạng. Chỉ chấp nhận các định dạng ảnh: jpg, png, jpeg, webp.";
+  } else if (err.name === "MulterError") {
+    statusCode = 400;
+    status = "fail";
+    message = `Lỗi tải file lên: ${err.message}`;
+  }
+
+  const payload = { status, message };
 
   if (process.env.NODE_ENV === "development") {
     payload.stack = err.stack;
+    if (err.errors) payload.rawErrors = err.errors;
   }
 
   res.status(statusCode).json(payload);
@@ -95,8 +120,6 @@ const startServer = () => {
 };
 
 const mongoUri = process.env.MONGO_URI;
-// THÊM DÒNG NÀY ĐỂ CHECK:
-console.log(">>> Kiểm tra chuỗi kết nối nhận được: ", mongoUri);
 if (!mongoUri) {
   console.warn("[Server] MONGO_URI chưa được cấu hình, bỏ qua kết nối DB.");
   startServer();

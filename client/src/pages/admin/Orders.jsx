@@ -3,18 +3,24 @@ import { ShoppingCart, Loader2, Search, X, Check, Eye } from "lucide-react";
 import { useAdminOrders } from "../../hooks/useAdminOrders";
 
 const STATUS_COLORS = {
+  PENDING_PAYMENT: "bg-orange-100 text-orange-700",
   PENDING: "bg-amber-100 text-amber-700",
+  CONFIRMED: "bg-cyan-100 text-cyan-700",
   PROCESSING: "bg-blue-100 text-blue-700",
   SHIPPED: "bg-purple-100 text-purple-700",
   DELIVERED: "bg-emerald-100 text-emerald-700",
+  COMPLETED: "bg-green-100 text-green-700",
   CANCELLED: "bg-red-100 text-red-700"
 };
 
 const STATUS_LABELS = {
-  PENDING: "Chờ xử lý",
-  PROCESSING: "Đang đóng gói",
+  PENDING_PAYMENT: "Chờ thanh toán",
+  PENDING: "Chờ xác nhận",
+  CONFIRMED: "Đã xác nhận",
+  PROCESSING: "Đang chuẩn bị hàng",
   SHIPPED: "Đang giao hàng",
-  DELIVERED: "Đã giao",
+  DELIVERED: "Đã giao hàng",
+  COMPLETED: "Đã hoàn thành",
   CANCELLED: "Đã hủy"
 };
 

@@ -243,9 +243,9 @@ const ProductDetail = () => {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                       </button>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-gray-500">Stock</span>
-                      <span className="text-sm font-bold text-[#802f2f]">{product.stock} units</span>
+                    <div className="flex flex-col ml-4">
+                      <span className="text-xs text-slate-500 font-medium">Còn hàng</span>
+                      <span className="text-sm font-bold text-[#802f2f]">{product.stock} sản phẩm</span>
                     </div>
                   </div>
 
@@ -487,12 +487,12 @@ const ProductDetail = () => {
               <div className="bg-white rounded-2xl shadow-sm p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Thông số kỹ thuật</h2>
                 <div className="border border-gray-100 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-sm">
+                  <table className="w-full text-left text-sm table-fixed">
                     <tbody className="divide-y divide-gray-100">
                       {Object.entries(product.specs).map(([key, value], idx) => (
                         <tr key={key} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
-                          <td className="py-3 px-4 font-semibold text-gray-800 w-1/3">{key}</td>
-                          <td className="py-3 px-4 text-gray-600">{value}</td>
+                          <td className="py-3 px-3 md:px-4 font-semibold text-gray-800 w-1/3 md:w-2/5 break-words align-top">{key}</td>
+                          <td className="py-3 px-3 md:px-4 text-gray-600 break-words">{value}</td>
                         </tr>
                       ))}
                     </tbody>
