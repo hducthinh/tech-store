@@ -24,7 +24,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.2",
     "multer": "^2.2.0",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "puppeteer": "^25.2.0",
+    "slugify": "^1.6.9"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
