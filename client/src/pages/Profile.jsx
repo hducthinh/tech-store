@@ -69,19 +69,19 @@ export default function Profile() {
                 let dot = "bg-slate-500";
                 let statusText = o.status;
                 
-                if (o.status === "delivered") {
+                if (o.status === "DELIVERED") {
                   statusColor = "bg-green-100 text-green-700";
                   dot = "bg-green-500";
                   statusText = "Đã giao hàng";
-                } else if (o.status === "processing" || o.status === "pending") {
+                } else if (o.status === "PROCESSING" || o.status === "PENDING") {
                   statusColor = "bg-amber-100 text-amber-700";
                   dot = "bg-amber-500";
                   statusText = "Đang xử lý";
-                } else if (o.status === "cancelled") {
+                } else if (o.status === "CANCELLED") {
                   statusColor = "bg-red-100 text-red-700";
                   dot = "bg-red-500";
                   statusText = "Đã hủy";
-                } else if (o.status === "shipped") {
+                } else if (o.status === "SHIPPED") {
                   statusColor = "bg-blue-100 text-blue-700";
                   dot = "bg-blue-500";
                   statusText = "Đang giao hàng";
