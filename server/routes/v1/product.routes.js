@@ -6,6 +6,7 @@ import {
   getProducts,
   getFeaturedProducts,
   getProductBySlug,
+  getSimilarProducts,
   getAdminProducts,
   createProduct,
   updateProduct,
@@ -23,6 +24,7 @@ router.delete("/:id", verifyToken, verifyAdmin, deleteProduct);
 // Public Routes
 // Note: Các route tĩnh (static) phải đặt trước các route động (dynamic)
 router.get("/featured", getFeaturedProducts);
+router.get("/:slug/similar", getSimilarProducts);
 router.get("/:slug", getProductBySlug);
 router.get("/", getProducts);
 

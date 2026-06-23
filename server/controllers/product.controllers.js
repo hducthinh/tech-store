@@ -342,3 +342,35 @@ export const deleteProduct = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// @desc    Lấy sản phẩm tương tự
+// @route   GET /api/v1/products/:slug/similar
+// @access  Public
+export const getSimilarProducts = catchAsync(async (req, res, next) => {
+  const { slug } = req.params;
+
+  const currentProduct = await Product.findOne({ slug, isActive: true });
+  if (!currentProduct) {
+    return next(new AppError("Không tìm thấy sản phẩm", 404));
+  }
+
+  // Lấy 4 sản phẩm cùng danh mục, khác ID sản phẩm hiện tại
+  const products = await Product.find({
+    categoryId: currentProduct.categoryId,
+    _id: { $ne: currentProduct._id },
+    isActive: true
+  })
+    .sort({ createdAt: -1 })
+    .limit(4)
+    .select("-costPrice")
+    .populate("categoryId", "name slug")
+    .populate("brandId", "name slug");
+
+  res.status(200).json({
+    status: "success",
+    results: products.length,
+    data: {
+      products,
+    },
+  });
+});
