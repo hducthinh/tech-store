@@ -4,6 +4,21 @@ import Brand from "../models/brand.model.js";
 import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
 import slugify from "../utils/slugify.js";
+import { v2 as cloudinary } from "cloudinary";
+
+// Helper bóc tách public_id từ URL Cloudinary
+// VD: https://res.cloudinary.com/demo/image/upload/v1234567/tech-store/products/abc.png -> tech-store/products/abc
+const getCloudinaryPublicId = (imageUrl) => {
+  if (!imageUrl || !imageUrl.includes("cloudinary.com")) return null;
+  const parts = imageUrl.split("/");
+  const uploadIndex = parts.indexOf("upload");
+  if (uploadIndex === -1) return null;
+  const hasVersion = parts[uploadIndex + 1].startsWith("v");
+  const publicIdParts = parts.slice(uploadIndex + (hasVersion ? 2 : 1));
+  const fullPath = publicIdParts.join("/");
+  return fullPath.split(".")[0];
+};
+
 // @desc    Lấy danh sách sản phẩm (hỗ trợ lọc, sắp xếp)
 // @route   GET /api/v1/products
 // @access  Public
@@ -207,16 +222,61 @@ export const createProduct = catchAsync(async (req, res, next) => {
 export const updateProduct = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
+  // 1. Tìm sản phẩm cũ để lấy URL ảnh cũ
+  const oldProduct = await Product.findById(id);
+  if (!oldProduct) {
+    return next(new AppError("Không tìm thấy sản phẩm", 404));
+  }
+
   // Nếu cập nhật category/brand, ta phải cập nhật cả name của chúng
   const updateData = { ...req.body };
+  const imagesToDelete = [];
   
   if (req.files) {
     if (req.files.thumbnail && req.files.thumbnail.length > 0) {
       updateData.thumbnail = req.files.thumbnail[0].path;
+      // Nếu có ảnh mới và ảnh cũ khác nhau, đánh dấu ảnh cũ để xóa
+      if (oldProduct.thumbnail && oldProduct.thumbnail !== updateData.thumbnail) {
+        imagesToDelete.push(oldProduct.thumbnail);
+      }
     }
-    if (req.files.images && req.files.images.length > 0) {
-      updateData.images = req.files.images.map((f) => f.path);
+  }
+
+  if (req.body.clearThumbnail === "true") {
+    updateData.thumbnail = "";
+    if (oldProduct.thumbnail) {
+      imagesToDelete.push(oldProduct.thumbnail);
     }
+  }
+
+  // Handle mixing existing images and new images
+  if (req.body.existingImages !== undefined || (req.files && req.files.images && req.files.images.length > 0)) {
+    let existing = [];
+    if (req.body.existingImages) {
+      existing = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages];
+    }
+    const newImgs = req.files && req.files.images ? req.files.images.map((f) => f.path) : [];
+    updateData.images = [...existing, ...newImgs].filter(Boolean);
+
+    // Xác định những ảnh phụ nào của product cũ đã bị xóa khỏi existing
+    if (oldProduct.images && oldProduct.images.length > 0) {
+      oldProduct.images.forEach(oldImg => {
+        if (!existing.includes(oldImg)) {
+          imagesToDelete.push(oldImg);
+        }
+      });
+    }
+  }
+
+  // 2. Thực hiện xóa rác trên Cloudinary (Bắt lỗi nhưng không block quá trình cập nhật db)
+  if (imagesToDelete.length > 0) {
+    imagesToDelete.forEach(imgUrl => {
+      const publicId = getCloudinaryPublicId(imgUrl);
+      if (publicId) {
+        cloudinary.uploader.destroy(publicId)
+          .catch(err => console.error("Lỗi xóa ảnh Cloudinary:", err));
+      }
+    });
   }
 
   if (updateData.name) {

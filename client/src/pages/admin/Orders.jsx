@@ -21,6 +21,7 @@ const STATUS_LABELS = {
 export default function AdminOrders() {
   const { orders, loading, updateOrderStatus } = useAdminOrders();
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, orderId: null, newStatus: null });
 
   const formatVND = (amount) => {
     return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
@@ -32,12 +33,16 @@ export default function AdminOrders() {
     });
   };
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    if (window.confirm(`Xác nhận đổi trạng thái thành "${STATUS_LABELS[newStatus]}"?`)) {
-      const res = await updateOrderStatus(orderId, newStatus);
-      if (!res.success) {
-        alert(res.message);
-      }
+  const handleStatusSelect = (orderId, newStatus) => {
+    setConfirmModal({ isOpen: true, orderId, newStatus });
+  };
+
+  const confirmStatusChange = async () => {
+    const { orderId, newStatus } = confirmModal;
+    setConfirmModal({ isOpen: false, orderId: null, newStatus: null });
+    const res = await updateOrderStatus(orderId, newStatus);
+    if (!res.success) {
+      alert(res.message);
     }
   };
 
@@ -89,7 +94,7 @@ export default function AdminOrders() {
                   <td className="px-4 py-3 text-center">
                     <select
                       value={order.status}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                      onChange={(e) => handleStatusSelect(order._id, e.target.value)}
                       className={`text-xs font-bold px-2 py-1 rounded-full outline-none cursor-pointer appearance-none text-center ${STATUS_COLORS[order.status]}`}
                     >
                       {Object.entries(STATUS_LABELS).map(([key, label]) => (
@@ -184,6 +189,32 @@ export default function AdminOrders() {
             <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-2xl">
               <button onClick={() => setSelectedOrder(null)} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-sm cursor-pointer">
                 Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Status Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Xác nhận thay đổi</h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Bạn có chắc chắn muốn đổi trạng thái đơn hàng thành <span className="font-bold text-blue-600">{STATUS_LABELS[confirmModal.newStatus]}</span>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setConfirmModal({ isOpen: false, orderId: null, newStatus: null })} 
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={confirmStatusChange} 
+                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition cursor-pointer"
+              >
+                Xác nhận
               </button>
             </div>
           </div>

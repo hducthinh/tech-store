@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Plus, Edit, Trash2, Power, PowerOff, Loader2, X, Check } from "lucide-react";
+import { Box, Plus, Edit, Trash2, Power, PowerOff, Loader2, X, Check, Link } from "lucide-react";
 import { useAdminProducts } from "../../hooks/useAdminProducts";
 import api from "../../services/api";
 
@@ -9,6 +9,7 @@ export default function AdminProducts() {
   const [brands, setBrands] = useState([]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmToggleModal, setConfirmToggleModal] = useState({ isOpen: false, product: null });
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -25,6 +26,8 @@ export default function AdminProducts() {
   // File states
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [imageFiles, setImageFiles] = useState([]);
+  const [currentThumbnail, setCurrentThumbnail] = useState("");
+  const [currentImages, setCurrentImages] = useState([]);
 
   // States for inline adding
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -65,6 +68,8 @@ export default function AdminProducts() {
         description: product.description || "",
         specs: product.specs ? Object.entries(product.specs).map(([k, v]) => ({ key: k, value: v })) : [],
       });
+      setCurrentThumbnail(product.thumbnail || "");
+      setCurrentImages(product.images || []);
     } else {
       setEditingId(null);
       setFormData({
@@ -76,6 +81,8 @@ export default function AdminProducts() {
         description: "",
         specs: [],
       });
+      setCurrentThumbnail("");
+      setCurrentImages([]);
     }
     setThumbnailFile(null);
     setImageFiles([]);
@@ -88,6 +95,23 @@ export default function AdminProducts() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRemoveImage = (index) => {
+    setCurrentImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEditExistingImage = (index) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      if (e.target.files[0]) {
+        setCurrentImages(prev => prev.filter((_, i) => i !== index));
+        setImageFiles(prev => [...prev, e.target.files[0]]);
+      }
+    };
+    input.click();
   };
 
   const handleSaveNewCategory = async () => {
@@ -154,10 +178,21 @@ export default function AdminProducts() {
 
     if (thumbnailFile) {
       formDataObj.append("thumbnail", thumbnailFile);
+    } else if (editingId && !currentThumbnail) {
+      formDataObj.append("clearThumbnail", "true");
     }
+
     imageFiles.forEach(file => {
       formDataObj.append("images", file);
     });
+
+    if (currentImages && currentImages.length > 0) {
+      currentImages.forEach(img => {
+        formDataObj.append("existingImages", img);
+      });
+    } else if (editingId) {
+      formDataObj.append("existingImages", "");
+    }
 
     let res;
     if (editingId) {
@@ -174,10 +209,14 @@ export default function AdminProducts() {
     }
   };
 
-  const handleToggleActive = async (product) => {
-    if (window.confirm(`Bạn có chắc muốn ${product.isActive ? "vô hiệu hóa" : "khôi phục"} sản phẩm này?`)) {
-      await deleteProduct(product._id);
-    }
+  const handleToggleActive = (product) => {
+    setConfirmToggleModal({ isOpen: true, product });
+  };
+
+  const confirmToggleStatus = async () => {
+    const { product } = confirmToggleModal;
+    setConfirmToggleModal({ isOpen: false, product: null });
+    await deleteProduct(product._id);
   };
 
   const formatVND = (num) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(num);
@@ -264,7 +303,7 @@ export default function AdminProducts() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-slate-100">
               <h3 className="text-lg font-bold text-slate-800">{editingId ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}</h3>
             </div>
@@ -384,11 +423,72 @@ export default function AdminProducts() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Ảnh đại diện (1 ảnh)</label>
-                  <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                  <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 mb-2" />
+                  {currentThumbnail && !thumbnailFile && (
+                    <div className="mt-2 p-2 bg-slate-50 border border-slate-100 rounded-lg">
+                      <a href={currentThumbnail.startsWith('http') ? currentThumbnail : `http://localhost:5000${currentThumbnail}`} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1 mb-2 w-max" title={currentThumbnail}>
+                        <Link className="w-3 h-3" /> Đường dẫn ảnh
+                      </a>
+                      <div className="relative group w-32 h-32">
+                        <img src={currentThumbnail.startsWith('http') ? currentThumbnail : `http://localhost:5000${currentThumbnail}`} alt="Thumbnail" className="h-full w-full object-contain rounded border border-slate-200 bg-white" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2">
+                          <button type="button" onClick={() => document.querySelector('input[type="file"]').click()} className="p-1.5 bg-white text-blue-600 rounded-full hover:bg-blue-50 shadow-sm" title="Thay đổi ảnh"><Edit className="w-4 h-4" /></button>
+                          <button type="button" onClick={() => setCurrentThumbnail("")} className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 shadow-sm" title="Xóa ảnh"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {thumbnailFile && (
+                    <div className="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-lg">
+                      <p className="text-xs text-amber-600 mb-2 font-medium">Ảnh mới sẽ được cập nhật.</p>
+                      <div className="relative group w-32 h-32 mt-2">
+                        <img src={URL.createObjectURL(thumbnailFile)} alt="New Thumbnail" className="h-full w-full object-contain rounded border border-amber-200 bg-white" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2">
+                          <button type="button" onClick={() => setThumbnailFile(null)} className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 shadow-sm" title="Bỏ chọn ảnh"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Ảnh phụ (Tối đa 5 ảnh)</label>
-                  <input type="file" multiple accept="image/*" onChange={(e) => setImageFiles(Array.from(e.target.files).slice(0, 5))} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                  <input type="file" multiple accept="image/*" onChange={(e) => setImageFiles(prev => [...prev, ...Array.from(e.target.files).slice(0, 5)])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 mb-2" />
+                  {currentImages.length > 0 && (
+                    <div className="mt-2 p-2 bg-slate-50 border border-slate-100 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-2">Đang có {currentImages.length} ảnh (Bạn có thể xóa hoặc thay đổi):</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {currentImages.map((img, i) => (
+                           <div key={i} className="relative group w-20 h-20 bg-white rounded border border-slate-200 flex items-center justify-center">
+                              <img src={img.startsWith('http') ? img : `http://localhost:5000${img}`} alt={`Img ${i}`} className="max-h-full max-w-full object-contain" />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded flex flex-col items-center justify-center gap-1">
+                                <div className="flex gap-1">
+                                  <button type="button" onClick={() => handleEditExistingImage(i)} className="p-1 bg-white text-blue-600 rounded-full hover:bg-blue-50" title="Thay đổi"><Edit className="w-3 h-3" /></button>
+                                  <button type="button" onClick={() => handleRemoveImage(i)} className="p-1 bg-white text-red-600 rounded-full hover:bg-red-50" title="Xóa"><Trash2 className="w-3 h-3" /></button>
+                                </div>
+                                <a href={img.startsWith('http') ? img : `http://localhost:5000${img}`} target="_blank" rel="noreferrer" className="p-1 bg-white text-slate-600 rounded-full hover:text-blue-600" title={img}>
+                                  <Link className="w-3 h-3" />
+                                </a>
+                              </div>
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {imageFiles.length > 0 && (
+                    <div className="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-lg">
+                      <p className="text-xs text-amber-600 mb-2 font-medium">Các ảnh mới sẽ được cập nhật ({imageFiles.length}):</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {imageFiles.map((file, i) => (
+                          <div key={i} className="relative group w-20 h-20 bg-white rounded border border-amber-200 flex items-center justify-center">
+                            <img src={URL.createObjectURL(file)} alt={`New Img ${i}`} className="max-h-full max-w-full object-contain" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center">
+                              <button type="button" onClick={() => setImageFiles(prev => prev.filter((_, idx) => idx !== i))} className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 shadow-sm" title="Xóa ảnh mới"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -400,6 +500,34 @@ export default function AdminProducts() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Toggle Modal */}
+      {confirmToggleModal.isOpen && confirmToggleModal.product && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Xác nhận thay đổi</h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Bạn có chắc chắn muốn <span className={`font-bold ${confirmToggleModal.product.isActive ? "text-red-600" : "text-emerald-600"}`}>
+                {confirmToggleModal.product.isActive ? "vô hiệu hóa" : "khôi phục"}
+              </span> sản phẩm <span className="font-semibold text-slate-800">"{confirmToggleModal.product.name}"</span>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setConfirmToggleModal({ isOpen: false, product: null })} 
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={confirmToggleStatus} 
+                className={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm transition cursor-pointer ${confirmToggleModal.product.isActive ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
+              >
+                Xác nhận
+              </button>
+            </div>
           </div>
         </div>
       )}

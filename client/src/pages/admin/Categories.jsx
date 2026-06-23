@@ -6,6 +6,7 @@ export default function AdminCategories() {
   const { categories, loading, createCategory, updateCategory, deleteCategory } = useAdminCategories();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmToggleModal, setConfirmToggleModal] = useState({ isOpen: false, category: null });
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ name: "" });
   const [formError, setFormError] = useState("");
@@ -47,10 +48,14 @@ export default function AdminCategories() {
     }
   };
 
-  const handleToggleActive = async (category) => {
-    if (window.confirm(`Bạn có chắc muốn ${category.isActive ? "vô hiệu hóa" : "khôi phục"} danh mục này?`)) {
-      await deleteCategory(category._id);
-    }
+  const handleToggleActive = (category) => {
+    setConfirmToggleModal({ isOpen: true, category });
+  };
+
+  const confirmToggleStatus = async () => {
+    const { category } = confirmToggleModal;
+    setConfirmToggleModal({ isOpen: false, category: null });
+    await deleteCategory(category._id);
   };
 
   return (
@@ -146,6 +151,34 @@ export default function AdminCategories() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Toggle Modal */}
+      {confirmToggleModal.isOpen && confirmToggleModal.category && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Xác nhận thay đổi</h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Bạn có chắc chắn muốn <span className={`font-bold ${confirmToggleModal.category.isActive ? "text-red-600" : "text-emerald-600"}`}>
+                {confirmToggleModal.category.isActive ? "vô hiệu hóa" : "khôi phục"}
+              </span> danh mục <span className="font-semibold text-slate-800">"{confirmToggleModal.category.name}"</span>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setConfirmToggleModal({ isOpen: false, category: null })} 
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={confirmToggleStatus} 
+                className={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm transition cursor-pointer ${confirmToggleModal.category.isActive ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
+              >
+                Xác nhận
+              </button>
+            </div>
           </div>
         </div>
       )}
