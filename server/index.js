@@ -62,6 +62,11 @@ app.get("/", (req, res) => {
   );
 });
 
+// Health check route (Nhẹ nhàng, dùng để ping giữ server luôn thức)
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 app.use("/api", apiRoutes);
 
 app.use((req, res) => {
