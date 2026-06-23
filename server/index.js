@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust reverse proxy (quan trọng khi deploy lên Render/Heroku/Vercel) để express-rate-limit hoạt động đúng
+app.set("trust proxy", 1);
+
 // 1. Bảo vệ HTTP Headers với Helmet
 app.use(helmet());
 
