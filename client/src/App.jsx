@@ -6,9 +6,7 @@ import Register from "./pages/Register";
 
 import ForgotPassword from "./pages/ForgotPassword";
 
-// We keep these routes for fallback/reference, but the new UI
-// merges ProductList and Cart into the StoreDashboard (Home).
-import ProductList from "./pages/ProductList";
+
 import ProductDetail from "./pages/ProductDetail";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
@@ -32,7 +30,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/products" element={<ProductList />} />
+
         <Route path="/products/:slug" element={<Home><ProductDetail /></Home>} />
         <Route path="/profile" element={<Home><Profile /></Home>} />
         <Route path="/checkout" element={<Checkout />} />

@@ -3,6 +3,13 @@ import { Box, Plus, Edit, Trash2, Power, PowerOff, Loader2, X, Check, Link } fro
 import { useAdminProducts } from "../../hooks/useAdminProducts";
 import api from "../../services/api";
 
+const getImageUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith('http')) return url;
+  const baseUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api/v1', '') : 'http://localhost:5000';
+  return `${baseUrl}${url}`;
+};
+
 export default function AdminProducts() {
   const { products, loading, createProduct, updateProduct, deleteProduct } = useAdminProducts();
   const [categories, setCategories] = useState([]);
@@ -426,11 +433,11 @@ export default function AdminProducts() {
                   <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 mb-2" />
                   {currentThumbnail && !thumbnailFile && (
                     <div className="mt-2 p-2 bg-slate-50 border border-slate-100 rounded-lg">
-                      <a href={currentThumbnail.startsWith('http') ? currentThumbnail : `http://localhost:5000${currentThumbnail}`} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1 mb-2 w-max" title={currentThumbnail}>
+                      <a href={getImageUrl(currentThumbnail)} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:text-blue-600 flex items-center gap-1 mb-2 w-max" title={currentThumbnail}>
                         <Link className="w-3 h-3" /> Đường dẫn ảnh
                       </a>
                       <div className="relative group w-32 h-32">
-                        <img src={currentThumbnail.startsWith('http') ? currentThumbnail : `http://localhost:5000${currentThumbnail}`} alt="Thumbnail" className="h-full w-full object-contain rounded border border-slate-200 bg-white" />
+                        <img src={getImageUrl(currentThumbnail)} alt="Thumbnail" className="h-full w-full object-contain rounded border border-slate-200 bg-white" />
                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded flex items-center justify-center gap-2">
                           <button type="button" onClick={() => document.querySelector('input[type="file"]').click()} className="p-1.5 bg-white text-blue-600 rounded-full hover:bg-blue-50 shadow-sm" title="Thay đổi ảnh"><Edit className="w-4 h-4" /></button>
                           <button type="button" onClick={() => setCurrentThumbnail("")} className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 shadow-sm" title="Xóa ảnh"><Trash2 className="w-4 h-4" /></button>
@@ -459,13 +466,13 @@ export default function AdminProducts() {
                       <div className="flex gap-2 flex-wrap">
                         {currentImages.map((img, i) => (
                            <div key={i} className="relative group w-20 h-20 bg-white rounded border border-slate-200 flex items-center justify-center">
-                              <img src={img.startsWith('http') ? img : `http://localhost:5000${img}`} alt={`Img ${i}`} className="max-h-full max-w-full object-contain" />
+                              <img src={getImageUrl(img)} alt={`Img ${i}`} className="max-h-full max-w-full object-contain" />
                               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition rounded flex flex-col items-center justify-center gap-1">
                                 <div className="flex gap-1">
                                   <button type="button" onClick={() => handleEditExistingImage(i)} className="p-1 bg-white text-blue-600 rounded-full hover:bg-blue-50" title="Thay đổi"><Edit className="w-3 h-3" /></button>
                                   <button type="button" onClick={() => handleRemoveImage(i)} className="p-1 bg-white text-red-600 rounded-full hover:bg-red-50" title="Xóa"><Trash2 className="w-3 h-3" /></button>
                                 </div>
-                                <a href={img.startsWith('http') ? img : `http://localhost:5000${img}`} target="_blank" rel="noreferrer" className="p-1 bg-white text-slate-600 rounded-full hover:text-blue-600" title={img}>
+                                <a href={getImageUrl(img)} target="_blank" rel="noreferrer" className="p-1 bg-white text-slate-600 rounded-full hover:text-blue-600" title={img}>
                                   <Link className="w-3 h-3" />
                                 </a>
                               </div>
