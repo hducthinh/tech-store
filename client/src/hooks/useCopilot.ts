@@ -35,6 +35,10 @@ export function useCopilot() {
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || `HTTP ${res.status}`);
+      }
       
       const aiReply: Message = {
         role: "assistant",

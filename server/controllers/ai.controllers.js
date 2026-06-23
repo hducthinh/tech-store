@@ -3,7 +3,7 @@ import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/appError.js";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const SYSTEM_PROMPT = `Bạn là TechStore Copilot — trợ lý tư vấn phần cứng chuyên nghiệp của cửa hàng TechStore Pro Hardware.
 
@@ -56,9 +56,13 @@ export const chat = catchAsync(async (req, res, next) => {
   });
 
   if (!response.ok) {
-    const errData = await response.json();
-    console.error("[AI] Gemini API error:", errData);
-    return next(new AppError("Lỗi kết nối đến AI. Vui lòng thử lại sau.", 502));
+    const errData = await response.json().catch(() => ({}));
+    console.error("[AI] Gemini API error:", response.status, JSON.stringify(errData));
+    // 429 = rate limit / quota exceeded
+    const userMsg = response.status === 429
+      ? "Hệ thống AI đang bận, vui lòng thử lại sau vài giây."
+      : "Lỗi kết nối đến AI. Vui lòng thử lại sau.";
+    return next(new AppError(userMsg, 502));
   }
 
   const data = await response.json();
