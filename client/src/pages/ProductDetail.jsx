@@ -56,7 +56,8 @@ const ProductDetail = () => {
         // Lấy danh sách đánh giá
         fetchReviews(p._id);
       } catch (err) {
-        setError("Không tìm thấy sản phẩm hoặc có lỗi kết nối.");
+        console.error("fetchDetail error:", err);
+        setError(`Không tìm thấy sản phẩm hoặc có lỗi kết nối. Chi tiết: ${err.message || err}`);
       } finally {
         setIsLoading(false);
       }
@@ -110,9 +111,19 @@ const ProductDetail = () => {
     setSubmittingReview(true);
     setReviewError("");
     try {
-      await api.post(`/reviews/${product._id}`, {
-        rating: reviewRating,
-        comment: reviewComment
+      const formData = new FormData();
+      formData.append("rating", reviewRating);
+      formData.append("comment", reviewComment);
+      
+      // Thêm các file ảnh vào formData
+      reviewImages.forEach((imgObj) => {
+        formData.append("images", imgObj.file);
+      });
+
+      await api.post(`/reviews/${product._id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
       });
       // Lấy lại danh sách sau khi đánh giá thành công
       await fetchReviews(product._id);
@@ -383,16 +394,19 @@ const ProductDetail = () => {
                       alert("Tối đa 5 ảnh đính kèm.");
                       return;
                     }
-                    const newImages = files.map(file => URL.createObjectURL(file));
+                    const newImages = files.map(file => ({
+                      file,
+                      preview: URL.createObjectURL(file)
+                    }));
                     setReviewImages(prev => [...prev, ...newImages]);
                   }}
                   className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
                 {reviewImages.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-3">
-                    {reviewImages.map((src, i) => (
+                    {reviewImages.map((imgObj, i) => (
                       <div key={i} className="relative w-16 h-16 rounded-md overflow-hidden border border-gray-200">
-                        <img src={src} className="w-full h-full object-cover" />
+                        <img src={imgObj.preview} className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => setReviewImages(prev => prev.filter((_, idx) => idx !== i))}

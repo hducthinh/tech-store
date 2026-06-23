@@ -21,6 +21,10 @@ export default function AdminProducts() {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // File states
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+
   // States for inline adding
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -70,6 +74,8 @@ export default function AdminProducts() {
         description: "",
       });
     }
+    setThumbnailFile(null);
+    setImageFiles([]);
     setIsModalOpen(true);
   };
 
@@ -124,17 +130,27 @@ export default function AdminProducts() {
 
     setIsSubmitting(true);
     
-    const submitData = {
-      ...formData,
-      price: Number(formData.price),
-      stock: Number(formData.stock)
-    };
+    // Convert to FormData
+    const formDataObj = new FormData();
+    formDataObj.append("name", formData.name);
+    formDataObj.append("categoryId", formData.categoryId);
+    formDataObj.append("brandId", formData.brandId);
+    formDataObj.append("price", Number(formData.price));
+    formDataObj.append("stock", Number(formData.stock));
+    formDataObj.append("description", formData.description);
+
+    if (thumbnailFile) {
+      formDataObj.append("thumbnail", thumbnailFile);
+    }
+    imageFiles.forEach(file => {
+      formDataObj.append("images", file);
+    });
 
     let res;
     if (editingId) {
-      res = await updateProduct(editingId, submitData);
+      res = await updateProduct(editingId, formDataObj);
     } else {
-      res = await createProduct(submitData);
+      res = await createProduct(formDataObj);
     }
 
     setIsSubmitting(false);
@@ -317,6 +333,17 @@ export default function AdminProducts() {
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Mô tả tóm tắt</label>
                 <textarea name="description" rows="3" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm" placeholder="Mô tả thông số cơ bản..."></textarea>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Ảnh đại diện (1 ảnh)</label>
+                  <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files[0])} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Ảnh phụ (Tối đa 5 ảnh)</label>
+                  <input type="file" multiple accept="image/*" onChange={(e) => setImageFiles(Array.from(e.target.files).slice(0, 5))} className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">

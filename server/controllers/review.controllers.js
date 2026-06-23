@@ -59,10 +59,14 @@ export const createReview = catchAsync(async (req, res, next) => {
     return next(new AppError("Bạn phải mua sản phẩm này mới có thể đánh giá.", 403));
   }
 
+  // 2.7 Xử lý ảnh đính kèm (từ Multer Cloudinary)
+  const imageUrls = req.files ? req.files.map((file) => file.path) : [];
+
   // 3. Tạo Review
   const newReview = await Review.create({
     rating,
     comment,
+    images: imageUrls,
     product: productId,
     user: userId,
   });

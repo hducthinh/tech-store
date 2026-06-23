@@ -31,6 +31,7 @@ export default function Checkout() {
   const [promoError, setPromoError] = useState("");
   const [promoSuccess, setPromoSuccess] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
+  const [createdOrderId, setCreatedOrderId] = useState("");
 
   // Lọc ra các item đang được chọn để thanh toán
   const selectedCartItems = cart.filter(item => selectedItemIds.includes(item.product.id));
@@ -84,6 +85,7 @@ export default function Checkout() {
   const onPlaceOrder = async () => {
     const res = await handlePlaceOrder(selectedCartItems, selectedItemIds);
     if (res) {
+      setCreatedOrderId(res.id);
       setCheckoutStep(3);
     }
   };
@@ -364,12 +366,12 @@ export default function Checkout() {
 
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 w-full max-w-sm mb-8">
                 <p className="text-xs text-slate-500 mb-1 font-medium">Mã đơn hàng của bạn</p>
-                <p className="text-xl font-bold tracking-widest text-[#0058be]">#TECH{Math.floor(Math.random() * 100000)}</p>
+                <p className="text-xl font-bold tracking-widest text-[#0058be]">#{createdOrderId ? createdOrderId.substring(createdOrderId.length - 6).toUpperCase() : ""}</p>
               </div>
 
               <div className="flex gap-4">
                 <button 
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/profile", { state: { openOrderId: createdOrderId } })}
                   className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition"
                 >
                   Xem đơn hàng

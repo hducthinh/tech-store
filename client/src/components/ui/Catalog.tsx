@@ -18,6 +18,7 @@ interface CatalogProps {
   page: number;
   setPage: (page: any) => void;
   totalPages: number;
+  error?: string | null;
 }
 
 export function Catalog({
@@ -33,7 +34,8 @@ export function Catalog({
   onNavigateToAi,
   page,
   setPage,
-  totalPages
+  totalPages,
+  error
 }: CatalogProps) {
   return (
     <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
@@ -85,17 +87,22 @@ export function Catalog({
             <ProductSkeleton key={i} />
           ))}
         </div>
-      ) : products.length === 0 ? (
+      ) : products.length === 0 && !error ? (
         <div className="flex-1 text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
           <HelpCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-lg font-bold text-slate-700">Không tìm thấy sản phẩm phù hợp</p>
           <p className="text-sm text-slate-400 mt-1">Thử nhập từ khóa khác hoặc trò chuyện với Trợ lý AI để yêu cầu nhập hàng.</p>
           <button
             onClick={() => setSearchQuery("")}
-            className="mt-4 px-4 py-2 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg hover:bg-slate-200"
+            className="mt-4 px-4 py-2 bg-slate-100 text-slate-600 text-xs font-semibold rounded-lg hover:bg-slate-200 cursor-pointer"
           >
             Thiết lập lại tìm kiếm
           </button>
+        </div>
+      ) : error ? (
+        <div className="flex-1 text-center py-20 bg-white rounded-2xl border border-red-200 bg-red-50">
+          <p className="text-lg font-bold text-red-600 mb-2">Đã xảy ra lỗi</p>
+          <p className="text-sm text-red-500">{error}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

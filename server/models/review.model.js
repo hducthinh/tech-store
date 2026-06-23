@@ -15,6 +15,10 @@ const reviewSchema = new mongoose.Schema(
       required: [true, "Vui lòng nhập nội dung đánh giá"],
       maxlength: [1000, "Nội dung đánh giá không được vượt quá 1000 ký tự"],
     },
+    images: {
+      type: [String],
+      default: [],
+    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",

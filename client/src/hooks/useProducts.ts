@@ -9,6 +9,7 @@ export function useProducts() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [categoriesDb, setCategoriesDb] = useState<{_id: string, name: string}[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Tải danh mục
@@ -33,6 +34,7 @@ export function useProducts() {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
+        setError(null);
         const params: any = { page, limit: 12 };
         if (searchQuery) params.search = searchQuery;
         if (selectedCategory && selectedCategory !== "All") params.categoryId = selectedCategory;
@@ -60,8 +62,13 @@ export function useProducts() {
           }));
           setProducts(fetchedProducts);
         }
-      } catch (error) {
-        console.error("Lỗi khi tải sản phẩm:", error);
+      } catch (err: any) {
+        console.error("Lỗi khi tải sản phẩm:", err);
+        if (err.response?.status === 429) {
+          setError(err.response?.data?.message || "Hệ thống phát hiện quá nhiều yêu cầu từ IP của bạn. Vui lòng thử lại sau.");
+        } else {
+          setError("Không thể kết nối đến máy chủ.");
+        }
       } finally {
         setLoadingProducts(false);
       }
@@ -86,6 +93,7 @@ export function useProducts() {
     setSelectedProduct,
     page,
     setPage,
-    totalPages
+    totalPages,
+    error
   };
 }

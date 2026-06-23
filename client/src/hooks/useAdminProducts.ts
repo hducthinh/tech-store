@@ -27,7 +27,9 @@ export function useAdminProducts() {
 
   const createProduct = async (productData: any) => {
     try {
-      const res = await api.post("/products", productData);
+      const res = await api.post("/products", productData, {
+        headers: productData instanceof FormData ? { "Content-Type": "multipart/form-data" } : {}
+      });
       if (res.data.status === "success") {
         await fetchProducts(); // Tải lại sau khi tạo
         return { success: true };
@@ -40,7 +42,9 @@ export function useAdminProducts() {
 
   const updateProduct = async (id: string, productData: any) => {
     try {
-      const res = await api.patch(`/products/${id}`, productData);
+      const res = await api.patch(`/products/${id}`, productData, {
+        headers: productData instanceof FormData ? { "Content-Type": "multipart/form-data" } : {}
+      });
       if (res.data.status === "success") {
         await fetchProducts();
         return { success: true };

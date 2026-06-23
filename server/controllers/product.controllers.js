@@ -140,7 +140,20 @@ export const getAdminProducts = catchAsync(async (req, res, next) => {
 // @route   POST /api/v1/products
 // @access  Private/Admin
 export const createProduct = catchAsync(async (req, res, next) => {
-  const { name, categoryId, brandId, price, stock, description, thumbnail } = req.body;
+  const { name, categoryId, brandId, price, stock, description } = req.body;
+
+  // Xử lý ảnh upload
+  let thumbnail = req.body.thumbnail || "";
+  let images = [];
+
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail.length > 0) {
+      thumbnail = req.files.thumbnail[0].path;
+    }
+    if (req.files.images && req.files.images.length > 0) {
+      images = req.files.images.map((f) => f.path);
+    }
+  }
 
   // Validate basic
   if (!name || !categoryId || !brandId || price === undefined || stock === undefined) {
@@ -167,6 +180,7 @@ export const createProduct = catchAsync(async (req, res, next) => {
     stock,
     description,
     thumbnail: thumbnail || "",
+    images: images,
   });
 
   res.status(201).json({
@@ -185,6 +199,16 @@ export const updateProduct = catchAsync(async (req, res, next) => {
 
   // Nếu cập nhật category/brand, ta phải cập nhật cả name của chúng
   const updateData = { ...req.body };
+  
+  if (req.files) {
+    if (req.files.thumbnail && req.files.thumbnail.length > 0) {
+      updateData.thumbnail = req.files.thumbnail[0].path;
+    }
+    if (req.files.images && req.files.images.length > 0) {
+      updateData.images = req.files.images.map((f) => f.path);
+    }
+  }
+
   if (updateData.name) {
     updateData.slug = slugify(updateData.name);
   }

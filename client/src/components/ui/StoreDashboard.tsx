@@ -37,7 +37,8 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     categoriesDb,
     page,
     setPage,
-    totalPages
+    totalPages,
+    error
   } = useProducts();
 
   const {
@@ -262,6 +263,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
             page={page}
             setPage={setPage}
             totalPages={totalPages}
+            error={error}
             onAddToCart={addToCart}
             onSelectProduct={(p) => navigate(`/products/${p.slug}`)}
             onNavigateToAi={onNavigateToAi}
@@ -345,6 +347,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
                 onClick={() => {
                   setShowLogoutModal(false);
                   onLogout();
+                  navigate("/");
                 }}
                 className="flex-1 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm"
               >

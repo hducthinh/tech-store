@@ -112,3 +112,5 @@ if (!mongoUri) {
       process.exitCode = 1;
     });
 }
+// Trigger nodemon restart
+// 

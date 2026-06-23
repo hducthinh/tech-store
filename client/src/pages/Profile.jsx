@@ -2,12 +2,13 @@ import React from "react";
 import { User, FileText, Settings, LogOut, Camera, Edit2, ShoppingCart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../hooks/useCart";
 
 export default function Profile() {
   const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     cart,
     updateQuantity,
@@ -51,7 +52,7 @@ export default function Profile() {
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
     logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const [orders, setOrders] = React.useState([]);
@@ -101,6 +102,15 @@ export default function Profile() {
                 };
               });
               setOrders(mapped);
+              
+              if (location.state?.openOrderId) {
+                const orderToOpen = mapped.find(o => o.rawId === location.state.openOrderId);
+                if (orderToOpen) {
+                  setSelectedOrder(orderToOpen);
+                  setActiveTab("orders");
+                  window.history.replaceState({}, document.title);
+                }
+              }
             }
           })
           .catch(console.error);

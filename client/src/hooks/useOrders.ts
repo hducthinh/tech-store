@@ -87,6 +87,7 @@ export function useOrders(userEmail: string, setCart: (cart: any[]) => void) {
         setOrders([newOrder, ...orders]);
         setCart(cart.filter(item => !selectedItemIds.includes(item.product.id)));
         setCheckoutStep(3);
+        return newOrder;
       }
     } catch (error: any) {
       console.error(error);
