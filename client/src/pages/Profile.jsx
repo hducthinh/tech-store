@@ -2,7 +2,7 @@ import React from "react";
 import { User, FileText, LogOut, ShoppingCart } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../hooks/useCart";
 
 import ProfileInfo from "../components/profile/ProfileInfo";
@@ -12,12 +12,19 @@ import ProfileCart from "../components/profile/ProfileCart";
 export default function Profile() {
   const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const cartState = useCart(user?.email || "");
 
   useDocumentMeta("Hồ sơ cá nhân", "Quản lý thông tin tài khoản và đơn hàng của bạn tại TechStore.");
 
-  const [activeTab, setActiveTab] = React.useState("info");
+  const [activeTab, setActiveTab] = React.useState(location.state?.openOrderId ? "orders" : "info");
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+
+  React.useEffect(() => {
+    if (location.state?.openOrderId) {
+      setActiveTab("orders");
+    }
+  }, [location.state?.openOrderId]);
 
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);

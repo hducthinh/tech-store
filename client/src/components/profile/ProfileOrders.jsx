@@ -1,9 +1,10 @@
 import React from "react";
 import { FileText, Loader2 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function ProfileOrders({ user, setActiveTab }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [orders, setOrders] = React.useState([]);
   const [selectedOrder, setSelectedOrder] = React.useState(null);
   const [isCancelling, setIsCancelling] = React.useState(false);
@@ -77,7 +78,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
                 if (orderToOpen) {
                   setSelectedOrder(orderToOpen);
                   if(setActiveTab) setActiveTab("orders");
-                  window.history.replaceState({}, document.title);
+                  navigate(location.pathname, { replace: true, state: {} });
                 }
               }
             }
