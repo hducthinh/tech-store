@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ShoppingCart, Loader2, Search, X, Check, Eye } from "lucide-react";
+import { ShoppingCart, Loader2, X, Eye } from "lucide-react";
 import { useAdminOrders } from "../../hooks/useAdminOrders";
 
 const STATUS_COLORS = {

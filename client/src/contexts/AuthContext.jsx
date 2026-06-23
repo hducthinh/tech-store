@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/contexts/AuthContext.jsx
 import {
   createContext,
@@ -25,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get("/auth/profile");
       setUser(response.data.data.user);
-    } catch (err) {
+    } catch (_err) {
       localStorage.removeItem("token");
       delete api.defaults.headers.common["Authorization"];
     } finally {

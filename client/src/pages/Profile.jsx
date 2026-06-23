@@ -1,5 +1,5 @@
 import React from "react";
-import { User, FileText, Settings, LogOut, Camera, Edit2, ShoppingCart, Loader2 } from "lucide-react";
+import { User, FileText, LogOut, Camera, Edit2, ShoppingCart, Loader2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -34,6 +34,7 @@ export default function Profile() {
   // Sync state when user loads
   React.useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         fullName: user.fullName || "",
         phone: user.phone || "",
@@ -134,7 +135,7 @@ export default function Profile() {
           .catch(console.error);
       });
     }
-  }, [user]);
+  }, [user, location.state?.openOrderId]);
 
   const [isCancelling, setIsCancelling] = React.useState(false);
   const [showCancelModal, setShowCancelModal] = React.useState(false);

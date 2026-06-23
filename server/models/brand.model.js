@@ -38,8 +38,7 @@ const brandSchema = new mongoose.Schema(
   }
 );
 
-// ponytail: index on slug for fast query lookups
-brandSchema.index({ slug: 1 });
+// ponytail: index on slug for fast query lookups (already handled by unique: true)
 
 const Brand = mongoose.model("Brand", brandSchema, "brands");
 export default Brand;

@@ -96,8 +96,6 @@ const productSchema = new mongoose.Schema(
 );
 
 // Bộ chỉ mục Compound Indexes và Text Indexes cực mạnh phục vụ bộ lọc tìm kiếm nâng cao ở Backend
-productSchema.index({ slug: 1 }, { unique: true });
-productSchema.index({ sku: 1 }, { unique: true, sparse: true });
 productSchema.index({ categoryId: 1, price: -1, _id: 1 }); // Tối ưu bộ lọc: Chọn danh mục -> Xếp giá từ cao đến thấp
 productSchema.index({ brandId: 1, soldCount: -1 }); // Tối ưu bộ lọc: Chọn hãng -> Xếp theo sản phẩm bán chạy nhất
 

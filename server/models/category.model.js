@@ -48,7 +48,6 @@ const categorySchema = new mongoose.Schema(
 );
 
 // Khởi tạo các index phục vụ tìm kiếm menu nhanh
-categorySchema.index({ slug: 1 });
 categorySchema.index({ parentId: 1 });
 
 const Category = mongoose.model("Category", categorySchema, "categories");

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Terminal, Mail, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Terminal, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
