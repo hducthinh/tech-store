@@ -5,19 +5,30 @@ import { Link } from "react-router-dom";
 const ProductCard = ({ product }) => {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col">
-      <Link to={`/products/${product.slug}`}>
-        <img
-          src={product.thumbnail || product.images?.[0] || "https://placehold.co/400x400?text=No+Image"}
-          alt={product.name}
-          className="w-full h-48 object-cover transition-transform hover:scale-105"
-        />
-      </Link>
+      <div className="p-2">
+        <Link to={`/products/${product.slug}`}>
+          <img
+            src={product.thumbnail || product.images?.[0] || "https://placehold.co/400x400?text=No+Image"}
+            alt={product.name}
+            className="w-full h-48 object-cover rounded-md transition-transform hover:scale-105"
+          />
+        </Link>
+      </div>
       <div className="p-4 flex flex-col flex-1">
         <Link to={`/products/${product.slug}`}>
           <h3 className="font-semibold text-gray-800 line-clamp-2 hover:text-blue-600 mb-2">
             {product.name}
           </h3>
         </Link>
+        {product.specifications && product.specifications.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {product.specifications.slice(0, 3).map((spec, index) => (
+              <span key={index} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">
+                {spec.value || spec.name}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-auto flex items-end justify-between">
           <div>
             <span className="text-red-600 font-bold text-lg block">
@@ -32,6 +43,7 @@ const ProductCard = ({ product }) => {
         </div>
         <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
           <div className="text-yellow-400 text-sm flex items-center">
+            <span className="text-gray-700 font-bold mr-1 text-xs">{product.rating ? product.rating.toFixed(1) : "0.0"}</span>
             {"★".repeat(Math.round(product.rating || 0))}
             {"☆".repeat(5 - Math.round(product.rating || 0))}
             <span className="text-gray-400 ml-1 text-xs">({product.reviewCount || 0})</span>

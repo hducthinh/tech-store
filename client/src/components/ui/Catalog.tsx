@@ -40,27 +40,14 @@ export function Catalog({
   return (
     <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
 
-      {/* Hero promo banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#00236f] text-white p-8 md:p-12 shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="relative z-10 max-w-xl space-y-4">
-          <h2 className="text-3xl md:text-5xl font-sans font-extrabold tracking-tight leading-tight">
-            Nâng tầm <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-500">Hiệu Suất</span>
-          </h2>
-          <p className="text-blue-100 text-sm md:text-base leading-relaxed max-w-md">
-            Bạn gặp khó khăn khi lựa chọn linh kiện phù hợp với ngân sách và nhu cầu công việc? Hãy thử tham khảo ý kiến với trợ lý AI ngay!
-          </p>
-        </div>
-        <button
-          onClick={onNavigateToAi}
-          className="relative z-10 bg-white text-[#00236f] hover:bg-amber-400 hover:text-slate-900 transition font-semibold text-xs px-5 py-3 rounded-xl flex items-center gap-2 cursor-pointer shadow-md"
-        >
-          Nhận tư vấn cấu hình với AI
-          <ArrowRight className="w-4 h-4" />
-        </button>
-
-        {/* Background abstract overlay element */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full transform translate-x-12 -translate-y-12"></div>
-      </div>
+      {/* Floating AI Button */}
+      <button
+        onClick={onNavigateToAi}
+        className="fixed bottom-6 right-6 z-50 bg-[#00236f] text-white p-4 rounded-full shadow-2xl hover:bg-amber-400 hover:text-slate-900 transition-all flex items-center justify-center cursor-pointer group"
+        title="Nhận tư vấn cấu hình với AI"
+      >
+        <HelpCircle className="w-7 h-7 group-hover:scale-110 transition-transform" />
+      </button>
 
       {/* Controls: Search and Filters */}
       <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4">
