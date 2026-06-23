@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
-import { Product } from "../types";
 
 export function useAdminProducts() {
   const [products, setProducts] = useState<any[]>([]);

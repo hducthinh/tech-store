@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { Order } from "../../types";
 
 export function useOrders(userEmail: string, setCart: (cart: any[]) => void) {
   const [orders, setOrders] = useState<Order[]>([]);

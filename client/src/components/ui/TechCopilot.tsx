@@ -1,6 +1,5 @@
 import React from "react";
 import { Sparkles, Info, Send } from "lucide-react";
-import { Message } from "../../types";
 
 interface TechCopilotProps {
   chatMessages: Message[];

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
-import { Product } from "../../types";
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);

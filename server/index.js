@@ -129,11 +129,7 @@ app.use((err, req, res, next) => {
 });
 
 const startServer = () => {
-  app.listen(PORT, () => {
-    console.log(
-      `[Server] Server đang chạy mượt mà tại cổng: http://localhost:${PORT}`,
-    );
-  });
+  app.listen(PORT, () => {});
 };
 
 const mongoUri = process.env.MONGO_URI;
@@ -144,7 +140,6 @@ if (!mongoUri) {
   mongoose
     .connect(mongoUri)
     .then(() => {
-      console.log("[Server] Kết nối MongoDB thành công.");
       startServer();
     })
     .catch((error) => {

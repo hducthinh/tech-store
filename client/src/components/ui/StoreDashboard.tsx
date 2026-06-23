@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, LogOut, Loader2, Database, CheckCircle2, Search, ChevronDown } from "lucide-react";
-import { Product } from "../../types";
 
 import { useProducts } from "../../hooks/useProducts";
 import { useCart } from "../../hooks/useCart";

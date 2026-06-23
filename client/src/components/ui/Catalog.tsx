@@ -1,6 +1,5 @@
 import React from "react";
 import { Search, Loader2, HelpCircle, ArrowRight } from "lucide-react";
-import { Product } from "../../types";
 import { ProductCard } from "./ProductCard";
 import { ProductSkeleton } from "./ProductSkeleton";
 

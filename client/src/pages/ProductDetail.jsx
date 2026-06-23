@@ -109,7 +109,7 @@ const ProductDetail = () => {
     setAddingToCart(true);
     setAddSuccess(false);
     try {
-      await api.post("/cart", { productId: product._id, quantity });
+      await api.post("/cart", { productId: product._id || product.id, quantity });
       setAddSuccess(true);
       window.dispatchEvent(new Event("cartUpdated"));
       setTimeout(() => setAddSuccess(false), 3000);

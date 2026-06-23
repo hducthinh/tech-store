@@ -1,5 +1,4 @@
 import React from "react";
-import { Product } from "../../types";
 import { ShoppingCart, MessageSquare, Database, Laptop, Tv, Cpu, Terminal } from "lucide-react";
 
 interface ProductCardProps {

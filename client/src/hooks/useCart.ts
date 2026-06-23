@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
-import { CartItem, Product } from "../../types";
 
 export function useCart(userEmail: string) {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -14,10 +13,12 @@ export function useCart(userEmail: string) {
       if (userEmail) {
         api.get("/cart")
           .then(res => {
-            const items = res.data.data.cart.items.map((item: any) => ({
-              product: { ...item.productId, id: item.productId._id },
-              quantity: item.quantity
-            }));
+            const items = res.data.data.cart.items
+              .filter((item: any) => item && item.productId)
+              .map((item: any) => ({
+                product: { ...item.productId, id: item.productId._id || item.productId.id },
+                quantity: item.quantity
+              }));
             setCart(items);
           })
           .catch(err => console.error("Lỗi tải giỏ hàng:", err));
@@ -51,7 +52,7 @@ export function useCart(userEmail: string) {
     setTimeout(() => setToastMessage(null), 3000);
 
     try {
-      await api.post("/cart", { productId: product.id, quantity: 1 });
+      await api.post("/cart", { productId: product.id || (product as any)._id, quantity: 1 });
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (error) {
       console.error("Lỗi khi thêm vào giỏ hàng trên DB:", error);

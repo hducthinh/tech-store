@@ -1,6 +1,5 @@
 import React from "react";
 import { History, CheckCircle2 } from "lucide-react";
-import { Order } from "../../types";
 
 interface OrderHistoryProps {
   orders: Order[];

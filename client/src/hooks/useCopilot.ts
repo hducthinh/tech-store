@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Message } from "../../types";
 
 export function useCopilot() {
   const [chatMessages, setChatMessages] = useState<Message[]>([
