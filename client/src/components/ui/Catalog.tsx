@@ -37,6 +37,15 @@ export function Catalog({
   totalPages,
   error
 }: CatalogProps) {
+
+  const getPaginationRange = () => {
+    const total = totalPages;
+    if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
+    if (page <= 3) return [1, 2, 3, 4, '...', total];
+    if (page >= total - 2) return [1, '...', total - 3, total - 2, total - 1, total];
+    return [1, '...', page - 1, page, page + 1, '...', total];
+  };
+
   return (
     <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
 
@@ -52,7 +61,7 @@ export function Catalog({
       {/* Controls: Search and Filters */}
       <div className="flex flex-col xl:flex-row justify-between xl:items-center gap-4">
         {/* Category Filter Pills on Top */}
-        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none w-full xl:w-auto">
+        <div className="flex flex-wrap gap-2.5 w-full pb-2">
           {[{ _id: "All", name: "Tất cả sản phẩm" }, ...categoriesDb].map(c => (
             <button
               key={c._id}
@@ -117,16 +126,20 @@ export function Catalog({
           </button>
 
           <div className="flex items-center gap-1">
-            {[...Array(totalPages)].map((_, i) => (
+            {getPaginationRange().map((item, index) => (
               <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${page === i + 1
-                    ? "bg-[#00236f] text-white shadow-md"
-                    : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
+                key={index}
+                onClick={() => typeof item === 'number' && setPage(item)}
+                disabled={item === '...'}
+                className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+                  item === '...' 
+                    ? "bg-transparent text-slate-400 cursor-default" 
+                    : page === item
+                      ? "bg-[#00236f] text-white shadow-md cursor-pointer"
+                      : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                }`}
               >
-                {i + 1}
+                {item}
               </button>
             ))}
           </div>

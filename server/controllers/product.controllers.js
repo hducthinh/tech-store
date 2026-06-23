@@ -67,12 +67,40 @@ export const getProducts = catchAsync(async (req, res, next) => {
   }
 
   const total = await Product.countDocuments(filter);
-  const products = await Product.find(filter)
-    .sort(sort)
-    .skip(skip)
-    .limit(limitNum)
-    .select("-costPrice")
-    .populate("categoryId", "name slug"); // Lấy thêm thông tin danh mục
+  let products;
+
+  if (!categoryId && !search && !sortBy) {
+    // Ưu tiên hiển thị VGA, CPU, Mainboard, RAM, SSD ở trang chủ
+    products = await Product.aggregate([
+      { $match: filter },
+      {
+        $addFields: {
+          isCore: {
+            $cond: [
+              { $in: ["$categoryName", ["VGA", "CPU", "Mainboard", "RAM", "Ổ cứng SSD"]] },
+              1,
+              0
+            ]
+          },
+          // Lấy ký tự cuối cùng của _id để tạo một bucket pseudo-random (0-f)
+          // Giúp interleave (trộn lẫn) các category với nhau một cách ổn định
+          hashBucket: { $substr: [{ $toString: "$_id" }, 23, 1] }
+        }
+      },
+      { $sort: { isCore: -1, hashBucket: 1, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limitNum },
+      { $project: { costPrice: 0 } }
+    ]);
+    await Product.populate(products, { path: "categoryId", select: "name slug" });
+  } else {
+    products = await Product.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .select("-costPrice")
+      .populate("categoryId", "name slug");
+  }
 
   res.status(200).json({
     status: "success",
@@ -361,7 +389,7 @@ export const getSimilarProducts = catchAsync(async (req, res, next) => {
     isActive: true
   })
     .sort({ createdAt: -1 })
-    .limit(4)
+    .limit(3)
     .select("-costPrice")
     .populate("categoryId", "name slug")
     .populate("brandId", "name slug");

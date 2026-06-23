@@ -122,22 +122,24 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
                 Danh mục
                 <ChevronDown className="w-4 h-4" />
               </button>
-              <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 py-2">
-                <button 
-                  onClick={() => { setSelectedCategory("All"); setActiveTab("catalog"); navigate("/"); }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be]"
-                >
-                  Tất cả sản phẩm
-                </button>
-                {categoriesDb.map(cat => (
+              <div className="absolute top-full left-0 mt-2 w-max max-w-3xl bg-white border border-slate-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 p-3">
+                <div className="grid gap-x-2 gap-y-1" style={{ gridTemplateRows: 'repeat(10, minmax(0, 1fr))', gridAutoFlow: 'column', gridAutoColumns: '160px' }}>
                   <button 
-                    key={cat._id}
-                    onClick={() => { setSelectedCategory(cat._id); setActiveTab("catalog"); navigate("/"); }}
-                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be]"
+                    onClick={() => { setSelectedCategory("All"); setActiveTab("catalog"); navigate("/"); }}
+                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be] rounded-lg truncate"
                   >
-                    {cat.name}
+                    Tất cả sản phẩm
                   </button>
-                ))}
+                  {categoriesDb.map(cat => (
+                    <button 
+                      key={cat._id}
+                      onClick={() => { setSelectedCategory(cat._id); setActiveTab("catalog"); navigate("/"); }}
+                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#0058be] rounded-lg truncate"
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
