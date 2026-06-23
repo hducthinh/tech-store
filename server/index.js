@@ -32,7 +32,7 @@ app.use(cors({
 // 3. Giới hạn số lượng request (Rate Limiting) chống Brute-force/DDoS
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
-  limit: 100, // Mỗi IP tối đa 100 request
+  limit: 1000, // Mỗi IP tối đa 100 request
   message: {
     status: "fail",
     message: "Hệ thống phát hiện quá nhiều yêu cầu từ IP của bạn. Vui lòng thử lại sau 15 phút."

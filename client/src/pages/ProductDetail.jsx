@@ -43,15 +43,20 @@ const ProductDetail = () => {
       try {
         const res = await api.get(`/products/${slug}`);
         const p = res.data.data.product;
-        // ponytail: mock 4 hình ảnh bất kỳ theo yêu cầu
-        p.images = [
-          "https://placehold.co/600x600/f8f9fa/334155?text=Anh+1",
-          "https://placehold.co/600x600/f8f9fa/334155?text=Anh+2",
-          "https://placehold.co/600x600/f8f9fa/334155?text=Anh+3",
-          "https://placehold.co/600x600/f8f9fa/334155?text=Anh+4"
-        ];
+        // Sử dụng ảnh thực tế, gộp thumbnail vào list images nếu có
+        const actualImages = [];
+        if (p.thumbnail) actualImages.push(p.thumbnail);
+        if (p.images && p.images.length > 0) {
+            actualImages.push(...p.images.filter(img => img !== p.thumbnail));
+        }
+        
+        if (actualImages.length === 0) {
+            actualImages.push("https://placehold.co/600x600/f8f9fa/334155?text=No+Image");
+        }
+        
+        p.images = actualImages;
         setProduct(p);
-        setMainImage(p.images[0]);
+        setMainImage(actualImages[0]);
         
         // Lấy danh sách đánh giá
         fetchReviews(p._id);

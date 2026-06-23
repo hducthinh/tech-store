@@ -17,6 +17,7 @@ export default function AdminProducts() {
     price: "",
     stock: "",
     description: "",
+    specs: [],
   });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,6 +63,7 @@ export default function AdminProducts() {
         price: product.price,
         stock: product.stock,
         description: product.description || "",
+        specs: product.specs ? Object.entries(product.specs).map(([k, v]) => ({ key: k, value: v })) : [],
       });
     } else {
       setEditingId(null);
@@ -72,6 +74,7 @@ export default function AdminProducts() {
         price: "",
         stock: "",
         description: "",
+        specs: [],
       });
     }
     setThumbnailFile(null);
@@ -138,6 +141,16 @@ export default function AdminProducts() {
     formDataObj.append("price", Number(formData.price));
     formDataObj.append("stock", Number(formData.stock));
     formDataObj.append("description", formData.description);
+
+    const specsObj = {};
+    if (formData.specs && formData.specs.length > 0) {
+      formData.specs.forEach(s => {
+        if (s.key && s.value) {
+          specsObj[s.key] = s.value;
+        }
+      });
+    }
+    formDataObj.append("specs", JSON.stringify(specsObj));
 
     if (thumbnailFile) {
       formDataObj.append("thumbnail", thumbnailFile);
@@ -216,7 +229,7 @@ export default function AdminProducts() {
                   <td className="px-4 py-3 text-xs">{p.categoryId?.name || "N/A"}</td>
                   <td className="px-4 py-3 text-right font-semibold text-[#ba1a1a]">{formatVND(p.price)}</td>
                   <td className="px-4 py-3 text-center font-mono">
-                    <span className={`px-2 py-0.5 rounded text-xs ${p.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                    <span className={`px-2 py-0.5 rounded text-xs ${p.stock > 5 ? "bg-green-100 text-green-700" : p.stock > 0 ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`} title={p.stock > 0 && p.stock <= 5 ? "Sắp hết hàng" : ""}>
                       {p.stock}
                     </span>
                   </td>
@@ -333,6 +346,39 @@ export default function AdminProducts() {
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Mô tả tóm tắt</label>
                 <textarea name="description" rows="3" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm" placeholder="Mô tả thông số cơ bản..."></textarea>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-slate-700">Thông số kỹ thuật (Tùy chọn)</label>
+                  <button type="button" onClick={() => setFormData({...formData, specs: [...(formData.specs || []), {key: '', value: ''}]})} className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 cursor-pointer">
+                    <Plus className="w-3 h-3" /> Thêm thông số
+                  </button>
+                </div>
+                {formData.specs && formData.specs.length > 0 && (
+                  <div className="space-y-2 mb-2">
+                    {formData.specs.map((spec, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <input type="text" placeholder="Tên (VD: Socket)" value={spec.key} onChange={(e) => {
+                          const newSpecs = [...formData.specs];
+                          newSpecs[index].key = e.target.value;
+                          setFormData({...formData, specs: newSpecs});
+                        }} className="w-1/2 px-3 py-1.5 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-amber-500 outline-none text-sm" />
+                        <input type="text" placeholder="Giá trị (VD: LGA1700)" value={spec.value} onChange={(e) => {
+                          const newSpecs = [...formData.specs];
+                          newSpecs[index].value = e.target.value;
+                          setFormData({...formData, specs: newSpecs});
+                        }} className="w-1/2 px-3 py-1.5 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-amber-500 outline-none text-sm" />
+                        <button type="button" onClick={() => {
+                          const newSpecs = formData.specs.filter((_, i) => i !== index);
+                          setFormData({...formData, specs: newSpecs});
+                        }} className="text-red-500 hover:bg-red-50 p-1.5 rounded transition cursor-pointer">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

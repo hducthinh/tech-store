@@ -26,7 +26,12 @@ export default function Login() {
     
     const result = await login({ email, password });
     if (result.success) {
-      navigate("/");
+      const user = result.data?.data?.user || result.data?.user;
+      if (user?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } else {
       setError(result.error || "Đăng nhập thất bại");
     }

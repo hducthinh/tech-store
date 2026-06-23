@@ -169,6 +169,15 @@ export const createProduct = catchAsync(async (req, res, next) => {
 
   const slug = slugify(name);
 
+  let parsedSpecs = {};
+  if (req.body.specs) {
+    try {
+      parsedSpecs = JSON.parse(req.body.specs);
+    } catch (e) {
+      console.error("Lỗi parse specs:", e);
+    }
+  }
+
   const newProduct = await Product.create({
     name,
     slug,
@@ -179,6 +188,7 @@ export const createProduct = catchAsync(async (req, res, next) => {
     price,
     stock,
     description,
+    specs: parsedSpecs,
     thumbnail: thumbnail || "",
     images: images,
   });
@@ -221,6 +231,15 @@ export const updateProduct = catchAsync(async (req, res, next) => {
   if (updateData.brandId) {
     const brand = await Brand.findById(updateData.brandId);
     if (brand) updateData.brandName = brand.name;
+  }
+
+  if (updateData.specs) {
+    try {
+      updateData.specs = JSON.parse(updateData.specs);
+    } catch (e) {
+      console.error("Lỗi parse specs update:", e);
+      delete updateData.specs;
+    }
   }
 
   const product = await Product.findByIdAndUpdate(id, updateData, {

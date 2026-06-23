@@ -53,6 +53,8 @@ export function useProducts() {
             rating: p.rating || 0,
             reviewCount: p.reviewCount || 0,
             image: p.thumbnail || (p.images && p.images.length > 0 ? p.images[0] : "https://via.placeholder.com/300"),
+            thumbnail: p.thumbnail,
+            images: p.images,
             description: p.description,
             specs: [
               "Hàng chính hãng",
