@@ -1,5 +1,5 @@
 import React from "react";
-import { User, FileText, Settings, LogOut, Camera, Edit2, ShoppingCart } from "lucide-react";
+import { User, FileText, Settings, LogOut, Camera, Edit2, ShoppingCart, Loader2 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -69,27 +69,45 @@ export default function Profile() {
                 let dot = "bg-slate-500";
                 let statusText = o.status;
                 
-                if (o.status === "DELIVERED") {
-                  statusColor = "bg-green-100 text-green-700";
-                  dot = "bg-green-500";
-                  statusText = "Đã giao hàng";
-                } else if (o.status === "PROCESSING" || o.status === "PENDING") {
+                let rawStatus = o.status;
+                if (o.status === "PENDING_PAYMENT") {
+                  statusColor = "bg-orange-100 text-orange-700";
+                  dot = "bg-orange-500";
+                  statusText = "Chờ thanh toán";
+                } else if (o.status === "PENDING") {
                   statusColor = "bg-amber-100 text-amber-700";
                   dot = "bg-amber-500";
-                  statusText = "Đang xử lý";
+                  statusText = "Chờ xác nhận";
+                } else if (o.status === "CONFIRMED") {
+                  statusColor = "bg-cyan-100 text-cyan-700";
+                  dot = "bg-cyan-500";
+                  statusText = "Đã xác nhận";
+                } else if (o.status === "PROCESSING") {
+                  statusColor = "bg-blue-100 text-blue-700";
+                  dot = "bg-blue-500";
+                  statusText = "Đang chuẩn bị hàng";
+                } else if (o.status === "SHIPPED") {
+                  statusColor = "bg-purple-100 text-purple-700";
+                  dot = "bg-purple-500";
+                  statusText = "Đang giao hàng";
+                } else if (o.status === "DELIVERED") {
+                  statusColor = "bg-emerald-100 text-emerald-700";
+                  dot = "bg-emerald-500";
+                  statusText = "Đã giao hàng";
+                } else if (o.status === "COMPLETED") {
+                  statusColor = "bg-green-100 text-green-700";
+                  dot = "bg-green-500";
+                  statusText = "Đã hoàn thành";
                 } else if (o.status === "CANCELLED") {
                   statusColor = "bg-red-100 text-red-700";
                   dot = "bg-red-500";
                   statusText = "Đã hủy";
-                } else if (o.status === "SHIPPED") {
-                  statusColor = "bg-blue-100 text-blue-700";
-                  dot = "bg-blue-500";
-                  statusText = "Đang giao hàng";
                 }
 
                 return {
                   id: "#" + o._id.substring(o._id.length - 6).toUpperCase(), 
                   rawId: o._id,
+                  rawStatus,
                   date: new Date(o.createdAt).toLocaleDateString("vi-VN") + " " + new Date(o.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
                   total: o.totalAmount.toLocaleString("vi-VN") + " ₫",
                   status: statusText,
@@ -117,6 +135,48 @@ export default function Profile() {
       });
     }
   }, [user]);
+
+  const [isCancelling, setIsCancelling] = React.useState(false);
+  const [showCancelModal, setShowCancelModal] = React.useState(false);
+
+  const executeCancelOrder = async () => {
+    if (!selectedOrder) return;
+    const orderId = selectedOrder.rawId;
+    setIsCancelling(true);
+    try {
+      const api = (await import("../services/api")).default;
+      const res = await api.post(`/orders/${orderId}/cancel`);
+      if (res.data.status === "success") {
+        alert("Đã hủy đơn hàng thành công!");
+        // Update local state to reflect cancellation
+        setOrders(prev => prev.map(o => {
+          if (o.rawId === orderId) {
+            return {
+              ...o,
+              rawStatus: "CANCELLED",
+              status: "Đã hủy",
+              statusColor: "bg-red-100 text-red-700",
+              dot: "bg-red-500"
+            };
+          }
+          return o;
+        }));
+        setSelectedOrder(prev => ({
+          ...prev,
+          rawStatus: "CANCELLED",
+          status: "Đã hủy",
+          statusColor: "bg-red-100 text-red-700",
+          dot: "bg-red-500"
+        }));
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Có lỗi xảy ra khi hủy đơn hàng");
+    } finally {
+      setIsCancelling(false);
+      setShowCancelModal(false);
+    }
+  };
 
   return (
     <>
@@ -493,12 +553,23 @@ export default function Profile() {
                 <p className="text-sm text-slate-500">Tổng cộng</p>
                 <p className="text-2xl font-black text-[#ba1a1a]">{selectedOrder.totalAmount?.toLocaleString("vi-VN")} ₫</p>
               </div>
-              <button 
-                onClick={() => setSelectedOrder(null)}
-                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
-              >
-                Đóng
-              </button>
+              <div className="flex items-center gap-3">
+                {["PENDING_PAYMENT", "PENDING", "CONFIRMED"].includes(selectedOrder.rawStatus) && (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    disabled={isCancelling}
+                    className="px-6 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    Hủy đơn hàng
+                  </button>
+                )}
+                <button 
+                  onClick={() => setSelectedOrder(null)}
+                  className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                >
+                  Đóng
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -527,6 +598,43 @@ export default function Profile() {
                 className="flex-1 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm"
               >
                 Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && selectedOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Hủy đơn hàng này?</h3>
+              <p className="text-sm text-slate-500">Bạn có chắc chắn muốn hủy đơn hàng <span className="font-bold">{selectedOrder.id}</span> không? Hành động này không thể hoàn tác.</p>
+            </div>
+            <div className="p-4 bg-slate-50 flex gap-3 border-t border-slate-100">
+              <button 
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCancelling}
+                className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                Không
+              </button>
+              <button 
+                onClick={executeCancelOrder}
+                disabled={isCancelling}
+                className="flex-1 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isCancelling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Đang hủy...
+                  </>
+                ) : (
+                  "Đồng ý hủy"
+                )}
               </button>
             </div>
           </div>
