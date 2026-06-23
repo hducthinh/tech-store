@@ -26,9 +26,18 @@ app.set("trust proxy", 1);
 // 1. Bảo vệ HTTP Headers với Helmet
 app.use(helmet());
 
+const allowedOrigins = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map(url => url.trim()) : ["http://localhost:5173"];
+
 // 2. Cấu hình CORS chặt chẽ
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: function (origin, callback) {
+    // Cho phép requests không có origin (như mobile apps, curl) hoặc origin nằm trong danh sách
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
