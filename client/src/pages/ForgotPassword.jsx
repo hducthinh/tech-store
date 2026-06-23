@@ -6,11 +6,26 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email) {
+    if (!email) return;
+    setIsLoading(true);
+    setError("");
+    try {
+      await fetch("/api/v1/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      // Luôn hiển thị thành công để tránh tiết lộ email có tồn tại không
       setSubmitted(true);
+    } catch (_err) {
+      setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,6 +83,12 @@ export default function ForgotPassword() {
                   </p>
                 </div>
 
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                    {error}
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-[#444651] flex items-center gap-1.5" htmlFor="forgot-email">
@@ -86,10 +107,11 @@ export default function ForgotPassword() {
                   </div>
 
                   <button 
-                    className="w-full py-3 bg-[#0058be] hover:bg-[#00236f] text-white rounded-lg text-sm font-semibold transition-all active:scale-[0.98] shadow-sm hover:shadow-md cursor-pointer" 
+                    className="w-full py-3 bg-[#0058be] hover:bg-[#00236f] text-white rounded-lg text-sm font-semibold transition-all active:scale-[0.98] shadow-sm hover:shadow-md cursor-pointer disabled:opacity-60" 
                     type="submit"
+                    disabled={isLoading}
                   >
-                    Gửi thiết lập lại mật khẩu
+                    {isLoading ? "Đang gửi..." : "Gửi thiết lập lại mật khẩu"}
                   </button>
                 </form>
               </>

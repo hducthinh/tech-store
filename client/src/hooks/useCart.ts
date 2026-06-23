@@ -7,22 +7,26 @@ export function useCart(userEmail: string) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
 
-  // Lấy giỏ hàng từ server
+  // Lấy giỏ hàng từ server, xóa khi đăng xuất
   useEffect(() => {
+    if (!userEmail) {
+      setCart([]);
+      setIsCartOpen(false);
+      return;
+    }
+
     const fetchCart = () => {
-      if (userEmail) {
-        api.get("/cart")
-          .then(res => {
-            const items = res.data.data.cart.items
-              .filter((item: any) => item && item.productId)
-              .map((item: any) => ({
-                product: { ...item.productId, id: item.productId._id || item.productId.id },
-                quantity: item.quantity
-              }));
-            setCart(items);
-          })
-          .catch(err => console.error("Lỗi tải giỏ hàng:", err));
-      }
+      api.get("/cart")
+        .then(res => {
+          const items = res.data.data.cart.items
+            .filter((item: any) => item && item.productId)
+            .map((item: any) => ({
+              product: { ...item.productId, id: item.productId._id || item.productId.id },
+              quantity: item.quantity
+            }));
+          setCart(items);
+        })
+        .catch(err => console.error("Lỗi tải giỏ hàng:", err));
     };
     
     fetchCart();

@@ -1,5 +1,6 @@
 // controllers/auth.controllers.js
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import User from "../models/user.model.js";
 import {
   validateRegisterInput,
@@ -7,6 +8,7 @@ import {
 } from "../utils/validators.js";
 import AppError from "../utils/appError.js";
 import catchAsync from "../utils/catchAsync.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 // Tạo JWT token
 const signToken = (id) => {
@@ -153,4 +155,80 @@ export const updateProfile = catchAsync(async (req, res, next) => {
       user,
     },
   });
+});
+
+// @desc    Gửi email đặt lại mật khẩu
+// @route   POST /api/v1/auth/forgot-password
+// @access  Public
+export const forgotPassword = catchAsync(async (req, res, next) => {
+  const email = normalizeEmail(req.body.email);
+  if (!email) return next(new AppError("Vui lòng cung cấp email", 400));
+
+  const user = await User.findOne({ email });
+  // Không tiết lộ email có tồn tại hay không để tránh user enumeration
+  if (!user) {
+    return res.status(200).json({ status: "success", message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi." });
+  }
+
+  // Sinh token ngẫu nhiên an toàn, lưu bản băm vào DB
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+  await user.save({ validateBeforeSave: false });
+
+  const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${rawToken}`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "[TechStore] Đặt lại mật khẩu của bạn",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e2e8f0; border-radius: 12px;">
+          <h2 style="color: #00236f;">TechStore Pro Hardware</h2>
+          <p>Xin chào <strong>${user.fullName}</strong>,</p>
+          <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Nhấn vào nút bên dưới để tiến hành:</p>
+          <a href="${resetUrl}" style="display:inline-block; margin: 20px 0; padding: 12px 28px; background: #0058be; color: #fff; border-radius: 8px; text-decoration: none; font-weight: bold;">Đặt lại mật khẩu</a>
+          <p style="color: #64748b; font-size: 13px;">Link này sẽ hết hạn sau <strong>10 phút</strong>. Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.</p>
+        </div>
+      `,
+    });
+  } catch (_err) {
+    // Nếu gửi email thất bại, xóa token đã lưu để tránh bị khai thác
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(new AppError("Không thể gửi email. Vui lòng thử lại sau.", 500));
+  }
+
+  res.status(200).json({ status: "success", message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi." });
+});
+
+// @desc    Đặt lại mật khẩu bằng token từ email
+// @route   POST /api/v1/auth/reset-password/:token
+// @access  Public
+export const resetPassword = catchAsync(async (req, res, next) => {
+  const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn", 400));
+  }
+
+  const { password } = req.body;
+  if (!password || password.length < 6) {
+    return next(new AppError("Mật khẩu phải có ít nhất 6 ký tự", 400));
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  await user.save();
+
+  sendTokenResponse(user, 200, res);
 });
