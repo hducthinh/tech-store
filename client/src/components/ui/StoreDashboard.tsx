@@ -276,7 +276,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
 
       {/* 3. AI FLOATING WIDGET */}
       {isAiChatOpen && (
-        <div className="fixed bottom-24 right-6 w-[350px] md:w-[420px] h-[600px] max-h-[80vh] z-50 flex flex-col shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300 border border-slate-200">
+        <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-[350px] md:w-[400px] h-[600px] max-h-[85vh] z-50 flex flex-col shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300 border border-slate-200">
           <TechCopilot
             chatMessages={chatMessages}
             setChatMessages={setChatMessages as any}
