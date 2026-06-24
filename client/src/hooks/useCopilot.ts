@@ -34,7 +34,7 @@ export function useCopilot() {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
       const baseUrl = apiUrl.replace(/\/v1\/?$/, "");
 
-      const res = await fetch(`${baseUrl}/gemini/chat`, {
+      const res = await fetch(`${baseUrl}/copilot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

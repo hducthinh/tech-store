@@ -21,6 +21,6 @@ router.use("/v1/orders", orderRoutes);
 router.use("/v1/dashboard", dashboardRoutes);
 router.use("/v1/users", userRoutes);
 router.use("/v1/reviews", reviewRoutes);
-router.use("/gemini", aiRoutes);
+router.use("/copilot", aiRoutes);
 
 export default router;
