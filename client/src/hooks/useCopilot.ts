@@ -8,7 +8,7 @@ export interface Message {
 
 export function useCopilot() {
   const [chatMessages, setChatMessages] = useState<Message[]>([
-    { role: "assistant", content: "Xin chào! Tôi là Trợ lý AI Kỹ Thuật (Tech Copilot) chuyên sâu về server, workstation và hệ thống từ TechStore. Tôi có thể giúp bạn setup cấu hình hoặc tra cứu thông số hôm nay?", timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) }
+    { role: "assistant", content: "Xin chào! Tôi là Trợ lý AI chuyên sâu về phần cứng từ TechStore. Tôi có thể giúp bạn setup cấu hình hoặc tra cứu thông số hôm nay?", timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) }
   ]);
   const [userInputMessage, setUserInputMessage] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -34,7 +34,7 @@ export function useCopilot() {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
       const baseUrl = apiUrl.replace(/\/v1\/?$/, "");
 
-      const res = await fetch(`${baseUrl}/copilot/chat`, {
+      const res = await fetch(`${baseUrl}/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -107,7 +107,7 @@ export function useCopilot() {
       }
 
     } catch (err: any) {
-      console.error("Gemini Chat Endpoint Fail:", err);
+      console.error("AI Chat Endpoint Fail:", err);
       const errReply: Message = {
         role: "assistant",
         content: `Tôi phát hiện lỗi hệ thống kết nối AI (${err.message}). Bạn vui lòng thử lại sau.`,

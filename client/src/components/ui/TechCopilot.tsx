@@ -59,17 +59,17 @@ export function TechCopilot({
             </div>
             <div>
               <h3 className="text-sm font-bold tracking-tight text-slate-800 flex items-center gap-2">
-                TechStore Copilot
+                TechStore AI
                 <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider">AI</span>
               </h3>
-              <p className="text-xs font-medium text-slate-500">Trợ lý công nghệ thời gian thực</p>
+              <p className="text-[11px] font-medium text-slate-500">Trợ lý tư vấn mua sắm</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setChatMessages([{
                 role: "assistant",
-                content: `Chào bạn! Tôi là TechStore Copilot. Hãy hỏi tôi bất cứ cấu hình phần cứng hoặc thiết bị công nghệ nào của cửa hàng.`,
+                content: `Chào bạn! Tôi là Trợ lý AI của TechStore. Hãy hỏi tôi bất cứ cấu hình phần cứng hoặc thiết bị công nghệ nào của cửa hàng.`,
                 timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
               }])}
               title="Làm mới cuộc trò chuyện"
