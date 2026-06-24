@@ -2,9 +2,6 @@
 import catchAsync from "../utils/catchAsync.js";
 import AppError from "../utils/appError.js";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
 const SYSTEM_PROMPT = `Bạn là TechStore Copilot — trợ lý tư vấn phần cứng chuyên nghiệp của cửa hàng TechStore Pro Hardware.
 
 Chuyên môn của bạn:
@@ -21,8 +18,9 @@ Nguyên tắc trả lời:
 - Nếu câu hỏi nằm ngoài lĩnh vực phần cứng/công nghệ, hãy lịch sự từ chối và đề nghị hỏi về cấu hình máy tính.`;
 
 export const chat = catchAsync(async (req, res, next) => {
-  if (!GEMINI_API_KEY) {
-    return next(new AppError("GEMINI_API_KEY chưa được cấu hình", 500));
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  if (!GROQ_API_KEY) {
+    return next(new AppError("GROQ_API_KEY chưa được cấu hình", 500));
   }
 
   const { message, history = [] } = req.body;
@@ -30,47 +28,99 @@ export const chat = catchAsync(async (req, res, next) => {
     return next(new AppError("Tin nhắn không được để trống", 400));
   }
 
-  // Chuyển lịch sử chat sang định dạng Gemini
-  const contents = [
-    // System prompt giả lập bằng tin nhắn đầu tiên của model
-    { role: "user", parts: [{ text: "Bạn là ai?" }] },
-    { role: "model", parts: [{ text: SYSTEM_PROMPT }] },
-    // Lịch sử hội thoại (bỏ tin nhắn chào đầu tiên của bot)
+  // Chuyển lịch sử chat sang định dạng của OpenAI/Groq API
+  const messages = [
+    { role: "system", content: SYSTEM_PROMPT },
+    // Bỏ qua tin nhắn chào đầu tiên của bot nếu có
     ...history
-      .filter(m => m.role !== "assistant" || m.content !== history[0]?.content)
-      .map(m => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.content }]
+      .filter((m) => m.role !== "assistant" || m.content !== history[0]?.content)
+      .map((m) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content
       })),
-    // Tin nhắn hiện tại
-    { role: "user", parts: [{ text: message }] }
+    { role: "user", content: message }
   ];
 
-  const response = await fetch(GEMINI_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents,
-      generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
-    })
-  });
+  // Thiết lập Headers cho Server-Sent Events (SSE)
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
 
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    console.error("[AI] Gemini API error:", response.status, JSON.stringify(errData));
-    // 429 = rate limit / quota exceeded
-    const userMsg = response.status === 429
-      ? "Hệ thống AI đang bận, vui lòng thử lại sau vài giây."
-      : "Lỗi kết nối đến AI. Vui lòng thử lại sau.";
-    return next(new AppError(userMsg, 502));
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        stream: true,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 800
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      if (response.status === 429) {
+        throw new Error("Mô hình AI đang quá tải (Rate Limited). Vui lòng thử lại sau vài giây.");
+      }
+      throw new Error(errData.error?.message || `Lỗi kết nối Groq: HTTP ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    if (reader) {
+      let buffer = "";
+      let done = false;
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const dataStr = line.substring(6).trim();
+              if (dataStr === "[DONE]") {
+                done = true;
+                break;
+              }
+              if (!dataStr) continue;
+
+              try {
+                const data = JSON.parse(dataStr);
+                const contentChunk = data.choices?.[0]?.delta?.content;
+                if (contentChunk) {
+                  // Gửi từng phần dữ liệu cho client theo chuẩn SSE đang dùng
+                  res.write(`data: ${JSON.stringify({ text: contentChunk })}\n\n`);
+                }
+              } catch (e) {
+                // ignore JSON parse error for incomplete chunks
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Đánh dấu kết thúc stream
+    res.write("data: [DONE]\n\n");
+    res.end();
+
+  } catch (error) {
+    console.error("[AI] Groq API error:", error);
+
+    if (!res.headersSent) {
+      return next(new AppError(error.message || "Lỗi kết nối đến AI. Vui lòng thử lại sau.", 502));
+    }
+
+    res.write(`data: ${JSON.stringify({ error: "Lỗi kết nối đến AI hoặc bị ngắt quãng." })}\n\n`);
+    res.end();
   }
-
-  const data = await response.json();
-  const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (!reply) {
-    return next(new AppError("AI không trả về kết quả hợp lệ.", 502));
-  }
-
-  res.status(200).json({ reply });
 });

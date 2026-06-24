@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, Loader2, Database, CheckCircle2, Search, ChevronDown } from "lucide-react";
+import { User, LogOut, Loader2, Database, CheckCircle2, Search, ChevronDown, Sparkles } from "lucide-react";
 
 import { useProducts } from "../../hooks/useProducts";
 import { useCart } from "../../hooks/useCart";
@@ -21,7 +21,8 @@ interface StoreDashboardProps {
 }
 
 export default function StoreDashboard({ userEmail, onLogout, onLoginClick, children }: StoreDashboardProps) {
-  const [activeTab, setActiveTab] = useState<"catalog" | "ai" | "history">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "history">("catalog");
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -56,13 +57,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     getSelectedTotal
   } = useCart(userEmail);
 
-  const {
-    orders,
-    checkoutStep,
-    setCheckoutStep,
-    handleCheckout,
-    orderId
-  } = useOrders(userEmail, setCart);
+  const { orders } = useOrders(userEmail, setCart);
 
   useEffect(() => {
     const handleOpenCart = () => setIsCartOpen(true);
@@ -73,17 +68,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     };
   }, [setIsCartOpen]);
 
-  const {
-    shippingName,
-    setShippingName,
-    shippingPhone,
-    setShippingPhone,
-    shippingAddress,
-    setShippingAddress,
-    paymentMethod,
-    setPaymentMethod,
-    handlePlaceOrder
-  } = useOrders(userEmail, setCart);
+
 
   const {
     chatMessages,
@@ -95,7 +80,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
     chatSuggestions
   } = useCopilot();
 
-  const onNavigateToAi = () => setActiveTab("ai");
+  const onNavigateToAi = () => setIsAiChatOpen(true);
   const onNavigateToCatalog = () => setActiveTab("catalog");
 
   return (
@@ -169,16 +154,17 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
                 <button
                   key={tab.id}
                   onClick={() => {
-                    setActiveTab(tab.id as any);
-                    setIsCheckoutOpen(false);
-                    navigate("/");
+                    if (tab.id === "ai") {
+                      setIsAiChatOpen(true);
+                    } else {
+                      setActiveTab(tab.id as any);
+                      navigate("/");
+                    }
                   }}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                    activeTab === tab.id && !children
-                      ? "bg-white text-[#0058be] shadow-sm" 
-                      : tab.highlight 
-                        ? "text-amber-600 hover:bg-white/50" 
-                        : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+                    tab.highlight 
+                      ? "text-amber-600 hover:bg-white/50" 
+                      : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                   }`}
                 >
                   {tab.highlight && <span className="inline-block w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5 animate-pulse"></span>}
@@ -271,20 +257,7 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
           />
         )}
 
-        {/* TAB 2: AI Tech Assistant Workspace */}
-        {activeTab === "ai" && (
-          <div className="flex-1 max-w-[1280px] w-full mx-auto p-4 md:p-8 flex flex-col gap-6">
-            <TechCopilot
-              chatMessages={chatMessages}
-              setChatMessages={setChatMessages as any}
-              userInputMessage={userInputMessage}
-              setUserInputMessage={setUserInputMessage}
-              aiLoading={aiLoading}
-              handleSendMessage={handleSendMessage}
-              chatSuggestions={chatSuggestions}
-            />
-          </div>
-        )}
+
 
         {/* TAB 3: Placed orders history */}
         {activeTab === "history" && (
@@ -300,6 +273,35 @@ export default function StoreDashboard({ userEmail, onLogout, onLoginClick, chil
           </>
         )}
       </section>
+
+      {/* 3. AI FLOATING WIDGET */}
+      {isAiChatOpen && (
+        <div className="fixed bottom-24 right-6 w-[350px] md:w-[420px] h-[600px] max-h-[80vh] z-50 flex flex-col shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-300 border border-slate-200">
+          <TechCopilot
+            chatMessages={chatMessages}
+            setChatMessages={setChatMessages as any}
+            userInputMessage={userInputMessage}
+            setUserInputMessage={setUserInputMessage}
+            aiLoading={aiLoading}
+            handleSendMessage={handleSendMessage}
+            chatSuggestions={chatSuggestions}
+            onClose={() => setIsAiChatOpen(false)}
+          />
+        </div>
+      )}
+
+      {/* Floating AI Trigger Button */}
+      {!isAiChatOpen && (
+        <button
+          onClick={() => setIsAiChatOpen(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-tr from-[#00236f] to-[#0058be] text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform z-40 group cursor-pointer"
+        >
+          <Sparkles className="w-6 h-6 animate-pulse" />
+          <span className="absolute right-full mr-4 bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            Chat với chúng tôi
+          </span>
+        </button>
+      )}
 
       {/* 4. REACTIVE SHOPPING CART SIDE DRAWER */}
       <CartDrawer

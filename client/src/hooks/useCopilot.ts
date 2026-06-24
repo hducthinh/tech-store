@@ -1,5 +1,11 @@
 import { useState } from "react";
 
+export interface Message {
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp?: string;
+}
+
 export function useCopilot() {
   const [chatMessages, setChatMessages] = useState<Message[]>([
     { role: "assistant", content: "Xin chào! Tôi là Trợ lý AI Kỹ Thuật (Tech Copilot) chuyên sâu về server, workstation và hệ thống từ TechStore. Tôi có thể giúp bạn setup cấu hình hoặc tra cứu thông số hôm nay?", timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) }
@@ -34,25 +40,74 @@ export function useCopilot() {
         })
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.message || `HTTP ${res.status}`);
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `HTTP ${res.status}`);
       }
-      
-      const aiReply: Message = {
-        role: "assistant",
-        content: data.reply || "Tôi gặp trục trặc kỹ thuật khi kết nối hệ thống. Bạn có thể hỏi lại sau.",
-        timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
-      };
 
-      setChatMessages(prev => [...prev, aiReply]);
+      // Tạo sẵn một tin nhắn trống cho AI
+      setChatMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "",
+          timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+        }
+      ]);
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      if (reader) {
+        let buffer = "";
+        let done = false;
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || "";
+            
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const dataStr = line.substring(6);
+                if (dataStr.trim() === "[DONE]") {
+                  done = true;
+                  break;
+                }
+                try {
+                  const data = JSON.parse(dataStr);
+                  if (data.error) {
+                    throw new Error(data.error);
+                  }
+                  if (data.text) {
+                    setChatMessages(prev => {
+                      const newMsgs = [...prev];
+                      const lastIdx = newMsgs.length - 1;
+                      if (newMsgs[lastIdx].role === "assistant") {
+                        newMsgs[lastIdx] = {
+                          ...newMsgs[lastIdx],
+                          content: newMsgs[lastIdx].content + data.text
+                        };
+                      }
+                      return newMsgs;
+                    });
+                  }
+                } catch (e) {
+                  // ignore JSON parse errors
+                }
+              }
+            }
+          }
+        }
+      }
 
     } catch (err: any) {
       console.error("Gemini Chat Endpoint Fail:", err);
       const errReply: Message = {
         role: "assistant",
-        content: `Tôi phát hiện lỗi hệ thống kết nối AI (${err.message}). Bạn vui lòng thực hiện kiểm tra GEMINI_API_KEY ở cài đặt.`,
+        content: `Tôi phát hiện lỗi hệ thống kết nối AI (${err.message}). Bạn vui lòng thử lại sau.`,
         timestamp: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
       };
       setChatMessages(prev => [...prev, errReply]);
@@ -70,6 +125,7 @@ export function useCopilot() {
 
   return {
     chatMessages,
+    setChatMessages,
     userInputMessage,
     setUserInputMessage,
     aiLoading,
