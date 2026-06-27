@@ -1,20 +1,22 @@
 import React, { useState } from "react";
-import { Terminal, Mail, Lock, User, Phone } from "lucide-react";
+import { Terminal, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
+import { Btn, Input } from "../components/SharedUI";
 
 export default function Register() {
   const navigate = useNavigate();
   const { register, isLoading, error: authError } = useAuth();
-
-  useDocumentMeta("Đăng ký tài khoản", "Đăng ký thành viên TechStore để tham gia cộng đồng Developer Việt Nam.");
+  
+  useDocumentMeta("Đăng ký - TechCart", "Đăng ký tài khoản mới");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -29,7 +31,6 @@ export default function Register() {
     }
     setError("");
 
-    // The backend validation expects fullName, email, phone, password, and confirmPassword
     const result = await register({ fullName, email, phone, password, confirmPassword });
     if (result.success) {
       navigate("/");
@@ -39,194 +40,120 @@ export default function Register() {
   };
 
   return (
-    <div id="register-container" className="min-h-screen flex flex-col justify-between font-sans bg-[#faf8ff] w-full max-w-none m-0 absolute inset-0">
-      <main className="flex-1 flex flex-col md:flex-row min-h-0">
+    <div className="min-h-screen flex bg-gray-50 font-sans">
+      {/* Left panel - Image */}
+      <div className="hidden lg:flex w-1/2 tech-gradient p-12 text-white flex-col justify-between relative overflow-hidden">
+        <div className="z-10 cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
+          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
+            <Terminal size={20} />
+          </div>
+          <span className="text-xl font-black tracking-tight">TechCart</span>
+        </div>
+        
+        <div className="z-10 max-w-md">
+          <h1 className="text-5xl font-black leading-tight mb-6">Tạo tài khoản.</h1>
+          <p className="text-blue-100 text-lg">Tham gia cùng hàng ngàn khách hàng khác để mua sắm thiết bị công nghệ với giá tốt nhất.</p>
+        </div>
 
-        {/* Left Column: Branding (Split 50%) - Shared visual */}
-        <section id="register-left" className="hidden md:flex md:w-1/2 tech-gradient relative overflow-hidden flex-col justify-between p-16 text-white">
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg">
-              <Terminal className="w-8 h-8 text-white" />
+        <div className="absolute -bottom-24 -right-24 w-[120%] opacity-20 pointer-events-none">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#FFFFFF" d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,79.6,-45.8C87.4,-32.6,90,-16.3,89.1,-0.5C88.1,15.3,83.6,30.6,75.2,43.6C66.8,56.6,54.5,67.3,40.4,74.3C26.3,81.3,10.4,84.6,-4.8,82.7C-20,80.8,-34.5,73.8,-47.9,64.4C-61.3,55,-73.6,43.2,-81.1,28.7C-88.6,14.2,-91.3,-3,-88.4,-19C-85.5,-35,-77.1,-49.8,-64.5,-59.9C-51.9,-70,-35.1,-75.4,-20.1,-78C-5.1,-80.6,8.1,-80.4,22.1,-79.8" transform="translate(100 100) scale(1.1)" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Right panel - Form */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 relative overflow-y-auto">
+        <button onClick={() => navigate("/")} className="absolute top-8 left-8 text-gray-500 hover:text-blue-600 flex items-center gap-1 font-semibold text-sm transition-colors lg:hidden">
+          <ArrowLeft size={16} /> Trang chủ
+        </button>
+
+        <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500 my-auto py-10">
+          <div className="mb-8 text-center lg:text-left mt-8 lg:mt-0">
+            <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white mx-auto lg:mx-0 mb-6 lg:hidden shadow-lg shadow-blue-600/30">
+              <Terminal size={24} />
             </div>
-            <h1 className="text-2xl font-display font-bold tracking-tight text-white">TechStore</h1>
+            <h2 className="text-3xl font-black text-gray-900 mb-2">Đăng ký</h2>
+            <p className="text-gray-500 font-medium">Nhập thông tin của bạn để tạo tài khoản mới</p>
           </div>
 
-          <div className="relative z-10 max-w-md my-auto">
-            <h2 className="text-5xl font-bold font-sans tracking-tight leading-[1.15] mb-6">
-              Tạo tài khoản
-            </h2>
-            <p className="text-lg text-white/80 leading-relaxed font-sans font-light">
-              Tham gia cùng đội ngũ kỹ sư hệ thống và nhà phát triển hàng đầu Việt Nam để sở hữu thiết bị chuyên nghiệp.
-            </p>
-          </div>
+          {(error || authError) && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm font-semibold border border-red-100">
+              {error || authError}
+            </div>
+          )}
 
-          <div className="absolute bottom-0 right-0 w-3/4 h-1/2 opacity-25 pointer-events-none transform translate-y-6 translate-x-6">
-            <img
-              className="w-full h-full object-contain filter drop-shadow-[0_20px_50px_rgba(0,35,111,0.5)]"
-              alt="High-tech hardware render"
-              referrerPolicy="no-referrer"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBEaQsNQmkEI9OGq1zcoK4E3-tS_s4Q0o-VAhKCN-sLQwEtcUKw4Ofe-0gsvpsvGo46P6VEB3orj-CEKCuJ7v359yGkOOc5lC-Y2BHc8ZLYDoRvm0Z6lip9a4Y0knwCNVxio41ZB64lgfOP1eP6WCEKxgp9u2hImJcwe-dkwyx26YV3AhAq3UK274Ujpc9SfkFHO4yI7U0TDpo0-lBz6WNxce9BzeePV8yyWmiBB4KOq9ijckULjCbFcYvDJqDMvSsQdAyG38Dytk"
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input 
+              label="Họ và tên" 
+              placeholder="Nguyễn Văn A" 
+              value={fullName} 
+              onChange={setFullName} 
             />
-          </div>
-        </section>
-
-        {/* Right Column: Register Form */}
-        <section id="register-right" className="flex-1 flex flex-col justify-center items-center p-6 md:p-16 bg-[#faf8ff]">
-          <div className="w-full max-w-[440px] flex flex-col gap-8">
-
-            <div className="md:hidden flex items-center gap-2 mb-2">
-              <div className="p-1.5 bg-[#00236f]/10 rounded-lg">
-                <Terminal className="w-7 h-7 text-[#00236f]" />
-              </div>
-              <h1 className="text-xl font-display font-bold tracking-tight text-[#00236f]">TechStore</h1>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <Input 
+                label="Số điện thoại" 
+                type="tel"
+                placeholder="0901234567" 
+                value={phone} 
+                onChange={setPhone} 
+              />
+              <Input 
+                label="Địa chỉ Email" 
+                type="email" 
+                placeholder="name@example.com" 
+                value={email} 
+                onChange={setEmail} 
+              />
             </div>
-
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight text-[#1a1b21] font-sans">Đăng ký tài khoản</h2>
-            </div>
-
-            {(error || authError) && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-[#ba1a1a]">
-                {error || authError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Full Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#444651] flex items-center gap-1.5" htmlFor="fullName">
-                  <User className="w-4 h-4 text-slate-400" />
-                  Họ và tên
-                </label>
-                <input
-                  className="w-full px-4 py-2.5 bg-white border border-[#c5c5d3] rounded-lg text-sm text-[#1a1b21] placeholder:text-slate-300 focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] hover:border-slate-400 transition-all outline-none"
-                  id="fullName"
-                  placeholder="Nguyễn Văn A"
-                  required
-                  minLength="2"
-                  maxLength="100"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  onInvalid={(e) => e.target.setCustomValidity("Vui lòng nhập họ và tên (từ 2-100 ký tự)")}
-                  onInput={(e) => e.target.setCustomValidity("")}
-                />
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#444651] flex items-center gap-1.5" htmlFor="reg-phone">
-                  <Phone className="w-4 h-4 text-slate-400" />
-                  Số điện thoại
-                </label>
-                <input
-                  className="w-full px-4 py-2.5 bg-white border border-[#c5c5d3] rounded-lg text-sm text-[#1a1b21] placeholder:text-slate-300 focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] hover:border-slate-400 transition-all outline-none"
-                  id="reg-phone"
-                  placeholder="0901234567"
-                  required
-                  pattern="[0-9]{10}"
-                  title="Số điện thoại phải chứa 10 chữ số"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Số điện thoại không hợp lệ (phải gồm 10 chữ số)" : "Vui lòng nhập số điện thoại")}
-                  onInput={(e) => e.target.setCustomValidity("")}
-                />
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#444651] flex items-center gap-1.5" htmlFor="reg-email">
-                  <Mail className="w-4 h-4 text-slate-400" />
-                  Địa chỉ Email
-                </label>
-                <input
-                  className="w-full px-4 py-2.5 bg-white border border-[#c5c5d3] rounded-lg text-sm text-[#1a1b21] placeholder:text-slate-300 focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] hover:border-slate-400 transition-all outline-none"
-                  id="reg-email"
-                  placeholder="name@company.com"
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Định dạng email không hợp lệ" : "Vui lòng nhập địa chỉ email")}
-                  onInput={(e) => e.target.setCustomValidity("")}
-                />
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#444651] flex items-center gap-1.5" htmlFor="reg-password">
-                  <Lock className="w-4 h-4 text-slate-400" />
-                  Mật khẩu
-                </label>
-                <input
-                  className="w-full px-4 py-2.5 bg-white border border-[#c5c5d3] rounded-lg text-sm text-[#1a1b21] placeholder:text-slate-300 focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] hover:border-slate-400 transition-all outline-none"
-                  id="reg-password"
+            
+            <div className="relative">
+              <label className="text-sm font-semibold text-gray-900 mb-1.5 block">Mật khẩu</label>
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none pr-10"
                   placeholder="••••••••"
-                  required
-                  minLength="6"
-                  type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Mật khẩu phải chứa ít nhất 6 ký tự" : "Vui lòng nhập mật khẩu")}
-                  onInput={(e) => e.target.setCustomValidity("")}
+                  onChange={e => setPassword(e.target.value)}
                 />
+                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
+            </div>
 
-              {/* Confirm Password */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#444651] flex items-center gap-1.5" htmlFor="reg-confirm-password">
-                  <Lock className="w-4 h-4 text-slate-400" />
-                  Xác nhận mật khẩu
-                </label>
-                <input
-                  className="w-full px-4 py-2.5 bg-white border border-[#c5c5d3] rounded-lg text-sm text-[#1a1b21] placeholder:text-slate-300 focus:ring-2 focus:ring-[#3b82f6] focus:border-[#3b82f6] hover:border-slate-400 transition-all outline-none"
-                  id="reg-confirm-password"
+            <div className="relative">
+              <label className="text-sm font-semibold text-gray-900 mb-1.5 block">Xác nhận mật khẩu</label>
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none pr-10"
                   placeholder="••••••••"
-                  required
-                  minLength="6"
-                  type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  onInvalid={(e) => e.target.setCustomValidity(e.target.value ? "Xác nhận mật khẩu phải chứa ít nhất 6 ký tự" : "Vui lòng xác nhận mật khẩu")}
-                  onInput={(e) => e.target.setCustomValidity("")}
+                  onChange={e => setConfirmPassword(e.target.value)}
                 />
               </div>
+            </div>
 
-              {/* Terms Checkbox */}
-              <div className="flex items-start gap-2 pt-1">
-                <input
-                  className="mt-1 w-4 h-4 rounded border-slate-300 text-[#0058be] focus:ring-[#3b82f6] cursor-pointer"
-                  id="terms"
-                  required
-                  type="checkbox"
-                />
-                <label className="text-xs text-[#444651] cursor-pointer" htmlFor="terms">
-                  Tôi đồng ý với <a href="#terms-link" className="text-[#0058be] hover:underline">Chính sách Bảo mật</a> và <a href="#terms-link" className="text-[#0058be] hover:underline">Điều khoản Sử dụng</a> của TechStore.
-                </label>
-              </div>
+            <label className="flex items-start gap-2 mt-2 cursor-pointer group">
+              <input type="checkbox" required className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              <span className="text-sm text-gray-500 leading-tight">
+                Tôi đồng ý với <a href="#" className="text-blue-600 hover:underline">Điều khoản dịch vụ</a> và <a href="#" className="text-blue-600 hover:underline">Chính sách bảo mật</a> của TechCart.
+              </span>
+            </label>
 
-              <button
-                className="w-full py-3 mt-2 bg-[#0058be] hover:bg-[#00236f] text-white rounded-lg text-sm font-semibold transition-all active:scale-[0.98] shadow-sm hover:shadow-md cursor-pointer disabled:opacity-70"
-                type="submit"
-                disabled={isLoading}
-              >
-                {isLoading ? "Đang xử lý..." : "Đăng ký thành viên"}
-              </button>
-            </form>
+            <Btn type="submit" size="lg" className="mt-4" disabled={isLoading}>
+              {isLoading ? "Đang xử lý..." : "Tạo tài khoản"}
+            </Btn>
+          </form>
 
-            <p className="text-center text-sm text-[#444651]">
-              Đã có tài khoản?{" "}
-              <button
-                onClick={() => navigate("/login")}
-                className="text-[#0058be] font-bold hover:underline decoration-[#0058be] decoration-2 underline-offset-4 cursor-pointer"
-              >
-                Đăng nhập ngay
-              </button>
-            </p>
-          </div>
-        </section>
-      </main>
+          <p className="text-center mt-8 text-gray-500 font-medium">
+            Đã có tài khoản? <button onClick={() => navigate("/login")} className="text-blue-600 font-bold hover:underline">Đăng nhập</button>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

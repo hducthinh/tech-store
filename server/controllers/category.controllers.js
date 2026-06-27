@@ -22,9 +22,24 @@ export const getAdminCategories = catchAsync(async (req, res) => {
 // @route   GET /api/v1/categories
 // @access  Public
 export const getCategories = catchAsync(async (req, res) => {
-  const categories = await Category.find({ isActive: true })
-    .sort({ displayOrder: 1, name: 1 })
-    .lean();
+  const categories = await Category.aggregate([
+    { $match: { isActive: true } },
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        foreignField: "categoryId",
+        as: "productItems"
+      }
+    },
+    {
+      $addFields: {
+        products: { $size: "$productItems" }
+      }
+    },
+    { $project: { productItems: 0 } },
+    { $sort: { displayOrder: 1, name: 1 } }
+  ]);
 
   res.status(200).json({
     status: "success",

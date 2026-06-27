@@ -1,0 +1,19 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "jest-puppeteer": "^11.0.0",
+    "puppeteer": "^25.2.1"
+  }
+}

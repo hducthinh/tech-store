@@ -21,7 +21,7 @@ export class ErrorBoundary extends React.Component {
           <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-red-100 p-8 text-center">
             <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">⚠️</div>
             <h1 className="text-xl font-bold text-slate-800 mb-2">Đã xảy ra lỗi hệ thống</h1>
-            <p className="text-sm text-slate-500 mb-6">Xin lỗi vì sự bất tiện này. Đội ngũ kỹ thuật đã được thông báo.</p>
+            <p className="text-sm text-slate-500 mb-6">{this.state.error?.message || "Xin lỗi vì sự bất tiện này. Đội ngũ kỹ thuật đã được thông báo."}</p>
             <button onClick={() => window.location.reload()} className="px-6 py-2.5 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-900 transition">
               Tải lại trang
             </button>

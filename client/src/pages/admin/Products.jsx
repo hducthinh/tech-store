@@ -1,322 +1,112 @@
 import React, { useState, useEffect } from "react";
-import { Box, Plus, Loader2 } from "lucide-react";
-import { useAdminProducts } from "../../hooks/useAdminProducts";
+import { Package, Plus, Search, Filter, Edit, Trash2, Eye, Star } from "lucide-react";
+import { Card, Btn, fmt, img } from "../../components/SharedUI";
+import { useDocumentMeta } from "../../hooks/useDocumentMeta";
 import api from "../../services/api";
 
-import ProductTable from "../../components/admin/ProductTable";
-import ProductFormModal from "../../components/admin/ProductFormModal";
-
 export default function AdminProducts() {
-  const { products, loading, createProduct, updateProduct, deleteProduct } = useAdminProducts();
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [confirmToggleModal, setConfirmToggleModal] = useState({ isOpen: false, product: null });
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    categoryId: "",
-    brandId: "",
-    price: "",
-    stock: "",
-    description: "",
-    specs: [],
-  });
-  const [formError, setFormError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // File states
-  const [thumbnailFile, setThumbnailFile] = useState(null);
-  const [imageFiles, setImageFiles] = useState([]);
-  const [currentThumbnail, setCurrentThumbnail] = useState("");
-  const [currentImages, setCurrentImages] = useState([]);
-
-  // States for inline adding
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [isAddingBrand, setIsAddingBrand] = useState(false);
-  const [newBrandName, setNewBrandName] = useState("");
+  useDocumentMeta("Quản lý Sản phẩm - Admin", "Quản lý Sản phẩm TechStore");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSelectOptions = async () => {
+    const fetchProducts = async () => {
       try {
-        const [catRes, brandRes] = await Promise.all([
-          api.get("/categories"),
-          api.get("/brands")
-        ]);
-        if (catRes.data.status === "success") setCategories(catRes.data.data.categories);
-        if (brandRes.data.status === "success") setBrands(brandRes.data.data.brands);
-      } catch (err) {
-        console.error("Lỗi tải options:", err);
+        const response = await api.get("/products/admin");
+        setProducts(response.data?.data?.products || []);
+      } catch (error) {
+        console.error("Lỗi khi tải sản phẩm", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchSelectOptions();
+    fetchProducts();
   }, []);
 
-  const handleOpenModal = (product = null) => {
-    setFormError("");
-    setIsAddingCategory(false);
-    setIsAddingBrand(false);
-    setNewCategoryName("");
-    setNewBrandName("");
-    if (product) {
-      setEditingId(product._id);
-      setFormData({
-        name: product.name,
-        categoryId: product.categoryId?._id || "",
-        brandId: product.brandId?._id || "",
-        price: product.price,
-        stock: product.stock,
-        description: product.description || "",
-        specs: product.specs ? Object.entries(product.specs).map(([k, v]) => ({ key: k, value: v })) : [],
-      });
-      setCurrentThumbnail(product.thumbnail || "");
-      setCurrentImages(product.images || []);
-    } else {
-      setEditingId(null);
-      setFormData({
-        name: "",
-        categoryId: categories.length > 0 ? categories[0]._id : "",
-        brandId: brands.length > 0 ? brands[0]._id : "",
-        price: "",
-        stock: "",
-        description: "",
-        specs: [],
-      });
-      setCurrentThumbnail("");
-      setCurrentImages([]);
-    }
-    setThumbnailFile(null);
-    setImageFiles([]);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleRemoveImage = (index) => {
-    setCurrentImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleEditExistingImage = (index) => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-      if (e.target.files[0]) {
-        setCurrentImages(prev => prev.filter((_, i) => i !== index));
-        setImageFiles(prev => [...prev, e.target.files[0]]);
-      }
-    };
-    input.click();
-  };
-
-  const handleSaveNewCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    try {
-      const res = await api.post("/categories", { name: newCategoryName });
-      if (res.data.status === "success") {
-        const newCat = res.data.data.category;
-        setCategories([...categories, newCat]);
-        setFormData({ ...formData, categoryId: newCat._id });
-        setIsAddingCategory(false);
-        setNewCategoryName("");
-      }
-    } catch (e) {
-      alert("Lỗi khi thêm danh mục: " + (e.response?.data?.message || e.message));
-    }
-  };
-
-  const handleSaveNewBrand = async () => {
-    if (!newBrandName.trim()) return;
-    try {
-      const res = await api.post("/brands", { name: newBrandName });
-      if (res.data.status === "success") {
-        const newBrand = res.data.data.brand;
-        setBrands([...brands, newBrand]);
-        setFormData({ ...formData, brandId: newBrand._id });
-        setIsAddingBrand(false);
-        setNewBrandName("");
-      }
-    } catch (e) {
-      alert("Lỗi khi thêm thương hiệu: " + (e.response?.data?.message || e.message));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormError("");
-    
-    if (isAddingCategory || isAddingBrand) {
-      setFormError("Vui lòng hoàn tất việc thêm danh mục/thương hiệu trước khi lưu sản phẩm.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    // Convert to FormData
-    const formDataObj = new FormData();
-    formDataObj.append("name", formData.name);
-    formDataObj.append("categoryId", formData.categoryId);
-    formDataObj.append("brandId", formData.brandId);
-    formDataObj.append("price", Number(formData.price));
-    formDataObj.append("stock", Number(formData.stock));
-    formDataObj.append("description", formData.description);
-
-    const specsObj = {};
-    if (formData.specs && formData.specs.length > 0) {
-      formData.specs.forEach(s => {
-        if (s.key && s.value) {
-          specsObj[s.key] = s.value;
-        }
-      });
-    }
-    formDataObj.append("specs", JSON.stringify(specsObj));
-
-    if (thumbnailFile) {
-      formDataObj.append("thumbnail", thumbnailFile);
-    } else if (editingId && !currentThumbnail) {
-      formDataObj.append("clearThumbnail", "true");
-    }
-
-    imageFiles.forEach(file => {
-      formDataObj.append("images", file);
-    });
-
-    if (currentImages && currentImages.length > 0) {
-      currentImages.forEach(img => {
-        formDataObj.append("existingImages", img);
-      });
-    } else if (editingId) {
-      formDataObj.append("existingImages", "");
-    }
-
-    let res;
-    if (editingId) {
-      res = await updateProduct(editingId, formDataObj);
-    } else {
-      res = await createProduct(formDataObj);
-    }
-
-    setIsSubmitting(false);
-    if (res.success) {
-      handleCloseModal();
-    } else {
-      setFormError(res.message);
-    }
-  };
-
-  const handleToggleActive = (product) => {
-    setConfirmToggleModal({ isOpen: true, product });
-  };
-
-  const confirmToggleStatus = async () => {
-    const { product } = confirmToggleModal;
-    setConfirmToggleModal({ isOpen: false, product: null });
-    await deleteProduct(product._id);
-  };
+  if (loading) return <div className="p-8 text-center text-gray-500 font-semibold">Đang tải sản phẩm...</div>;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-h-[500px]">
-      <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
-            <Box className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">Quản lý Sản phẩm</h2>
-            <p className="text-xs text-slate-500">Thêm mới, cập nhật và quản lý kho hàng</p>
-          </div>
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 mb-1">Sản phẩm</h1>
+          <p className="text-sm text-gray-500">Quản lý kho hàng và danh mục sản phẩm</p>
         </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 transition shadow-sm cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          Thêm sản phẩm
-        </button>
+        <div className="flex items-center gap-3">
+          <Btn variant="outline" className="flex items-center gap-2">
+            <Filter size={16} /> Lọc
+          </Btn>
+          <Btn variant="primary" className="flex items-center gap-2">
+            <Plus size={16} /> Thêm sản phẩm
+          </Btn>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-        </div>
-      ) : (
-        <ProductTable 
-          products={products} 
-          handleOpenModal={handleOpenModal} 
-          handleToggleActive={handleToggleActive} 
-        />
-      )}
-
-      {/* Modal */}
-      <ProductFormModal 
-        isModalOpen={isModalOpen}
-        editingId={editingId}
-        formData={formData}
-        setFormData={setFormData}
-        categories={categories}
-        brands={brands}
-        formError={formError}
-        isSubmitting={isSubmitting}
-        handleSubmit={handleSubmit}
-        handleCloseModal={handleCloseModal}
-        isAddingCategory={isAddingCategory}
-        setIsAddingCategory={setIsAddingCategory}
-        newCategoryName={newCategoryName}
-        setNewCategoryName={setNewCategoryName}
-        handleSaveNewCategory={handleSaveNewCategory}
-        isAddingBrand={isAddingBrand}
-        setIsAddingBrand={setIsAddingBrand}
-        newBrandName={newBrandName}
-        setNewBrandName={setNewBrandName}
-        handleSaveNewBrand={handleSaveNewBrand}
-        handleChange={handleChange}
-        thumbnailFile={thumbnailFile}
-        setThumbnailFile={setThumbnailFile}
-        currentThumbnail={currentThumbnail}
-        setCurrentThumbnail={setCurrentThumbnail}
-        imageFiles={imageFiles}
-        setImageFiles={setImageFiles}
-        currentImages={currentImages}
-        setCurrentImages={setCurrentImages}
-        handleEditExistingImage={handleEditExistingImage}
-        handleRemoveImage={handleRemoveImage}
-      />
-
-      {/* Confirm Toggle Modal */}
-      {confirmToggleModal.isOpen && confirmToggleModal.product && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Xác nhận thay đổi</h3>
-            <p className="text-sm text-slate-600 mb-6">
-              Bạn có chắc chắn muốn <span className={`font-bold ${confirmToggleModal.product.isActive ? "text-red-600" : "text-emerald-600"}`}>
-                {confirmToggleModal.product.isActive ? "vô hiệu hóa" : "khôi phục"}
-              </span> sản phẩm <span className="font-semibold text-slate-800">"{confirmToggleModal.product.name}"</span>?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setConfirmToggleModal({ isOpen: false, product: null })} 
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
-              >
-                Hủy bỏ
-              </button>
-              <button 
-                onClick={confirmToggleStatus} 
-                className={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm transition cursor-pointer ${confirmToggleModal.product.isActive ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700"}`}
-              >
-                Xác nhận
-              </button>
-            </div>
+      <Card className="p-0 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex items-center gap-4 bg-gray-50/50">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Tìm kiếm tên sản phẩm, mã SKU..." 
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
           </div>
         </div>
-      )}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Sản phẩm</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Thương hiệu</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Giá bán</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Tồn kho</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {products.map(p => (
+                <tr key={p._id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-4 cursor-pointer hover:opacity-80" onClick={() => setSelectedProduct(p)}>
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                        <img src={p.thumbnail && p.thumbnail.startsWith("http") ? p.thumbnail : img(p.thumbnail || "1610945415295-d9bbf067e59c")} alt={p.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 line-clamp-1">{p.name}</h4>
+                        <div className="flex items-center gap-1 text-xs text-amber-500 mt-1">
+                          <Star size={12} className="fill-amber-500" /> {p.rating || 5} 
+                          <span className="text-gray-400">({p.reviews || 0} đánh giá)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-700">{p.brandName || "Unknown"}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-red-600">{fmt(p.price)}</td>
+                  <td className="px-6 py-4">
+                    {p.stock > 10 ? (
+                      <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-md text-xs font-bold">Còn {p.stock}</span>
+                    ) : p.stock > 0 ? (
+                      <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-md text-xs font-bold">Sắp hết ({p.stock})</span>
+                    ) : (
+                      <span className="px-2 py-1 bg-red-50 text-red-600 rounded-md text-xs font-bold">Hết hàng</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2 text-gray-400">
+                      <button className="p-1.5 hover:bg-blue-50 hover:text-blue-600 rounded transition-colors"><Eye size={16}/></button>
+                      <button className="p-1.5 hover:bg-amber-50 hover:text-amber-600 rounded transition-colors"><Edit size={16}/></button>
+                      <button className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded transition-colors"><Trash2 size={16}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

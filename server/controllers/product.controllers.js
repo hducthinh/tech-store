@@ -23,7 +23,7 @@ const getCloudinaryPublicId = (imageUrl) => {
 // @route   GET /api/v1/products
 // @access  Public
 export const getProducts = catchAsync(async (req, res, next) => {
-  const { categoryId, brandId, minPrice, maxPrice, sortBy, search, page = 1, limit = 12 } = req.query;
+  const { category, categoryId, brandId, minPrice, maxPrice, sortBy, search, page = 1, limit = 12 } = req.query;
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 12;
   const skip = (pageNum - 1) * limitNum;
@@ -31,7 +31,12 @@ export const getProducts = catchAsync(async (req, res, next) => {
   // Xây dựng bộ lọc thủ công (Ponytail: Đơn giản, không dùng thư viện query builder cồng kềnh)
   const filter = { isActive: true };
 
-  if (categoryId) filter.categoryId = categoryId;
+  if (category) {
+    const categoryDoc = await Category.findOne({ slug: category });
+    if (categoryDoc) filter.categoryId = categoryDoc._id;
+  } else if (categoryId) {
+    filter.categoryId = categoryId;
+  }
   if (brandId) filter.brandId = brandId;
   
   if (minPrice || maxPrice) {
@@ -40,9 +45,11 @@ export const getProducts = catchAsync(async (req, res, next) => {
     if (maxPrice) filter.price.$lte = Number(maxPrice);
   }
 
-  // Nếu có từ khóa tìm kiếm, dùng text index (chuẩn bị sẵn cho Day 7)
   if (search) {
-    filter.$text = { $search: search };
+    filter.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { categoryName: { $regex: search, $options: "i" } }
+    ];
   }
 
   // Xây dựng tiêu chí sắp xếp
@@ -141,7 +148,14 @@ export const getFeaturedProducts = catchAsync(async (req, res, next) => {
 export const getProductBySlug = catchAsync(async (req, res, next) => {
   const { slug } = req.params;
 
-  const product = await Product.findOne({ slug, isActive: true })
+  let query = { slug, isActive: true };
+  
+  // Hỗ trợ tìm bằng _id (khi không có slug)
+  if (/^[0-9a-fA-F]{24}$/.test(slug)) {
+    query = { $or: [{ slug }, { _id: slug }], isActive: true };
+  }
+
+  const product = await Product.findOne(query)
     .select("-costPrice")
     .populate("categoryId", "name slug")
     .populate("brandId", "name slug");

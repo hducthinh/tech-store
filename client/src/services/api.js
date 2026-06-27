@@ -12,6 +12,18 @@ const api = useMock
     });
 
 if (!useMock) {
+  // Interceptor thêm token
+  api.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem("token");
+      if (token && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
   // Interceptor xử lý lỗi
   api.interceptors.response.use(
     (response) => response,

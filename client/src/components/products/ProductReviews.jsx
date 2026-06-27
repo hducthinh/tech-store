@@ -1,20 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Star, ThumbsUp, MessageSquare, Image as ImageIcon, X } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useAlert } from "../../contexts/AlertContext";
 import api from "../../services/api";
 
-export default function ProductReviews({ product, user, reviews, fetchReviews }) {
+export default function ProductReviews({ product, reviews, fetchReviews }) {
   const navigate = useNavigate();
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewImages, setReviewImages] = useState([]);
-  const [submittingReview, setSubmittingReview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
+
+  const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!reviewComment.trim()) return;
     
-    setSubmittingReview(true);
+    setIsSubmitting(true);
     setReviewError("");
     try {
       const formData = new FormData();
@@ -34,20 +40,17 @@ export default function ProductReviews({ product, user, reviews, fetchReviews })
       setReviewComment("");
       setReviewRating(5);
       setReviewImages([]);
+      showAlert("Đánh giá thành công!", "success");
     } catch (err) {
       setReviewError(err?.response?.data?.message || "Có lỗi khi gửi đánh giá.");
+      showAlert(err?.response?.data?.message || "Có lỗi khi gửi đánh giá.", "error");
     } finally {
-      setSubmittingReview(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
-      <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-        Đánh giá & Bình luận
-      </h2>
-
+    <>
       {/* Danh sách bình luận */}
       <div className="space-y-6 mb-10">
         {reviews.length === 0 ? (
@@ -149,7 +152,7 @@ export default function ProductReviews({ product, user, reviews, fetchReviews })
                 onChange={(e) => {
                   const files = Array.from(e.target.files);
                   if (reviewImages.length + files.length > 5) {
-                    alert("Tối đa 5 ảnh đính kèm.");
+                    showAlert("Tối đa 5 ảnh đính kèm.", "error");
                     return;
                   }
                   const newImages = files.map(file => ({
@@ -180,10 +183,10 @@ export default function ProductReviews({ product, user, reviews, fetchReviews })
 
             <button
               type="submit"
-              disabled={submittingReview || !reviewComment.trim()}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
+              disabled={isSubmitting || !reviewComment.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {submittingReview ? (
+              {isSubmitting ? (
                 <>
                   <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -198,6 +201,6 @@ export default function ProductReviews({ product, user, reviews, fetchReviews })
           </form>
         )}
       </div>
-    </div>
+    </>
   );
 }

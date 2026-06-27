@@ -83,12 +83,33 @@ export default function ProfileCart({
                 <div className="col-span-2 flex justify-center w-full md:w-auto">
                   <div className="flex items-center bg-white border border-slate-200 rounded-lg">
                     <button 
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                      type="button"
+                      onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
                       className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-l-lg transition-colors font-bold"
                     >-</button>
-                    <span className="w-10 text-center font-bold text-sm text-slate-800">{item.quantity}</span>
+                    <input 
+                      type="text"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          // Allow empty temporarily, but we shouldn't update global state with empty string
+                          // So we update it to 0 or we handle it via a local state? 
+                          // It's simpler to just update it to 1 if empty in cart since we don't have local state per item
+                          updateQuantity(item.product.id, "");
+                        } else {
+                          const num = parseInt(val.replace(/\D/g, ''));
+                          if (!isNaN(num)) updateQuantity(item.product.id, num);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (item.quantity === "" || item.quantity < 1) updateQuantity(item.product.id, 1);
+                      }}
+                      className="w-10 text-center font-bold text-sm text-slate-800 border-none focus:ring-0 focus:outline-none p-0 bg-transparent"
+                    />
                     <button 
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                      type="button"
+                      onClick={() => updateQuantity(item.product.id, (Number(item.quantity) || 0) + 1)}
                       className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-r-lg transition-colors font-bold"
                     >+</button>
                   </div>

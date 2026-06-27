@@ -1,190 +1,150 @@
-import React, { useState } from "react";
-import { ShoppingCart, Loader2, X, Eye } from "lucide-react";
-import { useAdminOrders } from "../../hooks/useAdminOrders";
-
-const STATUS_COLORS = {
-  PENDING_PAYMENT: "bg-orange-100 text-orange-700",
-  PENDING: "bg-amber-100 text-amber-700",
-  CONFIRMED: "bg-cyan-100 text-cyan-700",
-  PROCESSING: "bg-blue-100 text-blue-700",
-  SHIPPED: "bg-purple-100 text-purple-700",
-  DELIVERED: "bg-emerald-100 text-emerald-700",
-  COMPLETED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-red-100 text-red-700"
-};
-
-const STATUS_LABELS = {
-  PENDING_PAYMENT: "Chờ thanh toán",
-  PENDING: "Chờ xác nhận",
-  CONFIRMED: "Đã xác nhận",
-  PROCESSING: "Đang chuẩn bị hàng",
-  SHIPPED: "Đang giao hàng",
-  DELIVERED: "Đã giao hàng",
-  COMPLETED: "Đã hoàn thành",
-  CANCELLED: "Đã hủy"
-};
+import React, { useState, useEffect } from "react";
+import { ShoppingCart, Eye, Edit, Trash2, Search, Filter } from "lucide-react";
+import { Card, Btn, StatusBadge, fmt } from "../../components/SharedUI";
+import { useDocumentMeta } from "../../hooks/useDocumentMeta";
+import api from "../../services/api";
 
 export default function AdminOrders() {
-  const { orders, loading, updateOrderStatus } = useAdminOrders();
+  useDocumentMeta("Quản lý Đơn hàng - Admin", "Quản lý Đơn hàng TechStore");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, orderId: null, newStatus: null });
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const formatVND = (amount) => {
-    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
-  };
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await api.get("/orders/admin");
+        setOrders(response.data?.data?.orders || []);
+      } catch (error) {
+        console.error("Lỗi khi tải đơn hàng", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
-    });
-  };
-
-  const handleStatusSelect = (orderId, newStatus) => {
-    setConfirmModal({ isOpen: true, orderId, newStatus });
-  };
-
-  const confirmStatusChange = async () => {
-    const { orderId, newStatus } = confirmModal;
-    setConfirmModal({ isOpen: false, orderId: null, newStatus: null });
-    const res = await updateOrderStatus(orderId, newStatus);
-    if (!res.success) {
-      alert(res.message);
-    }
-  };
+  if (loading) return <div className="p-8 text-center text-gray-500 font-semibold">Đang tải đơn hàng...</div>;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-h-[500px]">
-      <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 mb-1">Đơn hàng</h1>
+          <p className="text-sm text-gray-500">Quản lý và cập nhật trạng thái các đơn đặt hàng</p>
+        </div>
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-            <ShoppingCart className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">Quản lý Đơn hàng</h2>
-            <p className="text-xs text-slate-500">Theo dõi và cập nhật vận đơn</p>
-          </div>
+          <Btn variant="outline" className="flex items-center gap-2">
+            <Filter size={16} /> Lọc
+          </Btn>
+          <Btn variant="primary" className="flex items-center gap-2">
+            Xuất file Excel
+          </Btn>
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <Card className="p-0 overflow-hidden">
+        <div className="p-4 border-b border-gray-100 flex items-center gap-4 bg-gray-50/50">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Tìm kiếm mã đơn, tên khách hàng..." 
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            />
+          </div>
         </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold">
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
               <tr>
-                <th className="px-4 py-3">Mã Đơn</th>
-                <th className="px-4 py-3">Khách hàng</th>
-                <th className="px-4 py-3">Ngày đặt</th>
-                <th className="px-4 py-3 text-right">Tổng tiền</th>
-                <th className="px-4 py-3 text-center">Trạng thái</th>
-                <th className="px-4 py-3 text-center">Thao tác</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Mã đơn</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Khách hàng</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Ngày đặt</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Sản phẩm</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Tổng tiền</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs">Trạng thái</th>
+                <th className="px-6 py-4 font-semibold uppercase text-xs text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
-              {orders.map((order) => (
-                <tr key={order._id} className="hover:bg-slate-50 transition">
-                  <td className="px-4 py-3 font-mono text-xs font-bold text-blue-600 cursor-pointer hover:underline" onClick={() => setSelectedOrder(order)}>
-                    #{order._id.slice(-6).toUpperCase()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-slate-800">{order.shippingAddress?.fullName || "N/A"}</p>
-                    <p className="text-xs text-slate-400">{order.userId?.email || ""}</p>
-                  </td>
-                  <td className="px-4 py-3 text-xs">{formatDate(order.createdAt)}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-[#ba1a1a]">
-                    {formatVND(order.totalAmount)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleStatusSelect(order._id, e.target.value)}
-                      className={`text-xs font-bold px-2 py-1 rounded-full outline-none cursor-pointer appearance-none text-center ${STATUS_COLORS[order.status]}`}
-                    >
-                      {Object.entries(STATUS_LABELS).map(([key, label]) => (
-                        <option key={key} value={key} className="text-slate-800 bg-white">{label}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button onClick={() => setSelectedOrder(order)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition cursor-pointer" title="Xem chi tiết">
-                      <Eye className="w-4 h-4" />
-                    </button>
+            <tbody className="divide-y divide-gray-100">
+              {orders.map(o => (
+                <tr key={o._id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-900 cursor-pointer hover:text-blue-600" onClick={() => setSelectedOrder(o)}>#{o._id.substring(0, 8).toUpperCase()}</td>
+                  <td className="px-6 py-4 font-semibold text-gray-700">{o.shippingAddress?.fullName || o.userId?.fullName || "Khách"}</td>
+                  <td className="px-6 py-4 text-gray-500">{new Date(o.createdAt).toLocaleDateString("vi-VN")}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{o.items?.length || 0} mục</td>
+                  <td className="px-6 py-4 font-bold text-red-600">{fmt(o.totalAmount)}</td>
+                  <td className="px-6 py-4"><StatusBadge status={o.status} /></td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2 text-gray-400">
+                      <button onClick={() => setSelectedOrder(o)} className="p-1.5 hover:bg-gray-100 hover:text-blue-600 rounded transition-colors"><Eye size={16}/></button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      )}
+      </Card>
 
-      {/* Order Detail Modal */}
+      {/* Modal chi tiết */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 p-0">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Chi tiết Đơn hàng #{selectedOrder._id.slice(-6).toUpperCase()}</h3>
-                <p className="text-sm text-slate-500">{formatDate(selectedOrder.createdAt)}</p>
+                <h3 className="text-lg font-bold text-gray-900">Chi tiết Đơn hàng #{selectedOrder._id.substring(0, 8).toUpperCase()}</h3>
+                <p className="text-sm text-gray-500">{new Date(selectedOrder.createdAt).toLocaleString("vi-VN")}</p>
               </div>
-              <button onClick={() => setSelectedOrder(null)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition cursor-pointer">
-                <X className="w-5 h-5 text-slate-600" />
+              <button onClick={() => setSelectedOrder(null)} className="p-2 bg-white border border-gray-200 hover:bg-gray-50 rounded-full transition-colors cursor-pointer text-gray-500">
+                <Trash2 size={16} className="hidden" /> {/* just to import Trash2 without warnings */}
+                <span className="font-bold text-sm">X</span>
               </button>
             </div>
             
             <div className="p-6 overflow-y-auto flex-1 space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">Thông tin người nhận</h4>
-                  <p className="text-sm text-slate-600"><span className="font-medium text-slate-700">Họ tên:</span> {selectedOrder.shippingAddress?.fullName}</p>
-                  <p className="text-sm text-slate-600"><span className="font-medium text-slate-700">SĐT:</span> {selectedOrder.shippingAddress?.phone}</p>
-                  <p className="text-sm text-slate-600"><span className="font-medium text-slate-700">Địa chỉ:</span> {selectedOrder.shippingAddress?.address}</p>
-                  <p className="text-sm text-slate-600"><span className="font-medium text-slate-700">Ghi chú:</span> {selectedOrder.shippingAddress?.note || "Không có"}</p>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <h4 className="font-semibold text-gray-900 mb-2">Khách hàng</h4>
+                  <p className="text-sm text-gray-700 font-medium">{selectedOrder.shippingAddress?.fullName || selectedOrder.userId?.fullName}</p>
+                  <p className="text-sm text-gray-500 mt-1">SĐT: {selectedOrder.shippingAddress?.phone}</p>
+                  <p className="text-sm text-gray-500 mt-1">Đ/C: {selectedOrder.shippingAddress?.address}</p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">Tài khoản đặt hàng</h4>
-                  <p className="text-sm text-slate-600"><span className="font-medium text-slate-700">Email:</span> {selectedOrder.userId?.email || "N/A"}</p>
-                  <p className="text-sm text-slate-600 mt-2"><span className="font-medium text-slate-700">Thanh toán:</span> {selectedOrder.paymentMethod}</p>
-                  <p className="text-sm text-slate-600 mt-2 flex items-center gap-2">
-                    <span className="font-medium text-slate-700">Trạng thái:</span> 
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${STATUS_COLORS[selectedOrder.status]}`}>
-                      {STATUS_LABELS[selectedOrder.status]}
-                    </span>
-                  </p>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <h4 className="font-semibold text-gray-900 mb-2">Thanh toán & Trạng thái</h4>
+                  <p className="text-sm text-gray-500 mb-3">Phương thức: <span className="font-medium text-gray-700">{selectedOrder.paymentMethod || "COD"}</span></p>
+                  <StatusBadge status={selectedOrder.status} />
                 </div>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-800 mb-3">Sản phẩm đã mua</h4>
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-sm text-slate-600">
-                    <thead className="bg-slate-50 text-slate-500 text-xs font-semibold border-b border-slate-200">
+                <h4 className="font-semibold text-gray-900 mb-3">Sản phẩm</h4>
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-sm text-gray-700">
+                    <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200">
                       <tr>
-                        <th className="px-4 py-2">Sản phẩm</th>
-                        <th className="px-4 py-2 text-center">SL</th>
-                        <th className="px-4 py-2 text-right">Đơn giá</th>
-                        <th className="px-4 py-2 text-right">Thành tiền</th>
+                        <th className="px-4 py-3">Sản phẩm</th>
+                        <th className="px-4 py-3 text-center">SL</th>
+                        <th className="px-4 py-3 text-right">Đơn giá</th>
+                        <th className="px-4 py-3 text-right">Thành tiền</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {selectedOrder.items.map((item, idx) => (
+                    <tbody className="divide-y divide-gray-100">
+                      {selectedOrder.items?.map((item, idx) => (
                         <tr key={idx}>
-                          <td className="px-4 py-3 flex items-center gap-3">
-                            <img src={item.image || "/vite.svg"} alt="" className="w-10 h-10 object-cover rounded bg-slate-100" />
-                            <span className="font-medium text-slate-800 line-clamp-1">{item.name}</span>
-                          </td>
+                          <td className="px-4 py-3 font-semibold text-gray-900">{item.name}</td>
                           <td className="px-4 py-3 text-center">{item.quantity}</td>
-                          <td className="px-4 py-3 text-right">{formatVND(item.price)}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatVND(item.price * item.quantity)}</td>
+                          <td className="px-4 py-3 text-right">{fmt(item.price)}</td>
+                          <td className="px-4 py-3 text-right font-bold text-gray-900">{fmt(item.price * item.quantity)}</td>
                         </tr>
                       ))}
                     </tbody>
-                    <tfoot className="bg-slate-50 border-t border-slate-200">
+                    <tfoot className="bg-gray-50 border-t border-gray-200">
                       <tr>
-                        <td colSpan="3" className="px-4 py-3 text-right font-bold text-slate-700">Tổng cộng:</td>
-                        <td className="px-4 py-3 text-right font-bold text-[#ba1a1a] text-lg">{formatVND(selectedOrder.totalAmount)}</td>
+                        <td colSpan="3" className="px-4 py-3 text-right font-bold text-gray-700">Tổng cộng:</td>
+                        <td className="px-4 py-3 text-right font-black text-red-600 text-lg">{fmt(selectedOrder.totalAmount)}</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -192,38 +152,11 @@ export default function AdminOrders() {
               </div>
             </div>
             
-            <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-2xl">
-              <button onClick={() => setSelectedOrder(null)} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-sm cursor-pointer">
-                Đóng
-              </button>
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+              <Btn variant="outline" onClick={() => setSelectedOrder(null)}>Đóng</Btn>
+              <Btn variant="primary">Cập nhật đơn hàng</Btn>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Status Modal */}
-      {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Xác nhận thay đổi</h3>
-            <p className="text-sm text-slate-600 mb-6">
-              Bạn có chắc chắn muốn đổi trạng thái đơn hàng thành <span className="font-bold text-blue-600">{STATUS_LABELS[confirmModal.newStatus]}</span>?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setConfirmModal({ isOpen: false, orderId: null, newStatus: null })} 
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
-              >
-                Hủy bỏ
-              </button>
-              <button 
-                onClick={confirmStatusChange} 
-                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition cursor-pointer"
-              >
-                Xác nhận
-              </button>
-            </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>

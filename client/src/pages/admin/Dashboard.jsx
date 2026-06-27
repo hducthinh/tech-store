@@ -1,32 +1,35 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { DollarSign, ShoppingCart, Users, Package, MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
+import { StatCard, Card, Badge, StatusBadge, PIE_DATA, PIE_COLORS, fmt, img } from "../../components/SharedUI";
 import api from "../../services/api";
-import { DollarSign, Package, ShoppingCart, Users } from "lucide-react";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalProducts: 0,
-    totalUsers: 0,
-    totalRevenue: 0,
-  });
+  const [revenueTime, setRevenueTime] = useState("Tháng này");
+  const [stats, setStats] = useState(null);
   const [chartData, setChartData] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, chartRes] = await Promise.all([
+        const [statsRes, chartRes, ordersRes] = await Promise.all([
           api.get("/dashboard/stats"),
-          api.get("/dashboard/chart")
+          api.get("/dashboard/chart"),
+          api.get("/orders/admin")
         ]);
-        if (statsRes.data.status === "success") {
-          setStats(statsRes.data.data.stats);
-        }
-        if (chartRes.data.status === "success") {
-          setChartData(chartRes.data.data.chart);
-        }
+        setStats(statsRes.data?.data?.stats);
+        
+        const mappedChart = chartRes.data?.data?.chart?.map(c => ({
+          month: c.date.substring(5), // MM-DD
+          revenue: c.revenue / 1000000 // Convert to Tr
+        })) || [];
+        setChartData(mappedChart);
+
+        setRecentOrders(ordersRes.data?.data?.orders?.slice(0, 5) || []);
       } catch (error) {
-        console.error("Lỗi lấy thống kê:", error);
+        console.error("Lỗi lấy dữ liệu dashboard", error);
       } finally {
         setLoading(false);
       }
@@ -34,120 +37,144 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  // Tính toán thông số cho biểu đồ SVG
-  const svgWidth = 800;
-  const svgHeight = 300;
-  const paddingX = 80;
-  const paddingY = 40;
-  const usableWidth = svgWidth - paddingX * 2;
-  const usableHeight = svgHeight - paddingY * 2;
+  if (loading) return <div className="p-8 text-center text-gray-500 font-semibold">Đang tải dữ liệu...</div>;
   
-  const maxRevenue = Math.max(...chartData.map(d => d.revenue), 1000000); // Tối thiểu 1 triệu để scale không quá to
-  const stepX = chartData.length > 1 ? usableWidth / (chartData.length - 1) : usableWidth;
-
-  const points = chartData.map((d, i) => {
-    const x = paddingX + i * stepX;
-    const y = svgHeight - paddingY - (d.revenue / maxRevenue) * usableHeight;
-    return `${x},${y}`;
-  }).join(" ");
-
-  const formatVND = (amount) => {
-    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
-  };
-
-  const statCards = [
-    { title: "Tổng doanh thu", value: formatVND(stats.totalRevenue), icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-100" },
-    { title: "Tổng đơn hàng", value: stats.totalOrders, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-100" },
-    { title: "Sản phẩm", value: stats.totalProducts, icon: Package, color: "text-amber-600", bg: "bg-amber-100" },
-    { title: "Khách hàng", value: stats.totalUsers, icon: Users, color: "text-purple-600", bg: "bg-purple-100" },
-  ];
-
-  if (loading) {
-    return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((card, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className={`p-4 rounded-xl ${card.bg}`}>
-              <card.icon className={`w-8 h-8 ${card.color}`} />
-            </div>
-            <div>
-              <p className="text-sm text-slate-500 font-medium">{card.title}</p>
-              <h3 className="text-2xl font-bold text-slate-800">{card.value}</h3>
-            </div>
-          </div>
-        ))}
+    <div className="flex flex-col gap-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900">Tổng quan</h1>
+          <p className="text-gray-500 text-sm mt-1">Theo dõi hoạt động kinh doanh của cửa hàng</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <select 
+            value={revenueTime} 
+            onChange={(e) => setRevenueTime(e.target.value)}
+            className="bg-white border border-gray-200 text-sm font-semibold rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option>Hôm nay</option>
+            <option>Tuần này</option>
+            <option>Tháng này</option>
+            <option>Năm nay</option>
+          </select>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors">
+            Xuất báo cáo
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-        <h3 className="text-lg font-bold text-slate-800 w-full mb-6">Biểu đồ doanh thu 7 ngày qua</h3>
-        {chartData.length > 0 ? (
-          <div className="w-full overflow-x-auto pb-4">
-            <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto min-w-[600px] drop-shadow-sm">
-              {/* Lưới nền (Grid Y) */}
-              {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
-                const y = svgHeight - paddingY - ratio * usableHeight;
-                return (
-                  <g key={ratio}>
-                    <line x1={paddingX} y1={y} x2={svgWidth - paddingX} y2={y} stroke="#f1f5f9" strokeWidth="1" />
-                    <text x={paddingX - 10} y={y + 4} fontSize="10" fill="#94a3b8" textAnchor="end">
-                      {ratio > 0 ? formatVND(maxRevenue * ratio).replace(" ₫", "").replace("₫", "đ") : "0đ"}
-                    </text>
-                  </g>
-                );
-              })}
-              
-              {/* Vẽ đường đồ thị */}
-              <polyline points={points} fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-              
-              {/* Vẽ vùng gradient (Area) dưới đường line */}
-              <polygon 
-                points={`${paddingX},${svgHeight - paddingY} ${points} ${svgWidth - paddingX},${svgHeight - paddingY}`} 
-                fill="url(#blue-gradient)" 
-                opacity="0.2" 
-              />
-              
-              {/* Định nghĩa Gradient */}
-              <defs>
-                <linearGradient id="blue-gradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-
-              {/* Vẽ các điểm (circles) và nhãn trục X */}
-              {chartData.map((d, i) => {
-                const x = paddingX + i * stepX;
-                const y = svgHeight - paddingY - (d.revenue / maxRevenue) * usableHeight;
-                const isToday = i === chartData.length - 1;
-                const dateLabel = d.date.split("-").slice(1).reverse().join("/"); // DD/MM
-                return (
-                  <g key={i}>
-                    <circle cx={x} cy={y} r="5" fill="#ffffff" stroke="#3b82f6" strokeWidth="3" className="transition-all hover:r-6 cursor-pointer" />
-                    <text x={x} y={svgHeight - paddingY + 20} fontSize="12" fill={isToday ? "#3b82f6" : "#64748b"} textAnchor="middle" fontWeight={isToday ? "bold" : "normal"}>
-                      {isToday ? "Hôm nay" : dateLabel}
-                    </text>
-                    {/* Hiển thị số tiền nhỏ ở trên các điểm có doanh thu */}
-                    {d.revenue > 0 && (
-                      <text x={x} y={y - 12} fontSize="10" fill="#1e293b" textAnchor="middle" fontWeight="bold">
-                        {formatVND(d.revenue).replace(" ₫", "").replace("₫", "")}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        ) : (
-          <div className="py-20 text-center">
-            <Package className="w-12 h-12 text-slate-200 mx-auto mb-3" />
-            <p className="text-slate-500">Chưa có dữ liệu giao dịch</p>
-          </div>
-        )}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <StatCard label="Tổng doanh thu" value={fmt(stats?.totalRevenue || 0)} change="+12.5%" icon={<DollarSign size={24}/>} color="blue" />
+        <StatCard label="Đơn hàng" value={stats?.totalOrders || 0} change="+5.2%" icon={<ShoppingCart size={24}/>} color="green" />
+        <StatCard label="Sản phẩm" value={stats?.totalProducts || 0} icon={<Package size={24}/>} color="amber" />
+        <StatCard label="Khách hàng" value={stats?.totalUsers || 0} change="+18.2%" icon={<Users size={24}/>} color="purple" />
       </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Revenue Chart */}
+        <Card className="p-6 lg:col-span-2">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-gray-900">Biểu đồ doanh thu</h3>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dx={-10} />
+                <Tooltip 
+                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                  formatter={(value) => [`${value} Tr`, 'Doanh thu']}
+                />
+                <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        {/* Pie Chart */}
+        <Card className="p-6">
+          <h3 className="font-bold text-gray-900 mb-6">Doanh thu theo danh mục</h3>
+          <div className="h-[220px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={PIE_DATA} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}
+                  dataKey="value" stroke="none"
+                >
+                  {PIE_DATA.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
+                  formatter={(value) => [`${value}%`, 'Tỷ trọng']}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 flex flex-col gap-3">
+            {PIE_DATA.map((item, i) => (
+              <div key={item.name} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: PIE_COLORS[i]}}></div>
+                  <span className="text-gray-600 font-semibold">{item.name}</span>
+                </div>
+                <span className="font-bold text-gray-900">{item.value}%</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Recent Orders Table */}
+      <Card className="overflow-hidden">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <h3 className="font-bold text-gray-900">Đơn hàng gần đây</h3>
+          <button className="text-sm font-semibold text-blue-600 hover:underline">Xem tất cả</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-semibold">Mã đơn</th>
+                <th className="px-6 py-4 font-semibold">Khách hàng</th>
+                <th className="px-6 py-4 font-semibold">Ngày đặt</th>
+                <th className="px-6 py-4 font-semibold">Tổng tiền</th>
+                <th className="px-6 py-4 font-semibold">Trạng thái</th>
+                <th className="px-6 py-4 font-semibold text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {recentOrders.map(o => (
+                <tr key={o._id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900">#{o._id.substring(0, 8).toUpperCase()}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-700">{o.shippingAddress?.fullName || o.userId?.fullName || "Khách"}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{new Date(o.createdAt).toLocaleDateString("vi-VN")}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-red-600">{fmt(o.totalAmount)}</td>
+                  <td className="px-6 py-4">
+                    <StatusBadge status={o.status} />
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2 text-gray-400">
+                      <button className="p-1.5 hover:bg-gray-100 hover:text-blue-600 rounded transition-colors"><Eye size={16}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 }

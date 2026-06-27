@@ -25,10 +25,15 @@ export const AuthProvider = ({ children }) => {
   const fetchProfile = useCallback(async () => {
     try {
       const response = await api.get("/auth/profile");
-      setUser(response.data.data.user);
-    } catch (_err) {
-      localStorage.removeItem("token");
-      delete api.defaults.headers.common["Authorization"];
+      const userPayload =
+        response?.data?.data?.user || response?.data?.user || null;
+      if (userPayload) setUser(userPayload);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        delete api.defaults.headers.common["Authorization"];
+        setUser(null);
+      }
     } finally {
       setIsInitialized(true); // 👈 Đánh dấu đã khởi tạo xong
     }
