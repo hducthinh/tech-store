@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { X, Search, ChevronRight, AlertTriangle } from "lucide-react";
-import { checkItemCompatibility } from "../../utils/compatibility";
+import { checkItemCompatibility } from "../../features/builder/utils/compatibility";
 import api from "../../services/api";
 import { fmt, img } from "../SharedUI";
 

@@ -8,7 +8,7 @@ import ForgotPassword from "./features/auth/ForgotPassword";
 import ResetPassword from "./features/auth/ResetPassword";
 
 import ProductDetail from "./features/products/ProductDetail";
-import Profile from "./pages/Profile";
+import Profile from "./features/profile/Profile";
 import Checkout from "./pages/Checkout";
 import CategoryPage from "./features/products/CategoryPage";
 import PCBuilder from "./features/builder/PCBuilder";

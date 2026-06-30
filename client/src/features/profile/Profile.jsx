@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { User, FileText, LogOut, ShoppingCart, Key, MapPin } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import UserLayout from "../components/layouts/UserLayout";
-import { Card, Btn, ORDERS, StatusBadge, fmt, img } from "../components/SharedUI";
-import ProfileOrders from "../components/profile/ProfileOrders";
-import ProfileCart from "../components/profile/ProfileCart";
-import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { useAuth } from "../contexts/AuthContext";
-import { useCart } from "../contexts/CartContext";
-import { useAlert } from "../contexts/AlertContext";
-import api from "../services/api";
+import UserLayout from "../../components/layouts/UserLayout";
+import { Card, Btn, ORDERS, StatusBadge, fmt, img } from "../../components/SharedUI";
+import ProfileOrders from "./components/ProfileOrders";
+import ProfileCart from "./components/ProfileCart";
+import { useDocumentMeta } from "../../hooks/useDocumentMeta";
+import { useAuth } from "../../contexts/AuthContext";
+import { useCart } from "../../contexts/CartContext";
+import { useAlert } from "../../contexts/AlertContext";
+import api from "../../services/api";
 
 export default function Profile() {
   const navigate = useNavigate();

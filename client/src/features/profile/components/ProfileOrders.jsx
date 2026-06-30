@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FileText, Loader2, Package, MapPin, CreditCard, Receipt, Store, AlertTriangle } from "lucide-react";
-import { Skeleton } from "../ui/Skeleton";
+import { Skeleton } from "../../../components/ui/Skeleton";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAlert } from "../../contexts/AlertContext";
+import { useAlert } from "../../../contexts/AlertContext";
 
 export default function ProfileOrders({ user, setActiveTab }) {
   const location = useLocation();
@@ -17,7 +17,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
 
   React.useEffect(() => {
     if (user) {
-      import("../../services/api").then(({ default: api }) => {
+      import("../../../services/api").then(({ default: api }) => {
         api.get("/orders")
           .then(res => {
             if (res.data.status === "success") {
@@ -100,7 +100,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
     const orderId = selectedOrder.rawId;
     setIsCancelling(true);
     try {
-      const api = (await import("../../services/api")).default;
+      const api = (await import("../../../services/api")).default;
       const res = await api.post(`/orders/${orderId}/cancel`);
       if (res.data.status === "success") {
         setOrders(prev => prev.map(o => {

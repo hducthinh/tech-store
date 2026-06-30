@@ -1,7 +1,7 @@
 import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Skeleton } from "../ui/Skeleton";
+import { Skeleton } from "../../../components/ui/Skeleton";
 
 export default function ProfileCart({ 
   cart, 
