@@ -9,6 +9,7 @@ import dashboardRoutes from "./v1/dashboard.routes.js";
 import userRoutes from "./v1/user.routes.js";
 import reviewRoutes from "./v1/review.routes.js";
 import aiRoutes from "./v1/ai.routes.js";
+import paymentRoutes from "./v1/payment.routes.js";
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.use("/v1/orders", orderRoutes);
 router.use("/v1/dashboard", dashboardRoutes);
 router.use("/v1/users", userRoutes);
 router.use("/v1/reviews", reviewRoutes);
+router.use("/v1/payments", paymentRoutes);
 router.use("/ai", aiRoutes);
 
 export default router;

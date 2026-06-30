@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, CreditCard, Banknote, MapPin } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Banknote, MapPin, QrCode } from "lucide-react";
 import UserLayout from "../components/layouts/UserLayout";
 import { fmt, img, Btn, Input, Card } from "../components/SharedUI";
 import { Skeleton } from "../components/ui/Skeleton";
@@ -31,6 +31,27 @@ export default function Checkout() {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [orderInfo, setOrderInfo] = useState(null);
+  const [isPaymentReceived, setIsPaymentReceived] = useState(false);
+
+  useEffect(() => {
+    let interval;
+    if (step === 3 && orderInfo?.paymentMethod === 'BANK_TRANSFER' && !isPaymentReceived) {
+      interval = setInterval(async () => {
+        try {
+          const res = await api.get(`/orders/${orderInfo._id}`);
+          if (res.data?.data?.order?.isPaid) {
+            setIsPaymentReceived(true);
+            clearInterval(interval);
+          }
+        } catch (error) {
+          console.error("Lỗi kiểm tra thanh toán:", error);
+        }
+      }, 3000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, orderInfo, isPaymentReceived]);
   
   const stateSelectedIds = location.state?.selectedItemIds || [];
   const allCartItems = cart?.items || [];
@@ -92,22 +113,34 @@ export default function Checkout() {
         <div className="max-w-5xl mx-auto px-4">
           
           {/* Steps Indicator */}
-          <div className="flex items-center justify-between mb-8 max-w-2xl mx-auto relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full z-0"></div>
-            <div className={`absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-600 rounded-full z-0 transition-all ${step === 1 ? 'w-0' : step === 2 ? 'w-1/2' : 'w-full'}`}></div>
-            
+          <div className="flex items-center justify-between mb-8 max-w-2xl mx-auto">
             {[
               { num: 1, label: "Giao hàng" },
               { num: 2, label: "Thanh toán" },
               { num: 3, label: "Hoàn tất" }
-            ].map(s => (
-              <div key={s.num} className="relative z-10 flex flex-col items-center gap-2">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${step >= s.num ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-white text-gray-400 border-2 border-gray-200'}`}>
-                  {step > s.num || (step === 3 && s.num === 3) ? <CheckCircle2 size={20} /> : s.num}
-                </div>
-                <span className={`text-xs font-bold ${step >= s.num ? 'text-blue-600' : 'text-gray-400'}`}>{s.label}</span>
-              </div>
-            ))}
+            ].map((s, index, array) => {
+              const isCompleted = step === 3 && (orderInfo?.paymentMethod !== 'BANK_TRANSFER' || isPaymentReceived);
+              const isActive = step >= s.num && (s.num !== 3 || isCompleted);
+              const isChecked = step > s.num || (s.num === 3 && isCompleted);
+
+              return (
+                <React.Fragment key={s.num}>
+                  <div className="relative z-10 flex flex-col items-center gap-2">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-white text-gray-400 border-2 border-gray-200'}`}>
+                      {isChecked ? <CheckCircle2 size={20} /> : s.num}
+                    </div>
+                    <span className={`text-xs font-bold absolute -bottom-6 whitespace-nowrap ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>{s.label}</span>
+                  </div>
+                  {index < array.length - 1 && (
+                    <div className="flex-1 h-1 -mx-1 z-0 rounded-full transition-colors relative">
+                      <div className={`h-full rounded-full transition-all duration-500 ${
+                        (step > s.num) || (s.num === 2 && isCompleted) ? 'bg-blue-600 w-full' : 'bg-gray-200 w-full'
+                      }`}></div>
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
 
           <div className="flex flex-col lg:flex-row gap-8">
@@ -181,13 +214,66 @@ export default function Checkout() {
 
               {step === 3 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center animate-in zoom-in-95 duration-500 bg-white rounded-3xl shadow-sm border border-gray-200 p-8">
-                  <div className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-6">
-                    <CheckCircle2 size={48} />
-                  </div>
-                  <h2 className="text-3xl font-black text-gray-900 mb-4">Đặt hàng thành công!</h2>
-                  <p className="text-gray-500 mb-8 max-w-md">
-                    Mã đơn hàng của bạn là <span className="font-bold text-blue-600">#{orderInfo?._id?.substring(orderInfo._id.length - 6).toUpperCase()}</span>. Đơn hàng sẽ được giao trong 2-3 ngày tới.
-                  </p>
+                  {orderInfo?.paymentMethod === 'BANK_TRANSFER' && !isPaymentReceived ? (
+                    <>
+                      <p className="text-gray-500 mb-6 max-w-md text-sm">
+                        Bạn có thể đợi sau khi chuyển khoản hoặc thoát ra và có thể kiểm tra trong phần <span className="font-semibold text-blue-600">Lịch sử đơn hàng ➔ Xem chi tiết</span>.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-24 h-24 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-6">
+                        <CheckCircle2 size={48} />
+                      </div>
+                      <h2 className="text-3xl font-black text-gray-900 mb-4">
+                        {orderInfo?.paymentMethod === 'BANK_TRANSFER' ? "Thanh toán thành công!" : "Đặt hàng thành công!"}
+                      </h2>
+                      <p className="text-gray-500 mb-8 max-w-md">
+                        {orderInfo?.paymentMethod === 'BANK_TRANSFER' ? "Cảm ơn bạn đã thanh toán cho đơn hàng " : "Mã đơn hàng của bạn là "}
+                        <span className="font-bold text-blue-600">#{orderInfo?._id?.substring(orderInfo._id.length - 6).toUpperCase()}</span>. Đơn hàng sẽ được xử lý và giao trong 2-3 ngày tới.
+                      </p>
+                    </>
+                  )}
+
+                  {orderInfo?.paymentMethod === 'BANK_TRANSFER' && !isPaymentReceived && (
+                    <div className="mb-8 w-full max-w-md bg-blue-50/50 border border-blue-100 rounded-2xl p-6 text-left">
+                      <h3 className="font-bold text-gray-900 mb-4 text-center">Hướng dẫn thanh toán chuyển khoản</h3>
+                      <div className="flex flex-col items-center mb-6 bg-white p-4 rounded-xl border border-blue-100">
+                        <img 
+                          src={`https://vietqr.app/img?acc=106880030456&bank=VietinBank&amount=${orderInfo.totalAmount}&des=SEVQR+TKPHDT+${orderInfo._id.substring(orderInfo._id.length - 6).toUpperCase()}`} 
+                          alt="QR Code" 
+                          className="w-48 h-48 object-contain mb-4" 
+                        />
+                        <p className="text-sm text-gray-500 text-center">Quét mã QR bằng ứng dụng ngân hàng để thanh toán nhanh</p>
+                      </div>
+                      
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-500">Ngân hàng:</span>
+                          <span className="font-bold text-gray-900">VietinBank</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-500">Chủ tài khoản:</span>
+                          <span className="font-bold text-gray-900">HUYNH DUC THINH</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-500">Số tài khoản:</span>
+                          <span className="font-bold text-gray-900">106880030456</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-200 pb-2">
+                          <span className="text-gray-500">Số tiền:</span>
+                          <span className="font-bold text-red-600">{fmt(orderInfo.totalAmount)}</span>
+                        </div>
+                        <div className="flex flex-col gap-1 pt-1">
+                          <span className="text-gray-500">Nội dung chuyển khoản:</span>
+                          <div className="bg-white px-3 py-2 border border-gray-200 rounded text-center font-bold text-blue-600 text-base uppercase">
+                            SEVQR TKPHDT {orderInfo._id.substring(orderInfo._id.length - 6)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex gap-4">
                     <Btn variant="outline" onClick={() => navigate("/profile", { state: { activeTab: "orders", openOrderId: orderInfo?._id } })}>Xem đơn hàng</Btn>
                     <Btn variant="primary" onClick={() => navigate("/")}>Tiếp tục mua sắm</Btn>

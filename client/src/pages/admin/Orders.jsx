@@ -9,6 +9,7 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -25,6 +26,22 @@ export default function AdminOrders() {
   }, []);
 
   if (loading) return <div className="p-8 text-center text-gray-500 font-semibold">Đang tải đơn hàng...</div>;
+
+  const handleConfirmPayment = async (orderId) => {
+    if (!window.confirm("Xác nhận đã nhận tiền chuyển khoản cho đơn hàng này?")) return;
+    try {
+      setIsConfirming(true);
+      const res = await api.patch(`/orders/admin/${orderId}/confirm-payment`);
+      if (res.data.status === "success") {
+        setOrders(orders.map(o => o._id === orderId ? res.data.data.order : o));
+        setSelectedOrder(res.data.data.order);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Lỗi khi xác nhận thanh toán");
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
@@ -115,6 +132,7 @@ export default function AdminOrders() {
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <h4 className="font-semibold text-gray-900 mb-2">Thanh toán & Trạng thái</h4>
                   <p className="text-sm text-gray-500 mb-3">Phương thức: <span className="font-medium text-gray-700">{selectedOrder.paymentMethod || "COD"}</span></p>
+                  <p className="text-sm text-gray-500 mb-3">Thanh toán: <span className={`font-medium ${selectedOrder.isPaid ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedOrder.isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}</span></p>
                   <StatusBadge status={selectedOrder.status} />
                 </div>
               </div>
@@ -153,8 +171,18 @@ export default function AdminOrders() {
             </div>
             
             <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+              {selectedOrder.paymentMethod === 'BANK_TRANSFER' && !selectedOrder.isPaid && (
+                <Btn 
+                  variant="primary" 
+                  className="bg-green-600 hover:bg-green-700 text-white border-none"
+                  onClick={() => handleConfirmPayment(selectedOrder._id)}
+                  disabled={isConfirming}
+                >
+                  {isConfirming ? "Đang xử lý..." : "Xác nhận đã nhận tiền"}
+                </Btn>
+              )}
               <Btn variant="outline" onClick={() => setSelectedOrder(null)}>Đóng</Btn>
-              <Btn variant="primary">Cập nhật đơn hàng</Btn>
+              <Btn variant="primary">Cập nhật trạng thái</Btn>
             </div>
           </Card>
         </div>

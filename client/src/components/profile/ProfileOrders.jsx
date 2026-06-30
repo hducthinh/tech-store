@@ -73,7 +73,8 @@ export default function ProfileOrders({ user, setActiveTab }) {
                   items: o.items || [],
                   shippingAddress: o.shippingAddress,
                   paymentMethod: o.paymentMethod || "COD",
-                  totalAmount: o.totalAmount
+                  totalAmount: o.totalAmount,
+                  isPaid: o.isPaid || false
                 };
               });
               setOrders(mapped);
@@ -258,8 +259,33 @@ export default function ProfileOrders({ user, setActiveTab }) {
                     <p className="text-slate-500">Phương thức thanh toán:</p>
                     <p className="font-bold text-slate-800 bg-white px-3 py-1 rounded-lg border border-slate-200">{selectedOrder.paymentMethod}</p>
                   </div>
+                  <div className="md:col-span-2 flex justify-between items-center">
+                    <p className="text-slate-500">Trạng thái thanh toán:</p>
+                    <p className={`font-bold px-3 py-1 rounded-lg border ${selectedOrder.isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
+                      {selectedOrder.isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* QR Code for Pending Bank Transfer */}
+              {selectedOrder.paymentMethod === 'BANK_TRANSFER' && !selectedOrder.isPaid && selectedOrder.rawStatus === 'PENDING' && (
+                <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 flex flex-col items-center">
+                  <h4 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider text-center">Mã QR Thanh toán</h4>
+                  <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm mb-4">
+                    <img 
+                      src={`https://vietqr.app/img?acc=106880030456&bank=VietinBank&amount=${selectedOrder.totalAmount}&des=SEVQR+TKPHDT+${selectedOrder.rawId.substring(selectedOrder.rawId.length - 6).toUpperCase()}`} 
+                      alt="QR Code" 
+                      className="w-48 h-48 object-contain" 
+                    />
+                  </div>
+                  <div className="text-center text-sm space-y-1">
+                    <p className="text-slate-500">Quét mã QR qua ứng dụng ngân hàng</p>
+                    <p className="text-slate-500">Số tiền: <span className="font-bold text-red-600">{selectedOrder.totalAmount?.toLocaleString("vi-VN")} ₫</span></p>
+                    <p className="text-slate-500">Nội dung CK: <span className="font-bold text-blue-600">SEVQR TKPHDT {selectedOrder.rawId.substring(selectedOrder.rawId.length - 6).toUpperCase()}</span></p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-5 border-t border-slate-100 bg-white flex justify-between items-center">

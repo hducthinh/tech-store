@@ -97,9 +97,8 @@ export const createOrder = catchAsync(async (req, res, next) => {
     }], { session });
 
     // 5. Xóa các sản phẩm đã thanh toán khỏi giỏ hàng
-    cart.items = cart.items.filter(item => 
-      item.productId && !selectedItemIds.includes(item.productId._id.toString())
-    );
+    const checkoutItemIds = selectedItemsToCheckout.map(item => item._id.toString());
+    cart.items = cart.items.filter(item => !checkoutItemIds.includes(item._id.toString()));
     await cart.save({ session });
 
     // Commit toàn bộ giao dịch
@@ -149,6 +148,24 @@ export const getAdminOrders = catchAsync(async (req, res, next) => {
     results: orders.length,
     data: {
       orders,
+    },
+  });
+});
+
+// @desc    Lấy chi tiết 1 đơn hàng của khách hàng
+// @route   GET /api/v1/orders/:id
+// @access  Private
+export const getOrderById = catchAsync(async (req, res, next) => {
+  const order = await Order.findOne({ _id: req.params.id, userId: req.userId });
+
+  if (!order) {
+    return next(new AppError("Không tìm thấy đơn hàng", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      order,
     },
   });
 });
@@ -235,6 +252,47 @@ export const cancelOrder = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "Đã hủy đơn hàng thành công",
+    data: {
+      order,
+    },
+  });
+});
+
+// @desc    Admin xác nhận đã nhận tiền (chuyển khoản thủ công)
+// @route   PATCH /api/v1/orders/admin/:id/confirm-payment
+// @access  Private/Admin
+export const confirmPayment = catchAsync(async (req, res, next) => {
+  const order = await Order.findById(req.params.id);
+  
+  if (!order) {
+    return next(new AppError("Không tìm thấy đơn hàng", 404));
+  }
+
+  if (order.isPaid) {
+    return next(new AppError("Đơn hàng này đã được xác nhận thanh toán trước đó", 400));
+  }
+
+  order.isPaid = true;
+  order.paidAt = new Date();
+  
+  if (order.status === "PENDING" || order.status === "PENDING_PAYMENT") {
+    order.status = "PROCESSING";
+    order.statusHistory.push({
+      status: "PROCESSING",
+      note: "Admin đã xác nhận nhận được thanh toán chuyển khoản.",
+    });
+  } else {
+    order.statusHistory.push({
+      status: order.status,
+      note: "Admin đã xác nhận nhận được thanh toán chuyển khoản (Thanh toán muộn).",
+    });
+  }
+
+  await order.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Xác nhận thanh toán thành công",
     data: {
       order,
     },

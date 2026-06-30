@@ -218,9 +218,9 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Thông tin chi tiết */}
+            {/* Mô tả sản phẩm */}
             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-              <h2 className="text-xl font-black text-gray-900 mb-6">Thông tin chi tiết</h2>
+              <h2 className="text-xl font-black text-gray-900 mb-6">Mô tả sản phẩm</h2>
               <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: product.description || "<p>Chưa có mô tả chi tiết cho sản phẩm này.</p>" }} />
             </div>
 

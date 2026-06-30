@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, User, Menu, X, ChevronRight, MapPin, Phone, Mail, Clock, Monitor, Truck, ShieldCheck, MessageCircle, ChevronUp, Laptop, Cpu, Mouse, Keyboard, HardDrive, Smartphone, Headphones, Box, Star, Zap } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, ChevronRight, MapPin, Phone, Mail, Clock, Monitor, Truck, ShieldCheck, MessageCircle, ChevronUp, Laptop, Cpu, Mouse, Keyboard, HardDrive, Smartphone, Headphones, Box, Star, Zap, Armchair, Fan, Speaker, Server } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Btn, fmt, img } from "../SharedUI";
 import { useCart } from "../../contexts/CartContext";
@@ -10,14 +10,30 @@ import CartDrawer from "../common/CartDrawer";
 function getCategoryIcon(name) {
   if (!name) return <Box size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
   const n = name.toLowerCase();
-  if (n.includes('laptop')) return <Laptop size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('màn hình')) return <Monitor size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('cpu') || n.includes('mainboard') || n.includes('vga')) return <Cpu size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('chuột')) return <Mouse size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('bàn phím')) return <Keyboard size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('ổ cứng') || n.includes('ssd') || n.includes('hdd') || n.includes('ram')) return <HardDrive size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('điện thoại')) return <Smartphone size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
-  if (n.includes('tai nghe')) return <Headphones size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
+  let iconName = '';
+
+  if (n.includes('cpu') || n.includes('vi xử lý')) iconName = 'cpu.svg';
+  else if (n.includes('mainboard') || n.includes('bo mạch')) iconName = 'mainboard.svg';
+  else if (n.includes('ram') || n.includes('bộ nhớ')) iconName = 'ram.svg';
+  else if (n.includes('vga') || n.includes('card màn hình')) iconName = 'vga.svg';
+  else if (n.includes('ssd') || n.includes('ổ cứng')) iconName = 'ssd.svg';
+  else if (n.includes('nguồn') || n.includes('psu')) iconName = 'power.svg';
+  else if (n.includes('case') || n.includes('vỏ máy')) iconName = 'case.svg';
+  else if (n.includes('tản nhiệt') || n.includes('fan') || n.includes('cooler')) iconName = 'fan.svg';
+  else if (n.includes('giá treo') || n.includes('arm')) iconName = 'arm.svg';
+  else if (n.includes('màn hình') || n.includes('monitor')) iconName = 'monitor.svg';
+  else if (n.includes('bàn phím') || n.includes('keyboard')) iconName = 'keyboard.svg';
+  else if (n.includes('chuột') || n.includes('mouse')) {
+    if (n.includes('lót') || n.includes('pad')) iconName = 'mousepad.svg';
+    else iconName = 'mouse.svg';
+  }
+  else if (n.includes('tai nghe') || n.includes('headphone')) iconName = 'headphone.svg';
+  else if (n.includes('loa') || n.includes('speaker')) iconName = 'speaker.svg';
+  else if (n.includes('ghế') || n.includes('chair')) iconName = 'chair.svg';
+
+  if (iconName) {
+    return <img src={`/icons/${iconName}`} alt={name} className="w-5 h-5 object-contain opacity-70 group-hover/item:opacity-100 transition-opacity filter-none group-hover/item:brightness-125" />;
+  }
   return <Box size={18} strokeWidth={1.5} className="text-gray-500 group-hover/item:text-blue-600 transition-colors" />;
 }
 
@@ -54,7 +70,7 @@ export default function UserLayout({ children }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Top Bar */}
@@ -86,66 +102,66 @@ export default function UserLayout({ children }) {
               <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden">
                 <div className="p-6 grid grid-cols-12 gap-8">
                   {/* Categories Column */}
-                <div className="col-span-5 border-r border-gray-100 pr-4">
-                  <h3 className="text-gray-900 font-bold mb-4 flex items-center gap-2"><Menu size={18} className="text-blue-600" /> Danh mục sản phẩm</h3>
-                  {categories.length === 0 ? (
-                    <div className="text-sm text-gray-500">Đang tải...</div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {categories.map(c => (
-                        <Link key={c._id} to={`/collections/${c.slug}`} className="flex items-center px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group/item">
-                          <span className="mr-3 flex items-center justify-center w-6 h-6">{getCategoryIcon(c.name)}</span>
-                          <span className="text-[13px] font-semibold text-gray-700 group-hover/item:text-blue-600 truncate">{c.name}</span>
+                  <div className="col-span-5 border-r border-gray-100 pr-4">
+                    <h3 className="text-gray-900 font-bold mb-4 flex items-center gap-2"><Menu size={18} className="text-blue-600" /> Danh mục sản phẩm</h3>
+                    {categories.length === 0 ? (
+                      <div className="text-sm text-gray-500">Đang tải...</div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {categories.map(c => (
+                          <Link key={c._id} to={`/collections/${c.slug}`} className="flex items-center px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group/item">
+                            <span className="mr-3 flex items-center justify-center w-6 h-6">{getCategoryIcon(c.name)}</span>
+                            <span className="text-[13px] font-semibold text-gray-700 group-hover/item:text-blue-600 truncate">{c.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Popular Products Column */}
+                  <div className="col-span-4 border-r border-gray-100 pr-4">
+                    <h3 className="text-gray-900 font-bold mb-4 flex items-center gap-2"><Zap size={18} className="text-amber-500 fill-amber-500" /> Sản phẩm nổi bật</h3>
+                    <div className="flex flex-col gap-4">
+                      {menuProducts.map(p => (
+                        <Link key={p._id} to={`/products/${p.slug || p._id}`} className="flex gap-3 items-center group/prod">
+                          <div className="w-16 h-16 bg-gray-50 rounded-lg p-1 shrink-0 group-hover/prod:shadow-md transition-shadow">
+                            <img src={p.images?.[0] || p.thumbnail || img("1517336714731-489689fd1ca8")} alt={p.name} className="w-full h-full object-contain mix-blend-multiply" />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-medium text-gray-800 line-clamp-2 group-hover/prod:text-blue-600 transition-colors">{p.name}</p>
+                            <p className="text-red-500 font-bold text-sm mt-1">{fmt(p.price)}</p>
+                          </div>
                         </Link>
                       ))}
                     </div>
-                  )}
-                </div>
-
-                {/* Popular Products Column */}
-                <div className="col-span-4 border-r border-gray-100 pr-4">
-                  <h3 className="text-gray-900 font-bold mb-4 flex items-center gap-2"><Zap size={18} className="text-amber-500 fill-amber-500" /> Sản phẩm nổi bật</h3>
-                  <div className="flex flex-col gap-4">
-                    {menuProducts.map(p => (
-                      <Link key={p._id} to={`/products/${p.slug || p._id}`} className="flex gap-3 items-center group/prod">
-                        <div className="w-16 h-16 bg-gray-50 rounded-lg p-1 shrink-0 group-hover/prod:shadow-md transition-shadow">
-                          <img src={p.images?.[0] || p.thumbnail || img("1517336714731-489689fd1ca8")} alt={p.name} className="w-full h-full object-contain mix-blend-multiply" />
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-medium text-gray-800 line-clamp-2 group-hover/prod:text-blue-600 transition-colors">{p.name}</p>
-                          <p className="text-red-500 font-bold text-sm mt-1">{fmt(p.price)}</p>
-                        </div>
-                      </Link>
-                    ))}
                   </div>
-                </div>
 
-                {/* Promotional Banner */}
-                <div className="col-span-3">
-                  <div className="w-full h-full bg-slate-900 rounded-2xl p-5 text-white flex flex-col relative overflow-hidden group/banner cursor-pointer shadow-inner" onClick={() => navigate("/xay-dung-cau-hinh")}>
-                    {/* Background layers */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-purple-800/90 z-0"></div>
-                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] z-0"></div>
-                    
-                    {/* Glowing orbs */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2 group-hover/banner:scale-150 transition-transform duration-700 z-0"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full blur-[30px] translate-y-1/2 -translate-x-1/2 group-hover/banner:scale-150 transition-transform duration-700 z-0"></div>
+                  {/* Promotional Banner */}
+                  <div className="col-span-3">
+                    <div className="w-full h-full bg-slate-900 rounded-2xl p-5 text-white flex flex-col relative overflow-hidden group/banner cursor-pointer shadow-inner" onClick={() => navigate("/xay-dung-cau-hinh")}>
+                      {/* Background layers */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-purple-800/90 z-0"></div>
+                      <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] z-0"></div>
 
-                    {/* Image / Decorative Icons */}
-                    <Cpu size={140} strokeWidth={0.5} className="absolute bottom-[-30px] right-[-30px] text-white opacity-10 rotate-12 group-hover/banner:scale-110 group-hover/banner:opacity-20 group-hover/banner:rotate-6 transition-all duration-700 z-10" />
-                    <Monitor size={60} strokeWidth={1} className="absolute bottom-[60px] right-[70px] text-blue-200 opacity-10 -rotate-12 group-hover/banner:scale-125 group-hover/banner:opacity-30 transition-all duration-700 z-10 delay-100" />
+                      {/* Glowing orbs */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2 group-hover/banner:scale-150 transition-transform duration-700 z-0"></div>
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 rounded-full blur-[30px] translate-y-1/2 -translate-x-1/2 group-hover/banner:scale-150 transition-transform duration-700 z-0"></div>
 
-                    {/* Content */}
-                    <div className="relative z-20 flex flex-col h-full">
-                      <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-black px-2 py-1 rounded w-max mb-3 shadow-[0_0_10px_rgba(239,68,68,0.5)] border border-white/20 tracking-wider">GIẢM ĐẾN 50%</span>
-                      <h4 className="font-black text-xl leading-tight mb-2 drop-shadow-md tracking-tight">BUILD PC<br/>SIÊU ƯU ĐÃI</h4>
-                      <p className="text-blue-100 text-[11px] mb-4 opacity-90 font-medium">Tặng balo chống sốc & chuột</p>
-                      <button className="mt-auto bg-white/10 backdrop-blur-md border border-white/30 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg hover:bg-white hover:text-blue-700 transition-all z-10 w-max group-hover/banner:shadow-[0_0_20px_rgba(255,255,255,0.3)]">Khám phá ngay</button>
+                      {/* Image / Decorative Icons */}
+                      <Cpu size={140} strokeWidth={0.5} className="absolute bottom-[-30px] right-[-30px] text-white opacity-10 rotate-12 group-hover/banner:scale-110 group-hover/banner:opacity-20 group-hover/banner:rotate-6 transition-all duration-700 z-10" />
+                      <Monitor size={60} strokeWidth={1} className="absolute bottom-[60px] right-[70px] text-blue-200 opacity-10 -rotate-12 group-hover/banner:scale-125 group-hover/banner:opacity-30 transition-all duration-700 z-10 delay-100" />
+
+                      {/* Content */}
+                      <div className="relative z-20 flex flex-col h-full">
+                        <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-black px-2 py-1 rounded w-max mb-3 shadow-[0_0_10px_rgba(239,68,68,0.5)] border border-white/20 tracking-wider">GIẢM ĐẾN 50%</span>
+                        <h4 className="font-black text-xl leading-tight mb-2 drop-shadow-md tracking-tight">BUILD PC<br />SIÊU ƯU ĐÃI</h4>
+                        <p className="text-blue-100 text-[11px] mb-4 opacity-90 font-medium">Tặng balo chống sốc & chuột</p>
+                        <button className="mt-auto bg-white/10 backdrop-blur-md border border-white/30 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg hover:bg-white hover:text-blue-700 transition-all z-10 w-max group-hover/banner:shadow-[0_0_20px_rgba(255,255,255,0.3)]">Khám phá ngay</button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
             </div>
           </div>
 
@@ -248,12 +264,11 @@ export default function UserLayout({ children }) {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <Mail className="shrink-0 text-gray-600" size={16} />
-              <p><strong>Email:</strong> support@ducthinhtechshop.vn</p>
+              <p><strong>Email:</strong> support@dthinhtech.shop</p>
             </div>
             <div className="flex items-center gap-4 pt-2">
-              <a href="#" className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4v-8.5z"/></svg></a>
-              <a href="#" className="w-8 h-8 rounded-full bg-blue-400 text-white flex items-center justify-center hover:bg-blue-500 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M21.543 7.103c.095 2.115.148 4.237.148 6.368 0 2.13-.053 4.253-.148 6.368-.046 1.042-.89 1.884-1.933 1.932-1.895.086-3.8.13-5.717.13s-3.821-.044-5.717-.13c-1.043-.048-1.887-.89-1.933-1.932-.095-2.115-.148-4.238-.148-6.368s.053-4.253.148-6.368c.046-1.042.89-1.884 1.933-1.932 1.896-.086 3.8-.13 5.717-.13s3.822.044 5.717.13c1.043.048 1.887.89 1.933 1.932zM10.876 15.698l4.496-2.228-4.496-2.228v4.456z"/></svg></a>
-              <a href="#" className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M21.543 7.103c.095 2.115.148 4.237.148 6.368 0 2.13-.053 4.253-.148 6.368-.046 1.042-.89 1.884-1.933 1.932-1.895.086-3.8.13-5.717.13s-3.821-.044-5.717-.13c-1.043-.048-1.887-.89-1.933-1.932-.095-2.115-.148-4.238-.148-6.368s.053-4.253.148-6.368c.046-1.042.89-1.884 1.933-1.932 1.896-.086 3.8-.13 5.717-.13s3.822.044 5.717.13c1.043.048 1.887.89 1.933 1.932zM10.876 15.698l4.496-2.228-4.496-2.228v4.456z"/></svg></a>
+              <a href="https://www.facebook.com/realDucThinh" target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14C11.928 2 10 3.657 10 6.7v2.8H7v4h3V22h4v-8.5z" /></svg></a>
+              <a href="https://github.com/hducthinh" target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-900 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg></a>
             </div>
           </div>
 
@@ -291,14 +306,14 @@ export default function UserLayout({ children }) {
             </ul>
           </div>
         </div>
-        
+
         <div className="max-w-7xl mx-auto px-4 py-4 text-left text-gray-500 text-sm">
           © Bản quyền thuộc về ĐỨC THỊNH TECHSHOP
         </div>
       </footer>
 
       {/* Cart Drawer Component */}
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
 
       {/* Floating Actions */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
@@ -306,7 +321,7 @@ export default function UserLayout({ children }) {
           <MessageCircle size={24} className="group-hover:animate-pulse" />
         </button>
         {scrolled && (
-          <button 
+          <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="w-12 h-12 bg-white text-gray-700 border border-gray-200 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 hover:text-blue-600 hover:scale-110 active:scale-95 transition-all"
           >

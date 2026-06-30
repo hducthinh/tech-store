@@ -86,7 +86,7 @@ export default function ProfileCart({
                   <div>
                     <h5 className="font-bold text-sm text-slate-800 line-clamp-2 hover:text-[#0058be] transition-colors">{item.product.name}</h5>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id); }}
+                      onClick={(e) => { e.stopPropagation(); removeFromCart(item.product.id, item.buildId); }}
                       className="text-xs text-red-500 hover:text-red-700 font-medium mt-2 flex items-center gap-1"
                     >
                       Xóa
@@ -102,7 +102,7 @@ export default function ProfileCart({
                   <div className="flex items-center bg-white border border-slate-200 rounded-lg">
                     <button 
                       type="button"
-                      onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1))}
+                      onClick={() => updateQuantity(item.product.id, Math.max(1, item.quantity - 1), item.buildId)}
                       className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-l-lg transition-colors font-bold"
                     >-</button>
                     <input 
@@ -117,17 +117,17 @@ export default function ProfileCart({
                           updateQuantity(item.product.id, "");
                         } else {
                           const num = parseInt(val.replace(/\D/g, ''));
-                          if (!isNaN(num)) updateQuantity(item.product.id, num);
+                          if (!isNaN(num)) updateQuantity(item.product.id, num, item.buildId);
                         }
                       }}
                       onBlur={(e) => {
-                        if (item.quantity === "" || item.quantity < 1) updateQuantity(item.product.id, 1);
+                        if (item.quantity === "" || item.quantity < 1) updateQuantity(item.product.id, 1, item.buildId);
                       }}
                       className="w-10 text-center font-bold text-sm text-slate-800 border-none focus:ring-0 focus:outline-none p-0 bg-transparent"
                     />
                     <button 
                       type="button"
-                      onClick={() => updateQuantity(item.product.id, (Number(item.quantity) || 0) + 1)}
+                      onClick={() => updateQuantity(item.product.id, (Number(item.quantity) || 0) + 1, item.buildId)}
                       className="w-8 h-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-r-lg transition-colors font-bold"
                     >+</button>
                   </div>

@@ -34,14 +34,30 @@ const UTILITIES = [
 function getCategoryIcon(name) {
   if (!name) return <Box size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
   const n = name.toLowerCase();
-  if (n.includes('laptop')) return <Laptop size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('màn hình')) return <Monitor size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('cpu') || n.includes('mainboard') || n.includes('vga')) return <Cpu size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('chuột')) return <Mouse size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('bàn phím')) return <Keyboard size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('ổ cứng') || n.includes('ssd') || n.includes('hdd') || n.includes('ram')) return <HardDrive size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('điện thoại')) return <Smartphone size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
-  if (n.includes('tai nghe')) return <Headphones size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
+  let iconName = '';
+  
+  if (n.includes('cpu') || n.includes('vi xử lý')) iconName = 'cpu.svg';
+  else if (n.includes('mainboard') || n.includes('bo mạch')) iconName = 'mainboard.svg';
+  else if (n.includes('ram') || n.includes('bộ nhớ')) iconName = 'ram.svg';
+  else if (n.includes('vga') || n.includes('card màn hình')) iconName = 'vga.svg';
+  else if (n.includes('ssd') || n.includes('ổ cứng')) iconName = 'ssd.svg';
+  else if (n.includes('nguồn') || n.includes('psu')) iconName = 'power.svg';
+  else if (n.includes('case') || n.includes('vỏ máy')) iconName = 'case.svg';
+  else if (n.includes('tản nhiệt') || n.includes('fan') || n.includes('cooler')) iconName = 'fan.svg';
+  else if (n.includes('giá treo') || n.includes('arm')) iconName = 'arm.svg';
+  else if (n.includes('màn hình') || n.includes('monitor')) iconName = 'monitor.svg';
+  else if (n.includes('bàn phím') || n.includes('keyboard')) iconName = 'keyboard.svg';
+  else if (n.includes('chuột') || n.includes('mouse')) {
+    if (n.includes('lót') || n.includes('pad')) iconName = 'mousepad.svg';
+    else iconName = 'mouse.svg';
+  }
+  else if (n.includes('tai nghe') || n.includes('headphone')) iconName = 'headphone.svg';
+  else if (n.includes('loa') || n.includes('speaker')) iconName = 'speaker.svg';
+  else if (n.includes('ghế') || n.includes('chair')) iconName = 'chair.svg';
+  
+  if (iconName) {
+    return <img src={`/icons/${iconName}`} alt={name} className="w-10 h-10 object-contain mb-4 group-hover:scale-110 transition-transform mx-auto filter-none" />;
+  }
   return <Box size={40} strokeWidth={1.5} className="text-blue-600 mb-4 group-hover:scale-110 transition-transform mx-auto" />;
 }
 

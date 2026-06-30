@@ -10,6 +10,7 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
   const [search, setSearch] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
+  const [ramFilter, setRamFilter] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
       setSearch("");
       setPriceFilter("");
       setBrandFilter("");
+      setRamFilter("");
       return;
     }
     
@@ -52,6 +54,19 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
     return Array.from(brands).sort();
   }, [products]);
 
+  const availableRamTypes = useMemo(() => {
+    if (categoryId !== 'ram') return [];
+    const types = new Set();
+    products.forEach(p => {
+      const name = p.name.toUpperCase();
+      const specRam = (p.specs?.['Loại RAM'] || p.specs?.['Loại bộ nhớ'] || '').toUpperCase();
+      const fullText = `${name} ${specRam}`;
+      if (fullText.includes('DDR4') || fullText.includes('D4')) types.add('DDR4');
+      if (fullText.includes('DDR5') || fullText.includes('D5')) types.add('DDR5');
+    });
+    return Array.from(types).sort();
+  }, [products, categoryId]);
+
   const filteredProducts = useMemo(() => {
     let result = products;
 
@@ -70,6 +85,17 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
       result = result.filter(p => (p.brand?.name || p.brandName) === brandFilter);
     }
 
+    if (ramFilter) {
+      result = result.filter(p => {
+        const name = p.name.toUpperCase();
+        const specRam = (p.specs?.['Loại RAM'] || p.specs?.['Loại bộ nhớ'] || '').toUpperCase();
+        const fullText = `${name} ${specRam}`;
+        if (ramFilter === 'DDR4') return fullText.includes('DDR4') || fullText.includes('D4');
+        if (ramFilter === 'DDR5') return fullText.includes('DDR5') || fullText.includes('D5');
+        return true;
+      });
+    }
+
     if (sortOrder === "price_asc") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortOrder === "price_desc") {
@@ -77,7 +103,7 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
     } // newest is default from backend usually
 
     return result;
-  }, [products, priceFilter, brandFilter, sortOrder]);
+  }, [products, priceFilter, brandFilter, ramFilter, sortOrder]);
 
   if (!isOpen) return null;
 
@@ -141,6 +167,26 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
                         className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
                       />
                       {brand}
+                    </label>
+                  ))}
+                </div>
+                <div className="border-b border-gray-100 mt-6"></div>
+              </div>
+            )}
+
+            {availableRamTypes.length > 0 && (
+              <div className="mb-8">
+                <h4 className="font-bold text-[#1a2b49] text-[15px] uppercase mb-4">Loại RAM</h4>
+                <div className="flex flex-col gap-3">
+                  {availableRamTypes.map(type => (
+                    <label key={type} className="flex items-center gap-3 cursor-pointer text-base text-[#4a5568] hover:text-[#1a2b49] transition-colors">
+                      <input 
+                        type="checkbox" 
+                        checked={ramFilter === type} 
+                        onChange={() => setRamFilter(ramFilter === type ? "" : type)} 
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                      />
+                      {type}
                     </label>
                   ))}
                 </div>
