@@ -44,7 +44,11 @@ src/
 - **Thư mục (Folders)**: Sử dụng `lowercase` (hoặc `kebab-case` nếu có nhiều từ). Ví dụ: `features/`, `admin/`, `common/`.
 - **Components & Pages**: Sử dụng `PascalCase`. Ví dụ: `ProductCard.jsx`, `AdminTable.jsx`.
 - **Hooks**: Sử dụng `camelCase`, luôn bắt đầu bằng chữ `use`. Ví dụ: `useFetchData.js`, `useDashboard.js`.
-- **Utils, Services & Constants**: Sử dụng `camelCase` hoặc `UPPER_SNAKE_CASE` đối với hằng số. Ví dụ: `api.js`, `compatibility.js`, `PRICE_RANGES`.
+- **Functions / Utilities**: Sử dụng `camelCase`. Ví dụ: `api.js`, `formatDate.js`.
+- **Classes (`Error`, `Service`, `Repository`, ...)**: Sử dụng `PascalCase`. Ví dụ: `ApiError.js`, `UserRepository.js`.
+- **Constants**: Sử dụng `UPPER_SNAKE_CASE`. Ví dụ: `MAX_ITEMS`, `PRICE_RANGES`.
+- **Types / Interfaces (TypeScript)**: Sử dụng `PascalCase`. Ví dụ: `UserType`, `IProduct`.
+- **Enums**: Sử dụng `PascalCase`. Ví dụ: `OrderStatus`.
 
 ## 5. Hook Rules
 
