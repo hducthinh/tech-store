@@ -96,13 +96,19 @@ export default function PCBuilder() {
 
     try {
       const buildId = "PCBUILD-" + Date.now().toString();
-      // Add items sequentially to avoid race conditions on the cart document
+      let allSuccess = true;
       for (const item of items) {
-        await addToCart(item.product._id, item.quantity, buildId);
+        const success = await addToCart(item.product._id, item.quantity, buildId);
+        if (!success) {
+          allSuccess = false;
+          break;
+        }
       }
-      showToast("Đã thêm toàn bộ cấu hình vào giỏ hàng!", "success");
-      setConfig({});
-      navigate("/"); // or open cart drawer
+      if (allSuccess) {
+        showToast("Đã thêm toàn bộ cấu hình vào giỏ hàng!", "success");
+        setConfig({});
+        navigate("/"); // or open cart drawer
+      }
     } catch (error) {
       showToast("Có lỗi xảy ra khi thêm vào giỏ hàng", "error");
     }
@@ -116,13 +122,19 @@ export default function PCBuilder() {
 
     try {
       const buildId = "PCBUILD-" + Date.now().toString();
-      // Add items sequentially to avoid race conditions on the cart document
+      let allSuccess = true;
       for (const item of items) {
-        await addToCart(item.product._id, item.quantity, buildId);
+        const success = await addToCart(item.product._id, item.quantity, buildId);
+        if (!success) {
+          allSuccess = false;
+          break;
+        }
       }
-      showToast("Đã chuyển sang trang thanh toán!", "success");
-      // Không gọi setConfig({}) ở đây để giữ lại dữ liệu nếu khách hàng bấm Back quay lại
-      navigate("/checkout", { state: { selectedItemIds: [buildId] } });
+      if (allSuccess) {
+        showToast("Đã chuyển sang trang thanh toán!", "success");
+        // Không gọi setConfig({}) ở đây để giữ lại dữ liệu nếu khách hàng bấm Back quay lại
+        navigate("/checkout", { state: { selectedItemIds: [buildId] } });
+      }
     } catch (error) {
       showToast("Có lỗi xảy ra khi chuẩn bị thanh toán", "error");
     }

@@ -34,12 +34,17 @@ export const CartProvider = ({ children }) => {
   }, [fetchCart]);
 
   const addToCart = async (productId, quantity = 1, buildId = null) => {
-    if (!user) return showAlert("Vui lòng đăng nhập để thêm vào giỏ hàng", "error");
+    if (!user) {
+      showAlert("Vui lòng đăng nhập để thêm vào giỏ hàng", "error");
+      return false;
+    }
     try {
       const response = await api.post("/cart", { productId, quantity, buildId });
       setCart(response.data?.data?.cart);
+      return true;
     } catch (error) {
       console.error("Failed to add to cart", error);
+      return false;
     }
   };
 

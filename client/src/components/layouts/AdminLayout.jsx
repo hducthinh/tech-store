@@ -61,9 +61,7 @@ export default function AdminLayout() {
             <Monitor size={18} className="text-white" strokeWidth={2.5} />
           </div>
           <div className={`overflow-hidden transition-all duration-300 ease-in-out motion-reduce:transition-none ${isCollapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100 ml-3'}`}>
-            <span className="text-xl font-black tracking-tighter text-gray-900 group-hover:text-blue-700 transition-colors whitespace-nowrap">
-              Tech<span className="text-blue-600">Admin</span>
-            </span>
+            <img src="/header_logo_cropped.png" alt="Đức Thịnh Techshop" className="h-[28px] w-auto object-contain" />
           </div>
         </div>
 

@@ -208,9 +208,9 @@ export default function ProductDetail() {
                     </div>
                   </div>
                   
-                  <Btn variant="primary" size="lg" className="w-full justify-center h-12 text-base rounded-xl shadow-lg shadow-blue-600/30" onClick={() => {
-                    addToCart(product._id, quantity);
-                    showToast(`Đã thêm ${quantity} sản phẩm ${product.name} vào giỏ hàng`, "success");
+                  <Btn variant="primary" size="lg" className="w-full justify-center h-12 text-base rounded-xl shadow-lg shadow-blue-600/30" onClick={async () => {
+                    const success = await addToCart(product._id, quantity);
+                    if (success) showToast(`Đã thêm ${quantity} sản phẩm ${product.name} vào giỏ hàng`, "success");
                   }}>
                     <ShoppingCart size={20} /> Thêm vào giỏ
                   </Btn>

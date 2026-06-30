@@ -418,10 +418,10 @@ export default function CategoryPage() {
                               </div>
                               <button
                                 className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors"
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.preventDefault();
-                                  addToCart(p._id, 1);
-                                  showToast(`Đã thêm ${p.name} vào giỏ hàng`, "success");
+                                  const success = await addToCart(p._id, 1);
+                                  if (success) showToast(`Đã thêm ${p.name} vào giỏ hàng`, "success");
                                 }}
                               >
                                 <ShoppingCart size={18} />

@@ -165,9 +165,8 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   if (!email) return next(new AppError("Vui lòng cung cấp email", 400));
 
   const user = await User.findOne({ email });
-  // Không tiết lộ email có tồn tại hay không để tránh user enumeration
   if (!user) {
-    return res.status(200).json({ status: "success", message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi." });
+    return next(new AppError("Email không tồn tại trong hệ thống", 404));
   }
 
   // Sinh token ngẫu nhiên an toàn, lưu bản băm vào DB

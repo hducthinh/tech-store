@@ -15,15 +15,18 @@ export default function ForgotPassword() {
     setIsLoading(true);
     setError("");
     try {
-      await fetch("/api/v1/auth/forgot-password", {
+      const res = await fetch("/api/v1/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      // Luôn hiển thị thành công để tránh tiết lộ email có tồn tại không
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Có lỗi xảy ra");
+
       setSubmitted(true);
-    } catch (_err) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+    } catch (err) {
+      setError(err.message || "Có lỗi xảy ra. Vui lòng thử lại sau.");
     } finally {
       setIsLoading(false);
     }
