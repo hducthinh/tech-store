@@ -9,7 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { login, isLoading, error: authError } = useAuth();
   
-  useDocumentMeta("Đăng nhập - TechCart", "Đăng nhập hệ thống");
+  useDocumentMeta("Đăng nhập - DucThinh TechShop", "Đăng nhập hệ thống");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +40,7 @@ export default function Login() {
           <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
             <Terminal size={20} />
           </div>
-          <span className="text-xl font-black tracking-tight">TechCart</span>
+          <span className="text-xl font-black tracking-tight">DucThinh TechShop</span>
         </div>
         
         <div className="z-10 max-w-md">

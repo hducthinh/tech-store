@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Package, MapPin, CreditCard, Receipt, Store, AlertTriangle } from "lucide-react";
+import { Skeleton } from "../ui/Skeleton";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAlert } from "../../contexts/AlertContext";
 
@@ -8,6 +9,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
   const navigate = useNavigate();
   const { showAlert } = useAlert();
   const [orders, setOrders] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [selectedOrder, setSelectedOrder] = React.useState(null);
   const [isCancelling, setIsCancelling] = React.useState(false);
   const [showCancelModal, setShowCancelModal] = React.useState(false);
@@ -86,7 +88,8 @@ export default function ProfileOrders({ user, setActiveTab }) {
               }
             }
           })
-          .catch(console.error);
+          .catch(console.error)
+          .finally(() => setIsLoading(false));
       });
     }
   }, [user, location.state?.openOrderId, setActiveTab]);
@@ -128,7 +131,32 @@ export default function ProfileOrders({ user, setActiveTab }) {
     <>
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <h2 className="text-xl font-bold text-slate-800 mb-6 border-l-4 border-[#0058be] pl-3">Lịch sử đơn hàng</h2>
-        {orders.length === 0 ? (
+        {isLoading ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-sm text-slate-500">
+                  <th className="pb-3 font-semibold px-4">Mã ĐH</th>
+                  <th className="pb-3 font-semibold px-4">Ngày đặt</th>
+                  <th className="pb-3 font-semibold px-4 text-right">Tổng tiền</th>
+                  <th className="pb-3 font-semibold px-4">Trạng thái</th>
+                  <th className="pb-3 font-semibold px-4 text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {[1, 2, 3].map(i => (
+                  <tr key={i} className="border-b border-slate-50">
+                    <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
+                    <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-4 px-4 flex justify-end"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-4 px-4"><Skeleton className="h-6 w-28 rounded-full" /></td>
+                    <td className="py-4 px-4 flex justify-center"><Skeleton className="h-8 w-24 rounded-lg" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="text-center py-10">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <p className="text-slate-500 font-medium">Bạn chưa có đơn hàng nào.</p>

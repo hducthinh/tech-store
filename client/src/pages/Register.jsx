@@ -9,7 +9,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { register, isLoading, error: authError } = useAuth();
   
-  useDocumentMeta("Đăng ký - TechCart", "Đăng ký tài khoản mới");
+  useDocumentMeta("Đăng ký - DucThinh TechShop", "Đăng ký tài khoản mới");
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -47,7 +47,7 @@ export default function Register() {
           <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20">
             <Terminal size={20} />
           </div>
-          <span className="text-xl font-black tracking-tight">TechCart</span>
+          <span className="text-xl font-black tracking-tight">DucThinh TechShop</span>
         </div>
         
         <div className="z-10 max-w-md">
@@ -140,7 +140,7 @@ export default function Register() {
             <label className="flex items-start gap-2 mt-2 cursor-pointer group">
               <input type="checkbox" required className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-sm text-gray-500 leading-tight">
-                Tôi đồng ý với <a href="#" className="text-blue-600 hover:underline">Điều khoản dịch vụ</a> và <a href="#" className="text-blue-600 hover:underline">Chính sách bảo mật</a> của TechCart.
+                Tôi đồng ý với <a href="#" className="text-blue-600 hover:underline">Điều khoản dịch vụ</a> và <a href="#" className="text-blue-600 hover:underline">Chính sách bảo mật</a> của DucThinh TechShop.
               </span>
             </label>
 

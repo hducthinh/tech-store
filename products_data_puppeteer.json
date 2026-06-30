@@ -1,0 +1,51 @@
+[
+  {
+    "name": "Card màn hình GIGABYTE GeForce RTX 3050 WINDFORCE OC V2 8G (GV-N3050WF2OCV2-8GD)",
+    "slug": "card-man-hinh-gigabyte-geforce-rtx-3050-windforce-oc-v2-8g-gv-n3050wf2ocv2-8gd",
+    "sku": "SKU-468843",
+    "categoryName": "VGA",
+    "brandName": "GIGABYTE",
+    "price": 8390000,
+    "originalPrice": 8490000,
+    "stock": 82,
+    "specs": {
+      "Thương hiệu": "GIGABYTE",
+      "Bảo hành": "36 tháng",
+      "Dòng sản phẩm": "GIGABYTE GeForce RTX 3050 WINDFORCE OC V2 8G",
+      "Dòng VGA": "RTX 30 Series",
+      "Số nhân CUDA Cores (NVIDIA)": "2560 nhân",
+      "Xung nhịp GPU Base": "1550 Mhz",
+      "Xung nhịp GPU Boost": "1792 Mhz",
+      "Bộ nhớ (VRAM)": "8 GB",
+      "Bus bộ nhớ": "128 b",
+      "Kiểu bộ nhớ": "GDDR6",
+      "Chuẩn giao tiếp": "PCIe 4.0",
+      "Số quạt tản nhiệt": "2 quạt",
+      "Cổng kết nối": "2x DisplayPort 1.4a, 2x HDMI 2.1",
+      "DirectX hỗ trợ": "DirectX 12 Ultimate",
+      "Hỗ trợ DLSS": "Có",
+      "Hỗ trợ Ray Tracing": "Có",
+      "OpenGL hỗ trợ": "4.6",
+      "Nhân đồ họa": "NVIDIA",
+      "Hỗ trợ đa màn hình": "4",
+      "Số slot chiếm dụng": "2 slot",
+      "Độ phân giải tối đa": "7680 x 4320 px",
+      "Đầu cấp nguồn": "1 x 8-pin",
+      "Nguồn đề xuất": "450 w",
+      "TDP": "130 w",
+      "Kích thước card": "198.1 x 120.6 x 39 mm",
+      "Trọng lượng": "0.7 kg"
+    },
+    "images": [
+      "https://res.cloudinary.com/dmgzwbpt6/image/upload/v1782751344/tech-store-products/VGA/GIGABYTE/card-man-hinh-gigabyte-geforce-rtx-3050-windforce-oc-v2-8g-gv-n3050wf2ocv2-8gd-1.png",
+      "https://res.cloudinary.com/dmgzwbpt6/image/upload/v1782751346/tech-store-products/VGA/GIGABYTE/card-man-hinh-gigabyte-geforce-rtx-3050-windforce-oc-v2-8g-gv-n3050wf2ocv2-8gd-2.png",
+      "https://res.cloudinary.com/dmgzwbpt6/image/upload/v1782751347/tech-store-products/VGA/GIGABYTE/card-man-hinh-gigabyte-geforce-rtx-3050-windforce-oc-v2-8g-gv-n3050wf2ocv2-8gd-3.png",
+      "https://res.cloudinary.com/dmgzwbpt6/image/upload/v1782751348/tech-store-products/VGA/GIGABYTE/card-man-hinh-gigabyte-geforce-rtx-3050-windforce-oc-v2-8g-gv-n3050wf2ocv2-8gd-4.png"
+    ],
+    "description": "Sản phẩm được tự động thu thập thông tin.",
+    "shortDescription": "Sản phẩm chính hãng tại Đức Thịnh TechShop.",
+    "warrantyMonths": 12,
+    "createdAt": "2026-06-29T16:42:29.289Z",
+    "updatedAt": "2026-06-29T16:42:29.289Z"
+  }
+]

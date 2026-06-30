@@ -33,9 +33,23 @@ export const getProducts = catchAsync(async (req, res, next) => {
 
   if (category) {
     const categoryDoc = await Category.findOne({ slug: category });
-    if (categoryDoc) filter.categoryId = categoryDoc._id;
+    if (categoryDoc) {
+      filter.categoryId = categoryDoc._id;
+    } else {
+      return res.status(200).json({
+        status: "success",
+        results: 0,
+        data: { products: [] },
+        pagination: { totalPages: 1, page: pageNum, total: 0 }
+      });
+    }
   } else if (categoryId) {
     filter.categoryId = categoryId;
+  }
+  
+  if (req.query.categoryNames) {
+    const names = req.query.categoryNames.split(",").map(n => n.trim());
+    filter.categoryName = { $in: names };
   }
   if (brandId) filter.brandId = brandId;
   

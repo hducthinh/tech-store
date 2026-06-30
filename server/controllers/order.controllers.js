@@ -26,9 +26,13 @@ export const createOrder = catchAsync(async (req, res, next) => {
     return next(new AppError("Giỏ hàng của bạn đang trống", 400));
   }
 
-  const selectedItemsToCheckout = cart.items.filter(item => 
-    item.productId && selectedItemIds.includes(item.productId._id.toString())
-  );
+  const selectedItemsToCheckout = cart.items.filter(item => {
+    // Client mới sẽ gửi lên item._id
+    if (selectedItemIds.includes(item._id.toString())) return true;
+    // Tương thích ngược với client cũ gửi lên productId
+    if (item.productId && selectedItemIds.includes(item.productId._id.toString())) return true;
+    return false;
+  });
 
   if (selectedItemsToCheckout.length === 0) {
     return next(new AppError("Không có sản phẩm hợp lệ nào được chọn để thanh toán", 400));

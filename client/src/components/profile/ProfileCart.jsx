@@ -1,6 +1,7 @@
 import React from "react";
 import { ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Skeleton } from "../ui/Skeleton";
 
 export default function ProfileCart({ 
   cart, 
@@ -9,7 +10,8 @@ export default function ProfileCart({
   selectedItemIds, 
   toggleItemSelection, 
   toggleAllSelection, 
-  getSelectedTotal 
+  getSelectedTotal,
+  isLoading
 }) {
   const navigate = useNavigate();
 
@@ -50,7 +52,23 @@ export default function ProfileCart({
           </div>
 
           <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
-            {cart.map((item) => (
+            {isLoading ? (
+              [...Array(3)].map((_, idx) => (
+                <div key={idx} className="flex flex-col md:grid md:grid-cols-12 gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-150">
+                  <div className="col-span-1 flex justify-center"><Skeleton className="w-5 h-5 rounded" /></div>
+                  <div className="col-span-5 flex items-center gap-4 w-full">
+                    <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+                    <div className="w-full">
+                      <Skeleton className="h-4 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-1/4 mt-2" />
+                    </div>
+                  </div>
+                  <div className="col-span-2 hidden md:flex justify-center"><Skeleton className="h-4 w-20" /></div>
+                  <div className="col-span-2 flex justify-center"><Skeleton className="h-8 w-24 rounded-lg" /></div>
+                  <div className="col-span-2 hidden md:flex justify-end"><Skeleton className="h-5 w-24" /></div>
+                </div>
+              ))
+            ) : cart.map((item) => (
               <div key={item.product.id} className="flex flex-col md:grid md:grid-cols-12 gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-150 transition-colors hover:border-[#0058be]/30">
                 <div className="col-span-1 flex justify-center w-full md:w-auto self-start md:self-center">
                   <input 

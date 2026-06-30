@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, CreditCard, Banknote, MapPin } from "lucide-react";
 import UserLayout from "../components/layouts/UserLayout";
 import { fmt, img, Btn, Input, Card } from "../components/SharedUI";
+import { Skeleton } from "../components/ui/Skeleton";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -14,7 +15,7 @@ export default function Checkout() {
   const location = useLocation();
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment, 3: Success
   const [paymentMethod, setPaymentMethod] = useState("COD");
-  const { cart, cartCount, fetchCart } = useCart();
+  const { cart, cartCount, fetchCart, loading: isCartLoading } = useCart();
   const { user } = useAuth();
   const { showAlert } = useAlert();
   
@@ -34,9 +35,12 @@ export default function Checkout() {
   const stateSelectedIds = location.state?.selectedItemIds || [];
   const allCartItems = cart?.items || [];
   const cartItems = stateSelectedIds.length > 0 
-    ? allCartItems.filter(item => stateSelectedIds.includes(item.productId?._id || item.product?.id))
+    ? allCartItems.filter(item => {
+        if (item.buildId && stateSelectedIds.includes(item.buildId)) return true;
+        return stateSelectedIds.includes(item.productId?._id || item.product?.id);
+      })
     : allCartItems;
-  const selectedItemIds = cartItems.map(item => item.productId?._id || item.product?.id).filter(Boolean);
+  const selectedItemIds = cartItems.map(item => item._id || item.id).filter(Boolean);
 
   const subtotal = cartItems.reduce((acc, curr) => {
     const price = curr.price || curr.productId?.price || 0;
@@ -70,6 +74,8 @@ export default function Checkout() {
       const response = await api.post("/orders", payload);
       setOrderInfo(response.data?.data?.order);
       await fetchCart();
+      // Xóa cấu hình PC Builder nếu có
+      localStorage.removeItem("pc_builder_config");
       setStep(3);
     } catch (error) {
       showAlert("Lỗi khi đặt hàng: " + (error.response?.data?.message || error.message), "error");
@@ -78,7 +84,7 @@ export default function Checkout() {
     }
   };
 
-  useDocumentMeta("Thanh toán - TechCart", "Tiến hành thanh toán đơn hàng");
+  useDocumentMeta("Thanh toán - DucThinh TechShop", "Tiến hành thanh toán đơn hàng");
 
   return (
     <UserLayout cartCount={cartCount}>
@@ -196,7 +202,21 @@ export default function Checkout() {
                 <Card className="p-6 sticky top-24">
                   <h3 className="font-bold text-lg mb-4">Tóm tắt đơn hàng</h3>
                   <div className="flex flex-col gap-4 mb-6">
-                    {cartItems.map((item, idx) => {
+                    {isCartLoading ? (
+                      [...Array(3)].map((_, i) => (
+                        <div key={i} className="flex gap-4">
+                          <Skeleton className="w-16 h-16 rounded-lg shrink-0" />
+                          <div className="flex-1">
+                            <Skeleton className="h-4 w-full mb-2" />
+                            <Skeleton className="h-4 w-3/4 mb-3" />
+                            <div className="flex items-center justify-between">
+                              <Skeleton className="h-3 w-10" />
+                              <Skeleton className="h-4 w-20" />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : cartItems.map((item, idx) => {
                       const product = item.productId || {};
                       const image = product.thumbnail || (product.images?.[0]) || "1610945415295-d9bbf067e59c";
                       return (

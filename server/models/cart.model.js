@@ -18,6 +18,10 @@ const cartItemSchema = new mongoose.Schema({
     of: String,
     default: {},
   },
+  buildId: {
+    type: String, // Dùng để gom nhóm các linh kiện của 1 bộ PC build
+    default: null
+  }
 });
 
 const cartSchema = new mongoose.Schema(

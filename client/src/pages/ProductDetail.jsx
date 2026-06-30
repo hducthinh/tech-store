@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, ShoppingCart, Truck, ShieldCheck, Zap, MessageSquare } from "lucide-react";
 import { fmt, img, Btn, Badge } from "../components/SharedUI";
+import { Skeleton } from "../components/ui/Skeleton";
 import { useDocumentMeta } from "../hooks/useDocumentMeta";
 import { useCart } from "../contexts/CartContext";
 import { useAlert } from "../contexts/AlertContext";
@@ -53,11 +54,57 @@ export default function ProductDetail() {
   }
 
   useDocumentMeta(
-    product ? `${product.name} - TechCart` : "Đang tải... - TechCart",
+    product ? `${product.name} - DucThinh TechShop` : "Đang tải... - DucThinh TechShop",
     "Chi tiết sản phẩm"
   );
 
-  if (loading) return <div className="p-10 text-center">Đang tải...</div>;
+  if (loading) return (
+    <div className="bg-gray-50 min-h-screen py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <Skeleton className="h-4 w-64 mb-6" />
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 flex flex-col gap-6">
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+              <div className="grid md:grid-cols-2 gap-10">
+                <div className="flex flex-col gap-4">
+                  <Skeleton className="w-full aspect-square rounded-2xl" />
+                  <div className="grid grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="aspect-square rounded-xl" />)}
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <Skeleton className="h-6 w-20 mb-3" />
+                  <Skeleton className="h-10 w-full mb-2" />
+                  <Skeleton className="h-10 w-3/4 mb-4" />
+                  <Skeleton className="h-4 w-32 mb-8" />
+                  <Skeleton className="h-12 w-40 mb-4" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-5/6 mb-8" />
+                  <div className="flex gap-4 mb-8">
+                    <Skeleton className="h-12 w-32 rounded-xl" />
+                  </div>
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="w-full lg:w-[380px] shrink-0">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+              <Skeleton className="h-6 w-40 mb-6" />
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="flex gap-4">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   if (!product) return <div className="p-10 text-center">Không tìm thấy sản phẩm</div>;
 
   return (

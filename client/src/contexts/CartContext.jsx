@@ -33,30 +33,31 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, [fetchCart]);
 
-  const addToCart = async (productId, quantity = 1) => {
+  const addToCart = async (productId, quantity = 1, buildId = null) => {
     if (!user) return showAlert("Vui lòng đăng nhập để thêm vào giỏ hàng", "error");
     try {
-      const response = await api.post("/cart", { productId, quantity });
+      const response = await api.post("/cart", { productId, quantity, buildId });
       setCart(response.data?.data?.cart);
     } catch (error) {
       console.error("Failed to add to cart", error);
     }
   };
 
-  const updateQuantity = async (productId, quantity) => {
+  const updateQuantity = async (productId, quantity, buildId = null) => {
     if (!user) return;
     try {
-      const response = await api.patch("/cart/update-quantity", { productId, quantity });
+      const response = await api.patch("/cart/update-quantity", { productId, quantity, buildId });
       setCart(response.data?.data?.cart);
     } catch (error) {
       console.error("Failed to update cart quantity", error);
     }
   };
 
-  const removeFromCart = async (productId) => {
+  const removeFromCart = async (productId, buildId = null) => {
     if (!user) return;
     try {
-      const response = await api.delete(`/cart/${productId}`);
+      const url = buildId ? `/cart/${productId}?buildId=${buildId}` : `/cart/${productId}`;
+      const response = await api.delete(url);
       setCart(response.data?.data?.cart);
     } catch (error) {
       console.error("Failed to remove from cart", error);

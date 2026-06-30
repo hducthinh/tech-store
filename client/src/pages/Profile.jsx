@@ -18,7 +18,7 @@ export default function Profile() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { user, logout, updateProfile } = useAuth();
   const { showToast } = useAlert();
-  const { cart, removeFromCart } = useCart();
+  const { cart, removeFromCart, loading: isCartLoading } = useCart();
   const cartItems = cart?.items || [];
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -78,7 +78,7 @@ export default function Profile() {
       .reduce((a, b) => a + (b.productId?.price || b.price || 0) * b.quantity, 0) || 0;
   };
 
-  useDocumentMeta("Hồ sơ cá nhân - TechCart", "Quản lý thông tin tài khoản");
+  useDocumentMeta("Hồ sơ cá nhân - DucThinh TechShop", "Quản lý thông tin tài khoản");
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -222,6 +222,7 @@ export default function Profile() {
                 toggleItemSelection={toggleItemSelection}
                 toggleAllSelection={toggleAllSelection}
                 getSelectedTotal={getSelectedTotal}
+                isLoading={isCartLoading}
               />
             )}
           </div>

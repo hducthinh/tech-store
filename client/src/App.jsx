@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -11,6 +11,8 @@ import ProductDetail from "./pages/ProductDetail";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import CategoryPage from "./pages/CategoryPage";
+import PCBuilder from "./pages/PCBuilder";
+import NotFound from "./pages/NotFound";
 
 // Admin Imports
 import AdminRoute from "./components/AdminRoute";
@@ -33,10 +35,16 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
+        <Route path="/search" element={<CategoryPage />} />
+        <Route path="/collections/all" element={<Navigate to="/" replace />} />
         <Route path="/collections/:slug" element={<CategoryPage />} />
         <Route path="/products/:slug" element={<Home><ProductDetail /></Home>} />
         <Route path="/profile" element={<Home><Profile /></Home>} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/xay-dung-cau-hinh" element={<Home><PCBuilder /></Home>} />
+        
+        {/* Fallback 404 Route */}
+        <Route path="*" element={<NotFound />} />
 
         {/* Admin Routes Protected by AdminRoute & AdminLayout */}
         <Route path="/admin" element={<AdminRoute />}>

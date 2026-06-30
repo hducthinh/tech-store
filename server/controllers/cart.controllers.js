@@ -26,7 +26,7 @@ export const getCart = catchAsync(async (req, res, next) => {
 // @route   POST /api/v1/cart
 // @access  Private
 export const addToCart = catchAsync(async (req, res, next) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId, quantity = 1, buildId = null } = req.body;
 
   if (!productId) {
     return next(new AppError("Vui lòng cung cấp ID sản phẩm", 400));
@@ -50,8 +50,11 @@ export const addToCart = catchAsync(async (req, res, next) => {
     cart = new Cart({ userId: req.userId, items: [] });
   }
 
-  // Kiểm tra xem sản phẩm đã có trong giỏ chưa
-  const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
+  // Kiểm tra xem sản phẩm đã có trong giỏ chưa (cùng buildId)
+  const itemIndex = cart.items.findIndex(item => 
+    item.productId.toString() === productId && 
+    (item.buildId || null) === (buildId || null)
+  );
 
   if (itemIndex > -1) {
     // Nếu có rồi, cộng thêm số lượng
@@ -62,7 +65,7 @@ export const addToCart = catchAsync(async (req, res, next) => {
     cart.items[itemIndex].quantity = newQuantity;
   } else {
     // Thêm mới
-    cart.items.push({ productId, quantity });
+    cart.items.push({ productId, quantity, buildId });
   }
 
   await cart.save();
@@ -82,7 +85,7 @@ export const addToCart = catchAsync(async (req, res, next) => {
 // @route   PATCH /api/v1/cart/update-quantity
 // @access  Private
 export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity, buildId = null } = req.body;
 
   if (!productId || quantity === undefined) {
     return next(new AppError("Vui lòng cung cấp productId và quantity", 400));
@@ -110,7 +113,10 @@ export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
     return next(new AppError("Không tìm thấy giỏ hàng", 404));
   }
 
-  const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
+  const itemIndex = cart.items.findIndex(item => 
+    item.productId.toString() === productId && 
+    (item.buildId || null) === (buildId || null)
+  );
   if (itemIndex > -1) {
     cart.items[itemIndex].quantity = quantity;
     await cart.save();
@@ -132,13 +138,18 @@ export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
 // @access  Private
 export const removeFromCart = catchAsync(async (req, res, next) => {
   const { productId } = req.params;
+  const { buildId = null } = req.query;
 
   const cart = await Cart.findOne({ userId: req.userId });
   if (!cart) {
     return next(new AppError("Không tìm thấy giỏ hàng", 404));
   }
 
-  cart.items = cart.items.filter(item => item.productId.toString() !== productId);
+  cart.items = cart.items.filter(item => {
+    const isSameProduct = item.productId.toString() === productId;
+    const isSameBuild = (item.buildId || null) === (buildId || null);
+    return !(isSameProduct && isSameBuild);
+  });
   await cart.save();
   await cart.populate("items.productId", "name price images thumbnail stock slug");
 
