@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { Btn, Input } from "../components/SharedUI";
-import AuthLayout from "../components/layouts/AuthLayout";
-import PasswordField from "../components/common/PasswordField";
+import { useAuth } from "../../contexts/AuthContext";
+import { useDocumentMeta } from "../../hooks/useDocumentMeta";
+import { Btn, Input } from "../../components/SharedUI";
+import AuthLayout from "../../components/layouts/AuthLayout";
+import PasswordField from "../../components/common/PasswordField";
 
 export default function Register() {
   const navigate = useNavigate();
