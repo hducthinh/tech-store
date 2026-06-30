@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, ShoppingCart, Truck, ShieldCheck, Zap, MessageSquare } from "lucide-react";
-import { fmt, img, Btn, Badge } from "../components/SharedUI";
-import { Skeleton } from "../components/ui/Skeleton";
-import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { useCart } from "../contexts/CartContext";
-import { useAlert } from "../contexts/AlertContext";
-import ProductReviews from "../components/products/ProductReviews";
-import api from "../services/api";
+import { fmt, img, Btn, Badge } from "../../components/SharedUI";
+import { Skeleton } from "../../components/ui/Skeleton";
+import { useDocumentMeta } from "../../hooks/useDocumentMeta";
+import { useCart } from "../../contexts/CartContext";
+import { useAlert } from "../../contexts/AlertContext";
+import ProductReviews from "./components/ProductReviews";
+import api from "../../services/api";
 
 export default function ProductDetail() {
   const { slug } = useParams();

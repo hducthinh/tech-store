@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, Star, Zap, ShoppingCart, Filter, ChevronRight, X, Heart, Eye, Flame } from "lucide-react";
-import { fmt, img, Btn, Card } from "../components/SharedUI";
-import { ProductSkeleton } from "../components/ui/ProductSkeleton";
-import UserLayout from "../components/layouts/UserLayout";
-import NotFound from "./NotFound";
-import { useDocumentMeta } from "../hooks/useDocumentMeta";
-import { useCart } from "../contexts/CartContext";
-import { useAlert } from "../contexts/AlertContext";
-import api from "../services/api";
+import { fmt, img, Btn, Card } from "../../components/SharedUI";
+import { ProductSkeleton } from "../../components/ui/ProductSkeleton";
+import UserLayout from "../../components/layouts/UserLayout";
+import NotFound from "../../pages/NotFound";
+import { useDocumentMeta } from "../../hooks/useDocumentMeta";
+import { useCart } from "../../contexts/CartContext";
+import { useAlert } from "../../contexts/AlertContext";
+import api from "../../services/api";
 
 const PRICE_RANGES = [
   { id: "range1", label: "Dưới 1,000,000₫", min: 0, max: 1000000 },

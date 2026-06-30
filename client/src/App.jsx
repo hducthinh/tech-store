@@ -7,10 +7,10 @@ import Register from "./features/auth/Register";
 import ForgotPassword from "./features/auth/ForgotPassword";
 import ResetPassword from "./features/auth/ResetPassword";
 
-import ProductDetail from "./pages/ProductDetail";
+import ProductDetail from "./features/products/ProductDetail";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
-import CategoryPage from "./pages/CategoryPage";
+import CategoryPage from "./features/products/CategoryPage";
 import PCBuilder from "./pages/PCBuilder";
 import NotFound from "./pages/NotFound";
 
