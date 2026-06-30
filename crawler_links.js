@@ -5,18 +5,18 @@ const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
 const cloudinary = require('cloudinary').v2;
 
-
-//node crawler_puppeteer.js "https://gearvn.com/collections/vga" "VGA" "GIGABYTE" 30
-//node crawler_puppeteer.js <URL_Danh_Mục> <Tên_Danh_Mục_Sẽ_Lưu> <Tên_Thương_Hiệu> <Số_Lượng_Sản_Phẩm_Tối_Đa>
-
 // ==========================================
 // 🛠 CẤU HÌNH NHANH (SỬA TRỰC TIẾP Ở ĐÂY CHO NHANH)
 // ==========================================
 const CONFIG = {
-    url: "https://gearvn.com/search?q=gi%C3%A1%20treo%20m%C3%A0n%20h%C3%ACnh",
+    urls: [
+        "https://gearvn.com/products/gia-treo-man-hinh-may-tinh-e-dra-ema7302",
+        "https://gearvn.com/products/gia-treo-man-hinh-may-tinh-e-dra-ema7310",
+        "https://gearvn.com/products/gia-treo-man-hinh-may-tinh-e-dra-dual-monitor-ema7306pd",
+        "https://gearvn.com/products/gia-treo-man-hinh-may-tinh-e-dra-ema7304-black",
+    ],
     category: "ARM",
-    brand: "WARRIOR",
-    maxItems: 10
+    brand: "EDRA"
 };
 // ==========================================
 
@@ -38,44 +38,17 @@ function generateSlug(text) {
         .replace(/-+/g, '-');        // Xóa gạch ngang thừa
 }
 
-async function scrapeGearVNWithPuppeteer(collectionUrl, categoryName = "Loa vi tính", brandName = "GearVN", maxItems = 20) {
+async function scrapeProductLinks(productLinks, categoryName = "Loa vi tính", brandName = "GearVN") {
     const results = [];
-    console.log(`🔍 Đang mở danh mục: ${collectionUrl}`);
+    console.log(`🔍 Chuẩn bị cào ${productLinks.length} link sản phẩm...`);
 
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
 
-    await page.goto(collectionUrl, { waitUntil: 'networkidle2' });
-
-    // Đợi một chút cho React/Vue render xong
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Cuộn trang xuống để load các sản phẩm (Lazy load)
-    for (let i = 0; i < 3; i++) {
-        await page.evaluate(() => window.scrollBy(0, 1000));
-        await new Promise(r => setTimeout(r, 1000));
-    }
-
-    // Lấy link sản phẩm
-    let productLinks = await page.evaluate(() => {
-        const elements = document.querySelectorAll(".proloop-block a[href*='/products/'], .proloop-detail a[href*='/products/'], .product-row a[href*='/products/']");
-        const links = [];
-        elements.forEach(el => {
-            let href = el.getAttribute("href");
-            if (href && !href.includes("?")) {
-                if (!href.startsWith("http")) href = "https://gearvn.com" + href;
-                links.push(href);
-            }
-        });
-        return [...new Set(links)]; // Lọc trùng
-    });
-
-    console.log(`✅ Đã tìm thấy ${productLinks.length} sản phẩm để cào!`);
-
-    for (let i = 0; i < Math.min(productLinks.length, maxItems); i++) {
+    for (let i = 0; i < productLinks.length; i++) {
         const url = productLinks[i];
-        console.log(`[${i + 1}/${Math.min(productLinks.length, maxItems)}] Đang cào bằng Puppeteer: ${url}`);
+        console.log(`[${i + 1}/${productLinks.length}] Đang cào bằng Puppeteer: ${url}`);
 
         try {
             await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -269,30 +242,23 @@ async function saveToMongoDB(products, categoryName, brandName) {
 }
 
 async function main() {
-    let collectionUrl = CONFIG.url;
+    let urls = CONFIG.urls;
     let categoryName = CONFIG.category;
     let brandName = CONFIG.brand;
-    let maxProducts = CONFIG.maxItems;
 
-    const args = process.argv.slice(2);
-    if (args.length > 0) collectionUrl = args[0];
-    if (args.length > 1) categoryName = args[1];
-    if (args.length > 2) brandName = args[2];
-    if (args.length > 3) {
-        const parsed = parseInt(args[3], 10);
-        if (!isNaN(parsed)) maxProducts = parsed;
+    if (urls.length === 0) {
+        console.log("⚠️ Vui lòng nhập link sản phẩm vào mảng CONFIG.urls");
+        return;
     }
 
-    console.log(`👉 Bắt đầu cào dữ liệu:`);
-    console.log(` - URL: ${collectionUrl}`);
+    console.log(`👉 Bắt đầu cào dữ liệu cho ${urls.length} links:`);
     console.log(` - Category: ${categoryName}`);
     console.log(` - Brand: ${brandName}`);
-    console.log(` - Max items: ${maxProducts}`);
 
-    const data = await scrapeGearVNWithPuppeteer(collectionUrl, categoryName, brandName, maxProducts);
+    const data = await scrapeProductLinks(urls, categoryName, brandName);
 
-    fs.writeFileSync("products_data_puppeteer.json", JSON.stringify(data, null, 2), "utf-8");
-    console.log(`\n🎉 XONG! Đã lưu ${data.length} sản phẩm vào products_data_puppeteer.json`);
+    fs.writeFileSync("products_data_links.json", JSON.stringify(data, null, 2), "utf-8");
+    console.log(`\n🎉 XONG! Đã lưu ${data.length} sản phẩm vào products_data_links.json`);
 
     if (data.length > 0) {
         await saveToMongoDB(data, categoryName, brandName);
