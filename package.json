@@ -3,11 +3,5 @@
     "install": "npm install --prefix server",
     "start": "npm start --prefix server",
     "build": "npm run build --prefix client"
-  },
-  "dependencies": {
-    "cloudinary": "^2.10.0",
-    "dotenv": "^17.4.2",
-    "mongodb": "^7.4.0",
-    "puppeteer": "^25.2.1"
   }
 }
