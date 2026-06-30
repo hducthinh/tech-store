@@ -1,88 +1,144 @@
 import catchAsync from "../utils/catchAsync.js";
+import dashboardService from "../services/dashboard.service.js";
 import Order from "../models/order.model.js";
-import Product from "../models/product.model.js";
-import User from "../models/user.model.js";
 
-// @desc    Lấy thống kê tổng quan cho Admin
-// @route   GET /api/v1/dashboard/stats
+// @desc    Get dashboard summary stats
+// @route   GET /api/v1/dashboard/summary
 // @access  Private/Admin
-export const getStats = catchAsync(async (req, res, next) => {
-  const totalOrders = await Order.countDocuments();
-  const totalProducts = await Product.countDocuments();
-  const totalUsers = await User.countDocuments();
-  
-  // Tính tổng doanh thu (revenue)
-  const revenueResult = await Order.aggregate([
-    { $match: { status: { $ne: "CANCELLED" } } },
-    { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
-  ]);
-  const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
-
+export const getSummary = catchAsync(async (req, res, next) => {
+  const summary = await dashboardService.getSummary();
   res.status(200).json({
     status: "success",
-    data: {
-      stats: {
-        totalOrders,
-        totalProducts,
-        totalUsers,
-        totalRevenue
-      }
-    }
+    data: summary
   });
 });
 
-// @desc    Lấy dữ liệu biểu đồ doanh thu (7 ngày gần nhất)
-// @route   GET /api/v1/dashboard/chart
+// @desc    Get dashboard revenue chart data
+// @route   GET /api/v1/dashboard/revenue
 // @access  Private/Admin
-export const getChart = catchAsync(async (req, res, next) => {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-  sevenDaysAgo.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 của 7 ngày trước (Local Time)
+export const getRevenue = catchAsync(async (req, res, next) => {
+  const { timeframe } = req.query;
+  const revenueChart = await dashboardService.getRevenue(timeframe);
+  res.status(200).json({
+    status: "success",
+    data: revenueChart
+  });
+});
 
-  // Tính timezone offset của server (ví dụ: +07:00)
-  const tzOffset = new Date().getTimezoneOffset();
-  const tzHours = String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, '0');
-  const tzMins = String(Math.abs(tzOffset) % 60).padStart(2, '0');
-  const tzString = (tzOffset <= 0 ? '+' : '-') + tzHours + ':' + tzMins;
+// @desc    Get dashboard category revenue data
+// @route   GET /api/v1/dashboard/category-revenue
+// @access  Private/Admin
+export const getCategoryRevenue = catchAsync(async (req, res, next) => {
+  const categoryRevenue = await dashboardService.getCategoryRevenue();
+  res.status(200).json({
+    status: "success",
+    data: categoryRevenue
+  });
+});
 
-  const chartData = await Order.aggregate([
-    {
-      $match: {
-        createdAt: { $gte: sevenDaysAgo },
-        status: { $ne: "CANCELLED" }
-      }
-    },
+// @desc    Get top products
+// @route   GET /api/v1/dashboard/top-products
+// @access  Private/Admin
+export const getTopProducts = catchAsync(async (req, res, next) => {
+  const topProducts = await Order.aggregate([
+    { $match: { status: { $ne: "CANCELLED" } } },
+    { $unwind: "$items" },
     {
       $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: tzString } },
-        revenue: { $sum: "$totalAmount" },
-        orders: { $sum: 1 }
+        _id: "$items.productId",
+        sales: { $sum: "$items.quantity" },
+        revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
       }
     },
-    { $sort: { _id: 1 } }
+    { $sort: { revenue: -1 } },
+    { $limit: 5 },
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        foreignField: "_id",
+        as: "product"
+      }
+    },
+    { $unwind: "$product" },
+    {
+      $project: {
+        _id: 1,
+        sales: 1,
+        revenue: 1,
+        name: "$product.name",
+        category: "$product.categoryName",
+        thumbnail: "$product.thumbnail",
+        images: "$product.images",
+        stock: "$product.stock"
+      }
+    }
   ]);
-
-  // Fill những ngày không có đơn hàng (doanh thu = 0)
-  const filledData = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(sevenDaysAgo);
-    d.setDate(d.getDate() + i);
-    // Convert to local date string YYYY-MM-DD
-    const localDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000));
-    const dateStr = localDate.toISOString().split("T")[0];
-    const existing = chartData.find(item => item._id === dateStr);
-    
-    filledData.push({
-      date: dateStr,
-      revenue: existing ? existing.revenue : 0,
-      orders: existing ? existing.orders : 0
-    });
-  }
 
   res.status(200).json({
     status: "success",
     data: {
-      chart: filledData
+      topProducts
     }
   });
 });
+
+// @desc    Get dashboard overview (Batched)
+// @route   GET /api/v1/dashboard/overview
+// @access  Private/Admin
+export const getOverview = catchAsync(async (req, res, next) => {
+  const { timeframe } = req.query;
+  
+  const topProductsPromise = Order.aggregate([
+    { $match: { status: { $ne: "CANCELLED" } } },
+    { $unwind: "$items" },
+    {
+      $group: {
+        _id: "$items.productId",
+        sales: { $sum: "$items.quantity" },
+        revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+      }
+    },
+    { $sort: { revenue: -1 } },
+    { $limit: 5 },
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        foreignField: "_id",
+        as: "product"
+      }
+    },
+    { $unwind: "$product" },
+    {
+      $project: {
+        _id: 1,
+        sales: 1,
+        revenue: 1,
+        name: "$product.name",
+        category: "$product.categoryName",
+        thumbnail: "$product.thumbnail",
+        images: "$product.images",
+        stock: "$product.stock"
+      }
+    }
+  ]);
+
+  const [summary, revenueChart, categoryRevenue, topProducts] = await Promise.all([
+    dashboardService.getSummary(),
+    dashboardService.getRevenue(timeframe),
+    dashboardService.getCategoryRevenue(),
+    topProductsPromise
+  ]);
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      summary,
+      revenueChart,
+      categoryRevenue,
+      topProducts: { topProducts }
+    }
+  });
+});
+

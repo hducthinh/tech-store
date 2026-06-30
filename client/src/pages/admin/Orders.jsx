@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ShoppingCart, Eye, Edit, Trash2, Search, Filter } from "lucide-react";
-import { Card, Btn, StatusBadge, fmt } from "../../components/SharedUI";
+import { Card, Btn, StatusBadge, fmt, EmptyState, PageSkeleton } from "../../components/SharedUI";
 import { useDocumentMeta } from "../../hooks/useDocumentMeta";
 import api from "../../services/api";
 
@@ -10,6 +10,9 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [confirmPaymentId, setConfirmPaymentId] = useState(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -25,21 +28,42 @@ export default function AdminOrders() {
     fetchOrders();
   }, []);
 
-  if (loading) return <div className="p-8 text-center text-gray-500 font-semibold">Đang tải đơn hàng...</div>;
+  if (loading) return <PageSkeleton />;
 
   const handleConfirmPayment = async (orderId) => {
-    if (!window.confirm("Xác nhận đã nhận tiền chuyển khoản cho đơn hàng này?")) return;
+    setIsConfirming(true);
+  };
+
+  const confirmPaymentAction = async () => {
+    if (!confirmPaymentId) return;
     try {
       setIsConfirming(true);
-      const res = await api.patch(`/orders/admin/${orderId}/confirm-payment`);
+      const res = await api.patch(`/orders/admin/${confirmPaymentId}/confirm-payment`);
       if (res.data.status === "success") {
-        setOrders(orders.map(o => o._id === orderId ? res.data.data.order : o));
-        setSelectedOrder(res.data.data.order);
+        setOrders(orders.map(o => o._id === confirmPaymentId ? res.data.data.order : o));
+        if (selectedOrder?._id === confirmPaymentId) setSelectedOrder(res.data.data.order);
       }
     } catch (error) {
       alert(error.response?.data?.message || "Lỗi khi xác nhận thanh toán");
     } finally {
       setIsConfirming(false);
+      setConfirmPaymentId(null);
+    }
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!newStatus) return;
+    setUpdatingStatus(true);
+    try {
+      const res = await api.patch(`/orders/admin/${selectedOrder._id}/status`, { status: newStatus });
+      if (res.data.status === "success") {
+        setOrders(orders.map(o => o._id === selectedOrder._id ? res.data.data.order : o));
+        setSelectedOrder(res.data.data.order);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Lỗi cập nhật trạng thái");
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -54,62 +78,68 @@ export default function AdminOrders() {
           <Btn variant="outline" className="flex items-center gap-2">
             <Filter size={16} /> Lọc
           </Btn>
-          <Btn variant="primary" className="flex items-center gap-2">
-            Xuất file Excel
-          </Btn>
         </div>
       </div>
 
-      <Card className="p-0 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center gap-4 bg-gray-50/50">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Tìm kiếm mã đơn, tên khách hàng..." 
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-            />
+      {orders.length === 0 ? (
+        <EmptyState 
+          icon={<ShoppingCart size={32} />} 
+          title="Chưa có đơn hàng nào" 
+          description="Hiện tại chưa có đơn hàng nào được ghi nhận. Đơn hàng mới sẽ xuất hiện tại đây khi khách hàng đặt mua."
+          primaryAction={{ label: "Làm mới", onClick: () => window.location.reload() }}
+        />
+      ) : (
+        <Card className="p-0 overflow-hidden">
+          <div className="p-4 border-b border-gray-100 flex items-center gap-4 bg-gray-50/50">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm mã đơn, tên khách hàng..." 
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4 font-semibold uppercase text-xs">Mã đơn</th>
-                <th className="px-6 py-4 font-semibold uppercase text-xs">Khách hàng</th>
-                <th className="px-6 py-4 font-semibold uppercase text-xs">Ngày đặt</th>
-                <th className="px-6 py-4 font-semibold uppercase text-xs">Sản phẩm</th>
-                <th className="px-6 py-4 font-semibold uppercase text-xs">Tổng tiền</th>
-                <th className="px-6 py-4 font-semibold uppercase text-xs">Trạng thái</th>
-                <th className="px-6 py-4 font-semibold uppercase text-xs text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {orders.map(o => (
-                <tr key={o._id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-gray-900 cursor-pointer hover:text-blue-600" onClick={() => setSelectedOrder(o)}>#{o._id.substring(0, 8).toUpperCase()}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-700">{o.shippingAddress?.fullName || o.userId?.fullName || "Khách"}</td>
-                  <td className="px-6 py-4 text-gray-500">{new Date(o.createdAt).toLocaleDateString("vi-VN")}</td>
-                  <td className="px-6 py-4 font-medium text-gray-900">{o.items?.length || 0} mục</td>
-                  <td className="px-6 py-4 font-bold text-red-600">{fmt(o.totalAmount)}</td>
-                  <td className="px-6 py-4"><StatusBadge status={o.status} /></td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 text-gray-400">
-                      <button onClick={() => setSelectedOrder(o)} className="p-1.5 hover:bg-gray-100 hover:text-blue-600 rounded transition-colors"><Eye size={16}/></button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs">Mã đơn</th>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs">Khách hàng</th>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs">Ngày đặt</th>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs">Sản phẩm</th>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs">Tổng tiền</th>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs">Trạng thái</th>
+                  <th className="px-6 py-4 font-semibold uppercase text-xs text-right">Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orders.map(o => (
+                  <tr key={o._id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4 font-bold text-gray-900 cursor-pointer hover:text-blue-600" onClick={() => { setSelectedOrder(o); setNewStatus(o.status); }}>#{o._id.substring(0, 8).toUpperCase()}</td>
+                    <td className="px-6 py-4 font-semibold text-gray-700">{o.shippingAddress?.fullName || o.userId?.fullName || "Khách"}</td>
+                    <td className="px-6 py-4 text-gray-500">{new Date(o.createdAt).toLocaleDateString("vi-VN")}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{o.items?.length || 0} mục</td>
+                    <td className="px-6 py-4 font-bold text-red-600">{fmt(o.totalAmount)}</td>
+                    <td className="px-6 py-4"><StatusBadge status={o.status} /></td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2 text-gray-400">
+                        <button onClick={() => { setSelectedOrder(o); setNewStatus(o.status); }} className="p-1.5 hover:bg-gray-100 hover:text-blue-600 rounded transition-colors"><Eye size={16}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* Modal chi tiết */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 p-0">
+          <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 ease-out motion-reduce:animate-none duration-200 p-0">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Chi tiết Đơn hàng #{selectedOrder._id.substring(0, 8).toUpperCase()}</h3>
@@ -170,19 +200,60 @@ export default function AdminOrders() {
               </div>
             </div>
             
-            <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
-              {selectedOrder.paymentMethod === 'BANK_TRANSFER' && !selectedOrder.isPaid && (
+            <div className="p-4 border-t border-gray-100 flex justify-between items-center gap-3 bg-gray-50">
+              <div className="flex items-center gap-2">
+                <select 
+                  className="px-3 py-2 border border-gray-300 rounded-lg outline-none text-sm bg-white"
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                >
+                  <option value="pending">Chờ xác nhận</option>
+                  <option value="processing">Đang xử lý</option>
+                  <option value="shipped">Đang giao hàng</option>
+                  <option value="delivered">Đã giao hàng</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
                 <Btn 
                   variant="primary" 
-                  className="bg-green-600 hover:bg-green-700 text-white border-none"
-                  onClick={() => handleConfirmPayment(selectedOrder._id)}
-                  disabled={isConfirming}
+                  disabled={updatingStatus || newStatus === selectedOrder.status}
+                  onClick={handleUpdateStatus}
                 >
-                  {isConfirming ? "Đang xử lý..." : "Xác nhận đã nhận tiền"}
+                  {updatingStatus ? "Đang lưu..." : "Cập nhật"}
                 </Btn>
-              )}
-              <Btn variant="outline" onClick={() => setSelectedOrder(null)}>Đóng</Btn>
-              <Btn variant="primary">Cập nhật trạng thái</Btn>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {selectedOrder.paymentMethod === 'BANK_TRANSFER' && !selectedOrder.isPaid && (
+                  <Btn 
+                    variant="primary" 
+                    className="bg-green-600 hover:bg-green-700 text-white border-none"
+                    onClick={() => setConfirmPaymentId(selectedOrder._id)}
+                  >
+                    Xác nhận đã nhận tiền
+                  </Btn>
+                )}
+                <Btn variant="outline" onClick={() => setSelectedOrder(null)}>Đóng</Btn>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Confirm Payment Modal */}
+      {confirmPaymentId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-sm max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 ease-out motion-reduce:animate-none duration-200 p-0">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-green-50">
+              <h3 className="text-lg font-bold text-green-700">Xác nhận thanh toán</h3>
+              <button onClick={() => setConfirmPaymentId(null)} className="text-gray-400 hover:text-gray-600">×</button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700">Xác nhận đã nhận tiền chuyển khoản cho đơn hàng này?</p>
+              <p className="text-sm text-gray-500 mt-2">Hành động này sẽ cập nhật trạng thái đơn hàng thành đã thanh toán.</p>
+            </div>
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50">
+              <Btn type="button" variant="outline" onClick={() => setConfirmPaymentId(null)}>Hủy</Btn>
+              <Btn type="button" variant="primary" className="bg-green-600 hover:bg-green-700 border-none text-white" disabled={isConfirming} onClick={confirmPaymentAction}>{isConfirming ? "Đang xử lý..." : "Xác nhận"}</Btn>
             </div>
           </Card>
         </div>

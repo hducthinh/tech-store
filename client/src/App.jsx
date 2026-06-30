@@ -24,9 +24,14 @@ import AdminCategories from "./pages/admin/Categories";
 import AdminBrands from "./pages/admin/Brands";
 import AdminUsers from "./pages/admin/Users";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
 function App() {
   return (
-    <Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
       <Routes>
         {/* Public / Customer Routes */}
         <Route path="/" element={<Home />} />
@@ -59,6 +64,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </QueryClientProvider>
   );
 }
 

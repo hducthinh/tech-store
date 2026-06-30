@@ -89,8 +89,13 @@ export default function UserLayout({ children }) {
 
       <header className={`bg-white border-b border-gray-200 sticky top-0 z-30 transition-shadow duration-300 ${scrolled ? "shadow-md" : ""}`}>
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-          <button onClick={() => navigate("/")} className="flex items-center cursor-pointer shrink-0 group mr-4">
-            <img src="/header_logo_cropped.png" alt="Đức Thịnh Techshop" className="h-[36px] w-auto object-contain" />
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 cursor-pointer shrink-0 group mr-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform">
+              <Monitor size={22} className="text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-2xl font-black tracking-tighter text-gray-900 group-hover:text-blue-700 transition-colors">
+              Tech<span className="text-blue-600">Store</span>
+            </span>
           </button>
 
           <div className="relative group hidden md:block">

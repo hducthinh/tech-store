@@ -7,9 +7,30 @@ import slugify from "../utils/slugify.js";
 // @route   GET /api/v1/brands/admin
 // @access  Private (Admin)
 export const getAdminBrands = catchAsync(async (req, res) => {
-  const brands = await Brand.find()
-    .sort({ displayOrder: 1, name: 1 })
-    .lean();
+  const brands = await Brand.aggregate([
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        foreignField: "brandId",
+        as: "brandProducts"
+      }
+    },
+    {
+      $addFields: {
+        products: { $size: "$brandProducts" },
+        id: "$_id" // Để đồng nhất với .lean() hoặc Schema ảo nếu cần
+      }
+    },
+    {
+      $project: {
+        brandProducts: 0
+      }
+    },
+    {
+      $sort: { displayOrder: 1, name: 1 }
+    }
+  ]);
 
   res.status(200).json({
     status: "success",

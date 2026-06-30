@@ -1,44 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { DollarSign, ShoppingCart, Users, Package, MoreVertical, Eye, Edit, Trash2 } from "lucide-react";
-import { StatCard, Card, Badge, StatusBadge, PIE_DATA, PIE_COLORS, fmt, img } from "../../components/SharedUI";
-import api from "../../services/api";
+import React, { useState, Suspense, useMemo } from "react";
+import { DollarSign, ShoppingCart, Users, Package } from "lucide-react";
+import { StatCard, Card, Badge, PIE_DATA, PIE_COLORS, fmt, img, CardSkeleton, ChartSkeleton, TableSkeleton } from "../../components/SharedUI";
+import { useDashboardOverview } from "../../hooks/useDashboard";
+
+const RevenueChart = React.lazy(() => import("./components/RevenueChart"));
+const CategoryPieChart = React.lazy(() => import("./components/CategoryPieChart"));
+
+// Memoized StatCard wrapper to prevent re-renders when other things change
+const MemoStatCard = React.memo(StatCard);
 
 export default function AdminDashboard() {
   const [revenueTime, setRevenueTime] = useState("Tháng này");
-  const [stats, setStats] = useState(null);
-  const [chartData, setChartData] = useState([]);
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsRes, chartRes, ordersRes] = await Promise.all([
-          api.get("/dashboard/stats"),
-          api.get("/dashboard/chart"),
-          api.get("/orders/admin")
-        ]);
-        setStats(statsRes.data?.data?.stats);
-        
-        const mappedChart = chartRes.data?.data?.chart?.map(c => ({
-          month: c.date.substring(5), // MM-DD
-          revenue: c.revenue / 1000000 // Convert to Tr
-        })) || [];
-        setChartData(mappedChart);
-
-        setRecentOrders(ordersRes.data?.data?.orders?.slice(0, 5) || []);
-      } catch (error) {
-        console.error("Lỗi lấy dữ liệu dashboard", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (loading) return <div className="p-8 text-center text-gray-500 font-semibold">Đang tải dữ liệu...</div>;
+  // Single batched API request
+  const { data: overview, isLoading } = useDashboardOverview(revenueTime);
   
+  const stats = overview?.summary;
+  const chartDataRaw = overview?.revenueChart;
+  const pieData = overview?.categoryRevenue || [];
+  const topProductsData = overview?.topProducts?.topProducts || [];
+
+  const chartData = useMemo(() => {
+    return (chartDataRaw || []).map(c => ({
+      month: c.date.substring(5), // MM-DD
+      revenue: c.revenue / 1000000 // Convert to Tr
+    }));
+  }, [chartDataRaw]);
+
+  const salesGoal = 100000000; // 100M VND
+  const currentRevenue = stats?.revenue || 0;
+
   return (
     <div className="flex flex-col gap-6">
       {/* Page Header */}
@@ -58,123 +49,160 @@ export default function AdminDashboard() {
             <option>Tháng này</option>
             <option>Năm nay</option>
           </select>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors">
-            Xuất báo cáo
-          </button>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <StatCard label="Tổng doanh thu" value={fmt(stats?.totalRevenue || 0)} change="+12.5%" icon={<DollarSign size={24}/>} color="blue" />
-        <StatCard label="Đơn hàng" value={stats?.totalOrders || 0} change="+5.2%" icon={<ShoppingCart size={24}/>} color="green" />
-        <StatCard label="Sản phẩm" value={stats?.totalProducts || 0} icon={<Package size={24}/>} color="amber" />
-        <StatCard label="Khách hàng" value={stats?.totalUsers || 0} change="+18.2%" icon={<Users size={24}/>} color="purple" />
+        {isLoading ? (
+          <>
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
+        ) : (
+          <>
+            <MemoStatCard label="Tổng doanh thu" value={fmt(stats?.revenue || 0)} change={stats?.revenueGrowth || "+0%"} icon={<DollarSign size={24}/>} color="blue" />
+            <MemoStatCard label="Đơn hàng" value={stats?.orders || 0} change={stats?.orderGrowth || "+0%"} icon={<ShoppingCart size={24}/>} color="green" />
+            <MemoStatCard label="Sản phẩm" value={stats?.products || 0} subtext={`${stats?.activeProducts || 0} đang bán - ${stats?.inactiveProducts || 0} tạm ẩn`} icon={<Package size={24}/>} color="amber" />
+            <MemoStatCard label="Khách hàng" value={stats?.customers || 0} change={stats?.customerGrowth || "+0%"} suffix={`${stats?.currentMonthUsers || 0} mới tháng này`} icon={<Users size={24}/>} color="purple" />
+          </>
+        )}
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Chart */}
-        <Card className="p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-gray-900">Biểu đồ doanh thu</h3>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dx={-10} />
-                <Tooltip 
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                  formatter={(value) => [`${value} Tr`, 'Doanh thu']}
-                />
-                <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+        {isLoading ? (
+          <div className="lg:col-span-2"><ChartSkeleton height="h-[350px]" /></div>
+        ) : (
+          <Card className="p-0 lg:col-span-2 flex flex-col overflow-hidden shadow-layered border-gray-100">
+            <div className="p-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">Doanh thu</h3>
+                <Badge color="green" className="mt-1 bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] uppercase tracking-wider py-0.5">
+                  +15%
+                </Badge>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-semibold text-gray-500 block">Tổng cộng</span>
+                <span className="text-xl font-black text-blue-600">{fmt(currentRevenue)}</span>
+              </div>
+            </div>
+            <div className="h-[280px] w-full mt-4">
+              <Suspense fallback={<ChartSkeleton height="h-[280px]" />}>
+                <RevenueChart data={chartData} />
+              </Suspense>
+            </div>
+          </Card>
+        )}
 
         {/* Pie Chart */}
-        <Card className="p-6">
-          <h3 className="font-bold text-gray-900 mb-6">Doanh thu theo danh mục</h3>
-          <div className="h-[220px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={PIE_DATA} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}
-                  dataKey="value" stroke="none"
-                >
-                  {PIE_DATA.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                  formatter={(value) => [`${value}%`, 'Tỷ trọng']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 flex flex-col gap-3">
-            {PIE_DATA.map((item, i) => (
-              <div key={item.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: PIE_COLORS[i]}}></div>
-                  <span className="text-gray-600 font-semibold">{item.name}</span>
+        {isLoading ? (
+          <div><ChartSkeleton height="h-[350px]" /></div>
+        ) : (
+          <Card className="p-6 flex flex-col shadow-layered border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-6 text-lg">Danh mục nổi bật</h3>
+            <div className="h-[220px] w-full">
+              <Suspense fallback={<ChartSkeleton height="h-[220px]" />}>
+                <CategoryPieChart data={pieData} />
+              </Suspense>
+            </div>
+            <div className="mt-6 flex flex-col gap-4">
+              {(pieData.length ? pieData : PIE_DATA).map((item, i) => (
+                <div key={item.name} className="flex items-center justify-between text-sm group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded-full shadow-sm group-hover:scale-110 transition-transform" style={{backgroundColor: PIE_COLORS[i % PIE_COLORS.length]}}></div>
+                    <span className="text-gray-600 font-semibold">{item.name}</span>
+                  </div>
+                  <span className="font-black text-gray-900">{pieData.length ? item.percentage : item.value}%</span>
                 </div>
-                <span className="font-bold text-gray-900">{item.value}%</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+              ))}
+            </div>
+          </Card>
+        )}
       </div>
 
-      {/* Recent Orders Table */}
-      <Card className="overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="font-bold text-gray-900">Đơn hàng gần đây</h3>
-          <button className="text-sm font-semibold text-blue-600 hover:underline">Xem tất cả</button>
+      <div className="w-full">
+        <div>
+          {isLoading ? (
+            <TableSkeleton rows={5} cols={4} />
+          ) : (
+            <Card className="flex flex-col shadow-layered border-gray-100 h-full overflow-hidden">
+              <div className="p-5 border-b border-gray-100 bg-white sticky top-0 z-10 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">Sản phẩm bán chạy</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Các sản phẩm mang lại doanh thu cao nhất</p>
+                </div>
+              </div>
+              <div className="flex-1 overflow-x-auto">
+                <table className="w-full text-left whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-gray-50/80 text-gray-500 text-[11px] font-bold uppercase tracking-wider">
+                      <th className="px-6 py-4">Sản phẩm</th>
+                      <th className="px-6 py-4 text-right">Đã bán</th>
+                      <th className="px-6 py-4 text-right">Doanh thu</th>
+                      <th className="px-6 py-4 text-center">Đóng góp</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {topProductsData.length > 0 ? topProductsData.map((prod, idx) => {
+                      const prodProgress = Math.min(((prod.revenue / (salesGoal || 100000000)) * 100).toFixed(1), 100);
+                      const imgUrl = (prod.thumbnail || (prod.images && prod.images[0])) ? (prod.thumbnail || prod.images[0]) : img("1610945415295-d9bbf067e59c");
+                      return (
+                        <tr key={prod._id || idx} className="hover:bg-blue-50/30 transition-colors group">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <div className="relative">
+                                <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 overflow-hidden shadow-sm group-hover:shadow-md transition-shadow">
+                                  <img src={imgUrl} alt={prod.name} className="w-full h-full object-cover" />
+                                </div>
+                                {idx < 3 && (
+                                  <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm border-2 border-white ${idx === 0 ? 'bg-amber-400' : idx === 1 ? 'bg-slate-300' : 'bg-amber-600'}`}>
+                                    #{idx+1}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-900 text-sm mb-0.5">{prod.name}</span>
+                                <span className="text-xs text-gray-500 font-medium">{prod.category || "Danh mục"}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-sm font-bold">{prod.sales}</span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="font-bold text-gray-900">{fmt(prod.revenue)}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${prodProgress}%` }}></div>
+                              </div>
+                              <span className="text-xs font-bold text-gray-700 w-8">{prodProgress}%</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }) : (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center justify-center text-gray-400">
+                            <Package size={40} className="mb-3 opacity-20" />
+                            <p className="font-medium text-sm text-gray-500">Chưa có dữ liệu sản phẩm</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                <th className="px-6 py-4 font-semibold">Mã đơn</th>
-                <th className="px-6 py-4 font-semibold">Khách hàng</th>
-                <th className="px-6 py-4 font-semibold">Ngày đặt</th>
-                <th className="px-6 py-4 font-semibold">Tổng tiền</th>
-                <th className="px-6 py-4 font-semibold">Trạng thái</th>
-                <th className="px-6 py-4 font-semibold text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {recentOrders.map(o => (
-                <tr key={o._id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900">#{o._id.substring(0, 8).toUpperCase()}</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-700">{o.shippingAddress?.fullName || o.userId?.fullName || "Khách"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{new Date(o.createdAt).toLocaleDateString("vi-VN")}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-red-600">{fmt(o.totalAmount)}</td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={o.status} />
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 text-gray-400">
-                      <button className="p-1.5 hover:bg-gray-100 hover:text-blue-600 rounded transition-colors"><Eye size={16}/></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }
