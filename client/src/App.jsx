@@ -17,12 +17,12 @@ import NotFound from "./pages/NotFound";
 // Admin Imports
 import AdminRoute from "./components/AdminRoute";
 import AdminLayout from "./components/layouts/AdminLayout";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminOrders from "./pages/admin/Orders";
-import AdminProducts from "./pages/admin/Products";
-import AdminCategories from "./pages/admin/Categories";
-import AdminBrands from "./pages/admin/Brands";
-import AdminUsers from "./pages/admin/Users";
+import AdminDashboard from "./features/admin/Dashboard";
+import AdminOrders from "./features/admin/Orders";
+import AdminProducts from "./features/admin/Products";
+import AdminCategories from "./features/admin/Categories";
+import AdminBrands from "./features/admin/Brands";
+import AdminUsers from "./features/admin/Users";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 

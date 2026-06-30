@@ -6,41 +6,41 @@ import {
   Box, Tags, Shield, Monitor, Menu, Plus
 } from "lucide-react";
 
+const menuGroups = [
+  {
+    label: "Overview",
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", to: "/admin" },
+    ]
+  },
+  {
+    label: "Catalog",
+    items: [
+      { icon: Box, label: "Products", to: "/admin/products" },
+      { icon: Tags, label: "Categories", to: "/admin/categories" },
+      { icon: Shield, label: "Brands", to: "/admin/brands" },
+    ]
+  },
+  {
+    label: "Sales",
+    items: [
+      { icon: ShoppingCart, label: "Orders", to: "/admin/orders" },
+      { icon: Users, label: "Customers", to: "/admin/users" },
+    ]
+  },
+  {
+    label: "Marketing",
+    items: [
+      { icon: Megaphone, label: "Marketing", to: "/admin/marketing" },
+    ]
+  }
+];
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-
-  const menuGroups = [
-    {
-      label: "Overview",
-      items: [
-        { icon: LayoutDashboard, label: "Dashboard", to: "/admin" },
-      ]
-    },
-    {
-      label: "Catalog",
-      items: [
-        { icon: Box, label: "Products", to: "/admin/products" },
-        { icon: Tags, label: "Categories", to: "/admin/categories" },
-        { icon: Shield, label: "Brands", to: "/admin/brands" },
-      ]
-    },
-    {
-      label: "Sales",
-      items: [
-        { icon: ShoppingCart, label: "Orders", to: "/admin/orders" },
-        { icon: Users, label: "Customers", to: "/admin/users" },
-      ]
-    },
-    {
-      label: "Marketing",
-      items: [
-        { icon: Megaphone, label: "Marketing", to: "/admin/marketing" },
-      ]
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">

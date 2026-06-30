@@ -25,6 +25,91 @@ const SORT_OPTIONS = [
   { value: "soldCount_desc", label: "Bán chạy nhất" },
 ];
 
+const Sidebar = ({ filters, actions }) => {
+  const { sortBy, displayBrands, showAllBrands, selectedBrands, minPrice, maxPrice } = filters;
+  const { handleSortChange, toggleBrand, setShowAllBrands, togglePriceRange } = actions;
+  
+  return (
+    <div className="space-y-8">
+      {/* Sort Filter */}
+      <div>
+        <h3 className="font-bold text-sm uppercase text-gray-900 mb-4 tracking-wider">Sắp xếp</h3>
+        <select
+          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+          value={sortBy}
+          onChange={handleSortChange}
+        >
+          {SORT_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="h-px bg-gray-200"></div>
+
+      {/* Brands Filter */}
+      {displayBrands.length > 0 && (
+      <div>
+        <h3 className="font-bold text-sm uppercase text-gray-900 mb-4 tracking-wider">Hãng Sản Xuất</h3>
+        <div className="space-y-3">
+          {(showAllBrands ? displayBrands : displayBrands.slice(0, 5)).map(brand => (
+            <label key={brand._id} className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-600 checked:border-blue-600 transition-all"
+                  checked={selectedBrands.includes(brand._id)}
+                  onChange={() => toggleBrand(brand._id)}
+                />
+                <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" viewBox="0 0 14 10" fill="none">
+                  <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{brand.name}</span>
+            </label>
+          ))}
+        </div>
+        {displayBrands.length > 5 && (
+          <button
+            className="mt-3 text-sm text-blue-600 font-semibold hover:underline flex items-center gap-1"
+            onClick={() => setShowAllBrands(!showAllBrands)}
+          >
+            {showAllBrands ? "Thu gọn" : "Xem thêm"}
+            <ChevronRight size={14} className={`transform transition-transform ${showAllBrands ? "-rotate-90" : "rotate-90"}`} />
+          </button>
+        )}
+      </div>
+      )}
+
+      <div className="h-px bg-gray-200"></div>
+
+      {/* Price Filter */}
+      <div>
+        <h3 className="font-bold text-sm uppercase text-gray-900 mb-4 tracking-wider">Giá</h3>
+        <div className="space-y-3">
+          {PRICE_RANGES.map(range => (
+            <label key={range.id} className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center justify-center">
+                <input
+                  type="checkbox"
+                  className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-600 checked:border-blue-600 transition-all"
+                  checked={minPrice == range.min && maxPrice == (range.max || "")}
+                  onChange={() => togglePriceRange(range)}
+                />
+                <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" viewBox="0 0 14 10" fill="none">
+                  <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{range.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
 export default function CategoryPage() {
   const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -193,85 +278,10 @@ export default function CategoryPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const Sidebar = () => (
-    <div className="space-y-8">
-      {/* Sort Filter */}
-      <div>
-        <h3 className="font-bold text-sm uppercase text-gray-900 mb-4 tracking-wider">Sắp xếp</h3>
-        <select
-          className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
-          value={sortBy}
-          onChange={handleSortChange}
-        >
-          {SORT_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="h-px bg-gray-200"></div>
-
-      {/* Brands Filter */}
-      {displayBrands.length > 0 && (
-      <div>
-        <h3 className="font-bold text-sm uppercase text-gray-900 mb-4 tracking-wider">Hãng Sản Xuất</h3>
-        <div className="space-y-3">
-          {(showAllBrands ? displayBrands : displayBrands.slice(0, 5)).map(brand => (
-            <label key={brand._id} className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-600 checked:border-blue-600 transition-all"
-                  checked={selectedBrands.includes(brand._id)}
-                  onChange={() => toggleBrand(brand._id)}
-                />
-                <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" viewBox="0 0 14 10" fill="none">
-                  <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{brand.name}</span>
-            </label>
-          ))}
-        </div>
-        {displayBrands.length > 5 && (
-          <button
-            className="mt-3 text-sm text-blue-600 font-semibold hover:underline flex items-center gap-1"
-            onClick={() => setShowAllBrands(!showAllBrands)}
-          >
-            {showAllBrands ? "Thu gọn" : "Xem thêm"}
-            <ChevronRight size={14} className={`transform transition-transform ${showAllBrands ? "-rotate-90" : "rotate-90"}`} />
-          </button>
-        )}
-      </div>
-      )}
-
-      <div className="h-px bg-gray-200"></div>
-
-      {/* Price Filter */}
-      <div>
-        <h3 className="font-bold text-sm uppercase text-gray-900 mb-4 tracking-wider">Giá</h3>
-        <div className="space-y-3">
-          {PRICE_RANGES.map(range => (
-            <label key={range.id} className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded cursor-pointer checked:bg-blue-600 checked:border-blue-600 transition-all"
-                  checked={minPrice == range.min && maxPrice == (range.max || "")}
-                  onChange={() => togglePriceRange(range)}
-                />
-                <svg className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none" viewBox="0 0 14 10" fill="none">
-                  <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-gray-600 group-hover:text-gray-900 transition-colors">{range.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-    </div>
-  );
+  const sidebarProps = {
+    filters: { sortBy, displayBrands, showAllBrands, selectedBrands, minPrice, maxPrice },
+    actions: { handleSortChange, toggleBrand, setShowAllBrands, togglePriceRange }
+  };
 
   if (baseDataLoading) {
     return (
@@ -318,7 +328,7 @@ export default function CategoryPage() {
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-64 shrink-0">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
-                <Sidebar />
+                <Sidebar {...sidebarProps} />
               </div>
             </aside>
 
@@ -334,7 +344,7 @@ export default function CategoryPage() {
                     </button>
                   </div>
                   <div className="p-6 overflow-y-auto flex-1">
-                    <Sidebar />
+                    <Sidebar {...sidebarProps} />
                   </div>
                   <div className="p-4 border-t border-gray-100">
                     <button

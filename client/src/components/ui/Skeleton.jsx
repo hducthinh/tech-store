@@ -14,12 +14,4 @@ export function Skeleton({ className = "", ...props }) {
   );
 }
 
-export function SkeletonText({ lines = 1, className = "", lineClassName = "h-4 w-full mb-2" }) {
-  return (
-    <div className={className}>
-      {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton key={i} className={lineClassName} />
-      ))}
-    </div>
-  );
-}
+

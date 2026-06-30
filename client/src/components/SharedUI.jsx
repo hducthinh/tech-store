@@ -2,32 +2,8 @@ import React from "react";
 import { TrendingUp } from "lucide-react";
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
-export const PRODUCTS = [
-  { id: 1, name: "iPhone 15 Pro Max 256GB", category: "Điện thoại", brand: "Apple", price: 28990000, stock: 45, status: "Còn hàng", img: "photo-1696446700704-46c3e3e55a51", rating: 4.8, reviews: 234 },
-  { id: 2, name: "Samsung Galaxy S24 Ultra", category: "Điện thoại", brand: "Samsung", price: 31990000, stock: 32, status: "Còn hàng", img: "photo-1610945415295-d9bbf067e59c", rating: 4.7, reviews: 189 },
-  { id: 3, name: "MacBook Pro 14\" M3 Pro", category: "Laptop", brand: "Apple", price: 52990000, stock: 18, status: "Còn hàng", img: "photo-1517336714731-489689fd1ca8", rating: 4.9, reviews: 97 },
-  { id: 4, name: "Dell XPS 15 9530", category: "Laptop", brand: "Dell", price: 41990000, stock: 0, status: "Hết hàng", img: "photo-1593642632559-0c6d3fc62b89", rating: 4.6, reviews: 54 },
-  { id: 5, name: "Sony WH-1000XM5", category: "Tai nghe", brand: "Sony", price: 7490000, stock: 67, status: "Còn hàng", img: "photo-1505740420928-5e560c06d30e", rating: 4.8, reviews: 412 },
-  { id: 6, name: "iPad Pro 12.9\" M2", category: "Máy tính bảng", brand: "Apple", price: 27990000, stock: 24, status: "Còn hàng", img: "photo-1544244015-0df4b3ffc6b0", rating: 4.7, reviews: 156 },
-];
 
-export const CATEGORIES = [
-  { id: 1, name: "Điện thoại", slug: "dien-thoai", products: 124, img: "📱" },
-  { id: 2, name: "Laptop", slug: "laptop", products: 87, img: "💻" },
-  { id: 3, name: "Tai nghe", slug: "tai-nghe", products: 63, img: "🎧" },
-  { id: 4, name: "Máy tính bảng", slug: "may-tinh-bang", products: 45, img: "📟" },
-  { id: 5, name: "Phụ kiện", slug: "phu-kien", products: 231, img: "🔌" },
-  { id: 6, name: "Đồng hồ thông minh", slug: "dong-ho", products: 38, img: "⌚" },
-];
 
-export const BRANDS = [
-  { id: 1, name: "Apple", products: 87, country: "Hoa Kỳ", status: "Hoạt động" },
-  { id: 2, name: "Samsung", products: 64, country: "Hàn Quốc", status: "Hoạt động" },
-  { id: 3, name: "Sony", products: 43, country: "Nhật Bản", status: "Hoạt động" },
-  { id: 4, name: "Dell", products: 29, country: "Hoa Kỳ", status: "Hoạt động" },
-  { id: 5, name: "Xiaomi", products: 52, country: "Trung Quốc", status: "Hoạt động" },
-  { id: 6, name: "ASUS", products: 38, country: "Đài Loan", status: "Tạm dừng" },
-];
 
 export const ORDERS = [
   { id: "DH001234", customer: "Nguyễn Văn An", date: "27/06/2026", total: 28990000, status: "Đã giao", items: 1 },
@@ -38,19 +14,7 @@ export const ORDERS = [
   { id: "DH001229", customer: "Vũ Thị Phương", date: "25/06/2026", total: 27990000, status: "Đã giao", items: 1 },
 ];
 
-export const USERS_DATA = [
-  { id: 1, name: "Nguyễn Văn An", email: "an.nguyen@email.com", phone: "0901234567", joined: "01/01/2026", orders: 12, status: "Hoạt động" },
-  { id: 2, name: "Trần Thị Bình", email: "binh.tran@email.com", phone: "0912345678", joined: "15/02/2026", orders: 5, status: "Hoạt động" },
-  { id: 3, name: "Lê Hoàng Cường", email: "cuong.le@email.com", phone: "0923456789", joined: "20/03/2026", orders: 8, status: "Khoá" },
-  { id: 4, name: "Phạm Thị Dung", email: "dung.pham@email.com", phone: "0934567890", joined: "05/04/2026", orders: 3, status: "Hoạt động" },
-  { id: 5, name: "Hoàng Văn Em", email: "em.hoang@email.com", phone: "0945678901", joined: "12/05/2026", orders: 21, status: "Hoạt động" },
-];
 
-export const REVENUE_DATA = [
-  { month: "T1", revenue: 240, orders: 45 }, { month: "T2", revenue: 310, orders: 58 },
-  { month: "T3", revenue: 280, orders: 51 }, { month: "T4", revenue: 420, orders: 79 },
-  { month: "T5", revenue: 390, orders: 72 }, { month: "T6", revenue: 510, orders: 94 },
-];
 
 export const PIE_DATA = [
   { name: "Điện thoại", value: 42 }, { name: "Laptop", value: 28 },
@@ -151,7 +115,7 @@ export function Card({ children, className = "", ...props }) {
   );
 }
 
-export function AnimatedNumber({ value }) {
+function AnimatedNumber({ value }) {
   const [displayValue, setDisplayValue] = React.useState(0);
   
   React.useEffect(() => {
@@ -324,15 +288,15 @@ export function EmptyState({ icon, title, description, primaryAction, secondaryA
 // ─── Skeleton Primitives ──────────────────────────────────────────────────────
 const shimmerClass = "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent";
 
-export function Skeleton({ className = "" }) {
+function Skeleton({ className = "" }) {
   return <div className={`bg-gray-100 rounded-lg ${shimmerClass} ${className}`} />;
 }
 
-export function AvatarSkeleton({ size = "w-10 h-10" }) {
+function AvatarSkeleton({ size = "w-10 h-10" }) {
   return <Skeleton className={`${size} !rounded-full shrink-0`} />;
 }
 
-export function ButtonSkeleton({ width = "w-28" }) {
+function ButtonSkeleton({ width = "w-28" }) {
   return <Skeleton className={`${width} h-9 !rounded-2xl`} />;
 }
 
@@ -405,7 +369,7 @@ export function TableSkeleton({ rows = 5, cols = 5 }) {
   );
 }
 
-export function DashboardSkeleton() {
+function DashboardSkeleton() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500">
       {/* Header */}

@@ -1,7 +1,7 @@
 import React, { useState, Suspense, useMemo } from "react";
 import { DollarSign, ShoppingCart, Users, Package } from "lucide-react";
 import { StatCard, Card, Badge, PIE_DATA, PIE_COLORS, fmt, img, CardSkeleton, ChartSkeleton, TableSkeleton } from "../../components/SharedUI";
-import { useDashboardOverview } from "../../hooks/useDashboard";
+import { useDashboardOverview } from "./hooks/useDashboard";
 
 const RevenueChart = React.lazy(() => import("./components/RevenueChart"));
 const CategoryPieChart = React.lazy(() => import("./components/CategoryPieChart"));

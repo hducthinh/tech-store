@@ -1,5 +1,5 @@
 // Extract Socket string from specs
-export const extractSocket = (specs) => {
+const extractSocket = (specs) => {
   if (!specs) return null;
   // Look through values for socket keywords like LGA1700, AM4, AM5, LGA1200, LGA 1700
   const values = Object.values(specs).map(v => String(v).toUpperCase());
@@ -14,7 +14,7 @@ export const extractSocket = (specs) => {
 };
 
 // Extract DDR type from specs
-export const extractRAMType = (specs) => {
+const extractRAMType = (specs) => {
   if (!specs) return null;
   const values = Object.values(specs).map(v => String(v).toUpperCase());
   for (const v of values) {
@@ -26,7 +26,7 @@ export const extractRAMType = (specs) => {
 };
 
 // Extract TDP/Power from specs (returns number in Watts)
-export const extractWattage = (specs) => {
+const extractWattage = (specs) => {
   if (!specs) return 0;
   const values = Object.values(specs).map(v => String(v).toUpperCase());
   for (const v of values) {
