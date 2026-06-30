@@ -1,26 +1,11 @@
+/* eslint-disable react-refresh/only-export-components */
 import React from "react";
 import { TrendingUp } from "lucide-react";
-
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-
-
-export const ORDERS = [
-  { id: "DH001234", customer: "Nguyễn Văn An", date: "27/06/2026", total: 28990000, status: "Đã giao", items: 1 },
-  { id: "DH001233", customer: "Trần Thị Bình", date: "27/06/2026", total: 7490000, status: "Đang giao", items: 1 },
-  { id: "DH001232", customer: "Lê Hoàng Cường", date: "26/06/2026", total: 52990000, status: "Đang xử lý", items: 2 },
-  { id: "DH001231", customer: "Phạm Thị Dung", date: "26/06/2026", total: 31990000, status: "Đã huỷ", items: 1 },
-  { id: "DH001230", customer: "Hoàng Văn Em", date: "25/06/2026", total: 41990000, status: "Đã giao", items: 3 },
-  { id: "DH001229", customer: "Vũ Thị Phương", date: "25/06/2026", total: 27990000, status: "Đã giao", items: 1 },
-];
-
-
 
 export const PIE_DATA = [
   { name: "Điện thoại", value: 42 }, { name: "Laptop", value: 28 },
   { name: "Tai nghe", value: 18 }, { name: "Khác", value: 12 },
 ];
-
 export const PIE_COLORS = ["#1B4FD8", "#10B981", "#F59E0B", "#8B5CF6"];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -122,11 +107,13 @@ function AnimatedNumber({ value }) {
     let start = 0;
     const end = typeof value === "number" ? value : parseInt(value?.toString().replace(/\D/g, '')) || 0;
     if (start === end) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayValue(end);
       return;
     }
     
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+       
       setDisplayValue(end);
       return;
     }
@@ -141,7 +128,8 @@ function AnimatedNumber({ value }) {
       if (progress < 1) {
         window.requestAnimationFrame(step);
       } else {
-        setDisplayValue(end);
+         
+      setDisplayValue(end);
       }
     };
     window.requestAnimationFrame(step);
@@ -369,52 +357,7 @@ export function TableSkeleton({ rows = 5, cols = 5 }) {
   );
 }
 
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-7 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <div className="flex gap-3">
-          <ButtonSkeleton width="w-32" />
-          <ButtonSkeleton width="w-24" />
-        </div>
-      </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[0, 1, 2, 3].map(i => <CardSkeleton key={i} />)}
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-2"><ChartSkeleton height="h-[350px]" /></div>
-        <div><ChartSkeleton height="h-[350px]" /></div>
-        <div>
-          <Card className="shadow-layered border-gray-100 h-full">
-            <div className="p-5 border-b border-gray-100 space-y-2">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-3 w-44" />
-            </div>
-            <div className="p-8 flex items-center justify-center">
-              <Skeleton className="w-40 h-40 !rounded-full" />
-            </div>
-            <div className="px-5 pb-5 space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Table */}
-      <TableSkeleton rows={4} cols={6} />
-    </div>
-  );
-}
 
 export function PageSkeleton({ title = true }) {
   return (

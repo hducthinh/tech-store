@@ -9,12 +9,14 @@ import {
   resetPassword,
 } from "../../controllers/auth.controllers.js";
 import verifyToken from "../../middlewares/verifyToken.js";
+import { validateRequest } from "../../middlewares/validateRequest.js";
+import { validateRegisterInput, validateLoginInput } from "../../utils/validators.js";
 
 const router = express.Router();
 
 // Public routes
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", validateRequest(validateRegisterInput), register);
+router.post("/login", validateRequest(validateLoginInput), login);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 

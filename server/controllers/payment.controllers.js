@@ -1,5 +1,5 @@
 import Order from "../models/order.model.js";
-import catchAsync from "../utils/catchAsync.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 // @desc    Xử lý Webhook từ SePay khi có giao dịch
 // @route   POST /api/v1/payments/sepay-webhook

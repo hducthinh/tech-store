@@ -1,8 +1,8 @@
 import Product from "../models/product.model.js";
 import Category from "../models/category.model.js";
 import Brand from "../models/brand.model.js";
-import AppError from "../utils/appError.js";
-import catchAsync from "../utils/catchAsync.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import slugify from "../utils/slugify.js";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -22,7 +22,7 @@ const getCloudinaryPublicId = (imageUrl) => {
 // @desc    Lấy danh sách sản phẩm (hỗ trợ lọc, sắp xếp)
 // @route   GET /api/v1/products
 // @access  Public
-export const getProducts = catchAsync(async (req, res, next) => {
+export const getProducts = asyncHandler(async (req, res, next) => {
   const { category, categoryId, brandId, minPrice, maxPrice, sortBy, search, page = 1, limit = 12 } = req.query;
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 12;
@@ -141,7 +141,7 @@ export const getProducts = catchAsync(async (req, res, next) => {
 // @desc    Lấy danh sách sản phẩm nổi bật
 // @route   GET /api/v1/products/featured
 // @access  Public
-export const getFeaturedProducts = catchAsync(async (req, res, next) => {
+export const getFeaturedProducts = asyncHandler(async (req, res, next) => {
   const products = await Product.find({ isActive: true, isFeatured: true })
     .sort({ createdAt: -1 })
     .limit(10) // Lấy tối đa 10 sản phẩm nổi bật nhất
@@ -159,7 +159,7 @@ export const getFeaturedProducts = catchAsync(async (req, res, next) => {
 // @desc    Lấy chi tiết sản phẩm theo slug
 // @route   GET /api/v1/products/:slug
 // @access  Public
-export const getProductBySlug = catchAsync(async (req, res, next) => {
+export const getProductBySlug = asyncHandler(async (req, res, next) => {
   const { slug } = req.params;
 
   let query = { slug, isActive: true };
@@ -175,7 +175,7 @@ export const getProductBySlug = catchAsync(async (req, res, next) => {
     .populate("brandId", "name slug");
 
   if (!product) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   // Fire and forget: Tăng lượt xem mà không cần đợi lưu xong
@@ -192,7 +192,7 @@ export const getProductBySlug = catchAsync(async (req, res, next) => {
 // @desc    Lấy toàn bộ sản phẩm cho Admin (Bao gồm cả sản phẩm đã xóa mềm)
 // @route   GET /api/v1/products/admin
 // @access  Private/Admin
-export const getAdminProducts = catchAsync(async (req, res, next) => {
+export const getAdminProducts = asyncHandler(async (req, res, next) => {
   const products = await Product.find()
     .sort({ createdAt: -1 })
     .populate("categoryId", "name")
@@ -210,7 +210,7 @@ export const getAdminProducts = catchAsync(async (req, res, next) => {
 // @desc    Tạo sản phẩm mới (Admin)
 // @route   POST /api/v1/products
 // @access  Private/Admin
-export const createProduct = catchAsync(async (req, res, next) => {
+export const createProduct = asyncHandler(async (req, res, next) => {
   const { name, categoryId, brandId, price, stock, description } = req.body;
 
   // Xử lý ảnh upload
@@ -228,15 +228,15 @@ export const createProduct = catchAsync(async (req, res, next) => {
 
   // Validate basic
   if (!name || !categoryId || !brandId || price === undefined || stock === undefined) {
-    return next(new AppError("Vui lòng điền đủ thông tin cơ bản của sản phẩm.", 400));
+    return next(new ApiError("Vui lòng điền đủ thông tin cơ bản của sản phẩm.", 400));
   }
 
   // Lấy tên Category & Brand
   const category = await Category.findById(categoryId);
-  if (!category) return next(new AppError("Danh mục không tồn tại.", 404));
+  if (!category) return next(new ApiError("Danh mục không tồn tại.", 404));
 
   const brand = await Brand.findById(brandId);
-  if (!brand) return next(new AppError("Thương hiệu không tồn tại.", 404));
+  if (!brand) return next(new ApiError("Thương hiệu không tồn tại.", 404));
 
   const slug = slugify(name);
 
@@ -275,13 +275,13 @@ export const createProduct = catchAsync(async (req, res, next) => {
 // @desc    Cập nhật sản phẩm (Admin)
 // @route   PATCH /api/v1/products/:id
 // @access  Private/Admin
-export const updateProduct = catchAsync(async (req, res, next) => {
+export const updateProduct = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
   // 1. Tìm sản phẩm cũ để lấy URL ảnh cũ
   const oldProduct = await Product.findById(id);
   if (!oldProduct) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   // Nếu cập nhật category/brand, ta phải cập nhật cả name của chúng
@@ -364,7 +364,7 @@ export const updateProduct = catchAsync(async (req, res, next) => {
   });
 
   if (!product) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   res.status(200).json({
@@ -378,12 +378,12 @@ export const updateProduct = catchAsync(async (req, res, next) => {
 // @desc    Xóa mềm / Khôi phục sản phẩm (Toggle isActive) (Admin)
 // @route   DELETE /api/v1/products/:id
 // @access  Private/Admin
-export const deleteProduct = catchAsync(async (req, res, next) => {
+export const deleteProduct = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const product = await Product.findById(id);
 
   if (!product) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   // Toggle trạng thái
@@ -402,12 +402,12 @@ export const deleteProduct = catchAsync(async (req, res, next) => {
 // @desc    Lấy sản phẩm tương tự
 // @route   GET /api/v1/products/:slug/similar
 // @access  Public
-export const getSimilarProducts = catchAsync(async (req, res, next) => {
+export const getSimilarProducts = asyncHandler(async (req, res, next) => {
   const { slug } = req.params;
 
   const currentProduct = await Product.findOne({ slug, isActive: true });
   if (!currentProduct) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   // Lấy 4 sản phẩm cùng danh mục, khác ID sản phẩm hiện tại

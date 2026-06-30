@@ -8,7 +8,7 @@ const calculateGrowth = (current, previous) => {
   return (percentage > 0 ? "+" : "") + percentage.toFixed(1) + "%";
 };
 
-export class DashboardService {
+class DashboardService {
   async getSummary() {
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);

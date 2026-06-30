@@ -1,12 +1,12 @@
 import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
-import AppError from "../utils/appError.js";
-import catchAsync from "../utils/catchAsync.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 // @desc    Lấy giỏ hàng của user hiện tại
 // @route   GET /api/v1/cart
 // @access  Private
-export const getCart = catchAsync(async (req, res, next) => {
+export const getCart = asyncHandler(async (req, res, next) => {
   let cart = await Cart.findOne({ userId: req.userId }).populate("items.productId", "name price images thumbnail stock slug");
 
   // Nếu user chưa có giỏ hàng, tạo mới một giỏ trống
@@ -25,24 +25,24 @@ export const getCart = catchAsync(async (req, res, next) => {
 // @desc    Thêm sản phẩm vào giỏ hàng
 // @route   POST /api/v1/cart
 // @access  Private
-export const addToCart = catchAsync(async (req, res, next) => {
+export const addToCart = asyncHandler(async (req, res, next) => {
   const { productId, quantity = 1, buildId = null } = req.body;
 
   if (!productId) {
-    return next(new AppError("Vui lòng cung cấp ID sản phẩm", 400));
+    return next(new ApiError("Vui lòng cung cấp ID sản phẩm", 400));
   }
 
   const product = await Product.findById(productId);
   if (!product) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   if (!product.isActive) {
-    return next(new AppError("Sản phẩm này hiện đã ngừng kinh doanh hoặc bị ẩn", 400));
+    return next(new ApiError("Sản phẩm này hiện đã ngừng kinh doanh hoặc bị ẩn", 400));
   }
 
   if (product.stock < quantity) {
-    return next(new AppError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
+    return next(new ApiError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
   }
 
   let cart = await Cart.findOne({ userId: req.userId });
@@ -60,7 +60,7 @@ export const addToCart = catchAsync(async (req, res, next) => {
     // Nếu có rồi, cộng thêm số lượng
     const newQuantity = cart.items[itemIndex].quantity + quantity;
     if (newQuantity > product.stock) {
-      return next(new AppError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
+      return next(new ApiError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
     }
     cart.items[itemIndex].quantity = newQuantity;
   } else {
@@ -84,33 +84,33 @@ export const addToCart = catchAsync(async (req, res, next) => {
 // @desc    Cập nhật số lượng sản phẩm trong giỏ
 // @route   PATCH /api/v1/cart/update-quantity
 // @access  Private
-export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
+export const updateCartItemQuantity = asyncHandler(async (req, res, next) => {
   const { productId, quantity, buildId = null } = req.body;
 
   if (!productId || quantity === undefined) {
-    return next(new AppError("Vui lòng cung cấp productId và quantity", 400));
+    return next(new ApiError("Vui lòng cung cấp productId và quantity", 400));
   }
 
   if (quantity < 1) {
-    return next(new AppError("Số lượng phải lớn hơn 0", 400));
+    return next(new ApiError("Số lượng phải lớn hơn 0", 400));
   }
 
   const product = await Product.findById(productId);
   if (!product) {
-    return next(new AppError("Không tìm thấy sản phẩm", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm", 404));
   }
 
   if (!product.isActive) {
-    return next(new AppError("Sản phẩm này hiện đã ngừng kinh doanh hoặc bị ẩn", 400));
+    return next(new ApiError("Sản phẩm này hiện đã ngừng kinh doanh hoặc bị ẩn", 400));
   }
 
   if (product.stock < quantity) {
-    return next(new AppError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
+    return next(new ApiError(`Số lượng trong kho không đủ, chỉ còn ${product.stock} sản phẩm`, 400));
   }
 
   const cart = await Cart.findOne({ userId: req.userId });
   if (!cart) {
-    return next(new AppError("Không tìm thấy giỏ hàng", 404));
+    return next(new ApiError("Không tìm thấy giỏ hàng", 404));
   }
 
   const itemIndex = cart.items.findIndex(item => 
@@ -129,20 +129,20 @@ export const updateCartItemQuantity = catchAsync(async (req, res, next) => {
       },
     });
   } else {
-    return next(new AppError("Sản phẩm không có trong giỏ hàng", 404));
+    return next(new ApiError("Sản phẩm không có trong giỏ hàng", 404));
   }
 });
 
 // @desc    Xóa sản phẩm khỏi giỏ hàng
 // @route   DELETE /api/v1/cart/:productId
 // @access  Private
-export const removeFromCart = catchAsync(async (req, res, next) => {
+export const removeFromCart = asyncHandler(async (req, res, next) => {
   const { productId } = req.params;
   const { buildId = null } = req.query;
 
   const cart = await Cart.findOne({ userId: req.userId });
   if (!cart) {
-    return next(new AppError("Không tìm thấy giỏ hàng", 404));
+    return next(new ApiError("Không tìm thấy giỏ hàng", 404));
   }
 
   cart.items = cart.items.filter(item => {
@@ -164,7 +164,7 @@ export const removeFromCart = catchAsync(async (req, res, next) => {
 // @desc    Xóa toàn bộ giỏ hàng
 // @route   DELETE /api/v1/cart
 // @access  Private
-export const clearCart = catchAsync(async (req, res, next) => {
+export const clearCart = asyncHandler(async (req, res, next) => {
   const cart = await Cart.findOne({ userId: req.user.id });
   
   if (cart) {

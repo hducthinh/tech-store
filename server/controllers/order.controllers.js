@@ -1,29 +1,29 @@
 import Order from "../models/order.model.js";
 import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
-import AppError from "../utils/appError.js";
-import catchAsync from "../utils/catchAsync.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import mongoose from "mongoose";
 
 // @desc    Tạo đơn hàng mới (Checkout)
 // @route   POST /api/v1/orders
 // @access  Private
-export const createOrder = catchAsync(async (req, res, next) => {
+export const createOrder = asyncHandler(async (req, res, next) => {
   const { shippingAddress, paymentMethod, selectedItemIds } = req.body;
 
   if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address) {
-    return next(new AppError("Vui lòng cung cấp đầy đủ địa chỉ giao hàng", 400));
+    return next(new ApiError("Vui lòng cung cấp đầy đủ địa chỉ giao hàng", 400));
   }
 
   if (!selectedItemIds || !Array.isArray(selectedItemIds) || selectedItemIds.length === 0) {
-    return next(new AppError("Vui lòng chọn ít nhất một sản phẩm để thanh toán", 400));
+    return next(new ApiError("Vui lòng chọn ít nhất một sản phẩm để thanh toán", 400));
   }
 
   // 1. Lấy giỏ hàng của user hiện tại
   const cart = await Cart.findOne({ userId: req.userId }).populate("items.productId");
 
   if (!cart || cart.items.length === 0) {
-    return next(new AppError("Giỏ hàng của bạn đang trống", 400));
+    return next(new ApiError("Giỏ hàng của bạn đang trống", 400));
   }
 
   const selectedItemsToCheckout = cart.items.filter(item => {
@@ -35,7 +35,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
   });
 
   if (selectedItemsToCheckout.length === 0) {
-    return next(new AppError("Không có sản phẩm hợp lệ nào được chọn để thanh toán", 400));
+    return next(new ApiError("Không có sản phẩm hợp lệ nào được chọn để thanh toán", 400));
   }
 
   const session = await mongoose.startSession();
@@ -49,7 +49,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
     for (const item of selectedItemsToCheckout) {
       const product = item.productId;
       if (!product || !product.isActive) {
-        throw new AppError(`Sản phẩm ${product?.name || 'đã chọn'} hiện đã ngừng kinh doanh hoặc bị ẩn.`, 400);
+        throw new ApiError(`Sản phẩm ${product?.name || 'đã chọn'} hiện đã ngừng kinh doanh hoặc bị ẩn.`, 400);
       }
 
       // Trừ kho nguyên tử. Nếu trong tíc tắc có người mua mất, updatedProduct sẽ null
@@ -69,7 +69,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
       );
 
       if (!updatedProduct) {
-        throw new AppError(`Đặt hàng thất bại do sản phẩm ${product.name} vừa hết hàng hoặc không đủ số lượng.`, 400);
+        throw new ApiError(`Đặt hàng thất bại do sản phẩm ${product.name} vừa hết hàng hoặc không đủ số lượng.`, 400);
       }
 
       // Tính tiền
@@ -123,7 +123,7 @@ export const createOrder = catchAsync(async (req, res, next) => {
 // @desc    Lấy danh sách đơn hàng của user đang đăng nhập
 // @route   GET /api/v1/orders
 // @access  Private
-export const getMyOrders = catchAsync(async (req, res, next) => {
+export const getMyOrders = asyncHandler(async (req, res, next) => {
   const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -138,7 +138,7 @@ export const getMyOrders = catchAsync(async (req, res, next) => {
 // @desc    Lấy toàn bộ danh sách đơn hàng cho Admin
 // @route   GET /api/v1/orders/admin
 // @access  Private/Admin
-export const getAdminOrders = catchAsync(async (req, res, next) => {
+export const getAdminOrders = asyncHandler(async (req, res, next) => {
   const orders = await Order.find()
     .populate("userId", "fullName email phone")
     .sort({ createdAt: -1 });
@@ -155,11 +155,11 @@ export const getAdminOrders = catchAsync(async (req, res, next) => {
 // @desc    Lấy chi tiết 1 đơn hàng của khách hàng
 // @route   GET /api/v1/orders/:id
 // @access  Private
-export const getOrderById = catchAsync(async (req, res, next) => {
+export const getOrderById = asyncHandler(async (req, res, next) => {
   const order = await Order.findOne({ _id: req.params.id, userId: req.userId });
 
   if (!order) {
-    return next(new AppError("Không tìm thấy đơn hàng", 404));
+    return next(new ApiError("Không tìm thấy đơn hàng", 404));
   }
 
   res.status(200).json({
@@ -173,22 +173,22 @@ export const getOrderById = catchAsync(async (req, res, next) => {
 // @desc    Cập nhật trạng thái đơn hàng
 // @route   PATCH /api/v1/orders/admin/:id/status
 // @access  Private/Admin
-export const updateOrderStatus = catchAsync(async (req, res, next) => {
+export const updateOrderStatus = asyncHandler(async (req, res, next) => {
   const { status } = req.body;
   const validStatuses = ["PENDING_PAYMENT", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED", "CANCELLED"];
 
   if (!validStatuses.includes(status)) {
-    return next(new AppError("Trạng thái đơn hàng không hợp lệ", 400));
+    return next(new ApiError("Trạng thái đơn hàng không hợp lệ", 400));
   }
 
   const order = await Order.findById(req.params.id);
   if (!order) {
-    return next(new AppError("Không tìm thấy đơn hàng", 404));
+    return next(new ApiError("Không tìm thấy đơn hàng", 404));
   }
 
   // Chặn đi lùi nếu đơn hàng đã đóng (COMPLETED hoặc CANCELLED)
   if (order.status === "COMPLETED" || order.status === "CANCELLED") {
-    return next(new AppError(`Không thể thay đổi trạng thái vì đơn hàng đã được chốt là ${order.status}`, 400));
+    return next(new ApiError(`Không thể thay đổi trạng thái vì đơn hàng đã được chốt là ${order.status}`, 400));
   }
 
   const currentIndex = validStatuses.indexOf(order.status);
@@ -196,7 +196,7 @@ export const updateOrderStatus = catchAsync(async (req, res, next) => {
 
   // Chặn đi lùi trạng thái (trừ trường hợp hủy đơn - CANCELLED có thể nhảy từ bất kỳ đâu trước khi COMPLETED)
   if (newIndex <= currentIndex && status !== "CANCELLED") {
-    return next(new AppError("Không thể lùi trạng thái hoặc cập nhật lại trạng thái hiện tại", 400));
+    return next(new ApiError("Không thể lùi trạng thái hoặc cập nhật lại trạng thái hiện tại", 400));
   }
 
   order.status = status;
@@ -214,21 +214,21 @@ export const updateOrderStatus = catchAsync(async (req, res, next) => {
 // @desc    Khách hàng tự hủy đơn hàng
 // @route   POST /api/v1/orders/:id/cancel
 // @access  Private
-export const cancelOrder = catchAsync(async (req, res, next) => {
+export const cancelOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const userId = req.userId;
 
   const order = await Order.findOne({ _id: orderId, userId });
 
   if (!order) {
-    return next(new AppError("Không tìm thấy đơn hàng", 404));
+    return next(new ApiError("Không tìm thấy đơn hàng", 404));
   }
 
   // Các trạng thái được phép hủy
   const cancellableStatuses = ["PENDING_PAYMENT", "PENDING", "CONFIRMED"];
 
   if (!cancellableStatuses.includes(order.status)) {
-    return next(new AppError("Đơn hàng đang trong trạng thái không thể hủy", 400));
+    return next(new ApiError("Đơn hàng đang trong trạng thái không thể hủy", 400));
   }
 
   // Hoàn lại stock và giảm soldCount
@@ -261,15 +261,15 @@ export const cancelOrder = catchAsync(async (req, res, next) => {
 // @desc    Admin xác nhận đã nhận tiền (chuyển khoản thủ công)
 // @route   PATCH /api/v1/orders/admin/:id/confirm-payment
 // @access  Private/Admin
-export const confirmPayment = catchAsync(async (req, res, next) => {
+export const confirmPayment = asyncHandler(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
   
   if (!order) {
-    return next(new AppError("Không tìm thấy đơn hàng", 404));
+    return next(new ApiError("Không tìm thấy đơn hàng", 404));
   }
 
   if (order.isPaid) {
-    return next(new AppError("Đơn hàng này đã được xác nhận thanh toán trước đó", 400));
+    return next(new ApiError("Đơn hàng này đã được xác nhận thanh toán trước đó", 400));
   }
 
   order.isPaid = true;

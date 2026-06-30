@@ -4,7 +4,7 @@ import { checkItemCompatibility } from "../../features/builder/utils/compatibili
 import api from "../../services/api";
 import { fmt, img } from "../SharedUI";
 
-export default function ProductSelectionModal({ isOpen, onClose, categoryKey, categoryId, categoryName, currentConfig, onSelect }) {
+export default function ProductSelectionModal({ isOpen, onClose, categoryKey, categoryId, currentConfig, onSelect }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -16,6 +16,7 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
   useEffect(() => {
     if (!isOpen) {
       // Clear old data when closed so it doesn't flash on next open
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProducts([]);
       setSearch("");
       setPriceFilter("");

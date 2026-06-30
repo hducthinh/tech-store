@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FileText, Loader2, Package, MapPin, CreditCard, Receipt, Store, AlertTriangle } from "lucide-react";
+import React from "react";
+import { FileText, Loader2 } from "lucide-react";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAlert } from "../../../contexts/AlertContext";
@@ -13,7 +13,6 @@ export default function ProfileOrders({ user, setActiveTab }) {
   const [selectedOrder, setSelectedOrder] = React.useState(null);
   const [isCancelling, setIsCancelling] = React.useState(false);
   const [showCancelModal, setShowCancelModal] = React.useState(false);
-  const [cancelNote, setCancelNote] = useState("");
 
   React.useEffect(() => {
     if (user) {
@@ -93,7 +92,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
           .finally(() => setIsLoading(false));
       });
     }
-  }, [user, location.state?.openOrderId, setActiveTab]);
+  }, [user, location.state?.openOrderId, setActiveTab, navigate, location.pathname]);
 
   const executeCancelOrder = async () => {
     if (!selectedOrder) return;
@@ -117,7 +116,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
         }));
         setSelectedOrder(null);
         setShowCancelModal(false);
-        setCancelNote("");
+        
       }
     } catch (error) {
       console.error(error);

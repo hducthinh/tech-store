@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
-import { ArrowRight, Star, Zap, ShoppingCart, Filter, ChevronRight, X, Heart, Eye, Flame } from "lucide-react";
-import { fmt, img, Btn, Card } from "../../components/SharedUI";
+import { Star, ShoppingCart, Filter, ChevronRight, X, Heart, Eye, Flame } from "lucide-react";
+import { fmt, img, Card } from "../../components/SharedUI";
 import { ProductSkeleton } from "../../components/ui/ProductSkeleton";
 import UserLayout from "../../components/layouts/UserLayout";
 import NotFound from "../../pages/NotFound";
@@ -205,15 +205,17 @@ export default function CategoryPage() {
       }
     };
     fetchProducts();
-  }, [slug, searchParams]);
+  }, [slug, searchParams, currentPage, maxPrice, minPrice, searchQuery, selectedBrands, sortBy]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAvailableBrands([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [slug, searchQuery]);
 
   useEffect(() => {
     if (products.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAvailableBrands(prev => {
         const uniqueBrands = new Map(prev.map(b => [b._id, b]));
         products.forEach(p => {

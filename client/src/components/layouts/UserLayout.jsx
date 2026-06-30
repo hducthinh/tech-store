@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, User, Menu, X, ChevronRight, MapPin, Phone, Mail, Clock, Monitor, Truck, ShieldCheck, MessageCircle, ChevronUp, Laptop, Cpu, Mouse, Keyboard, HardDrive, Smartphone, Headphones, Box, Star, Zap, Armchair, Fan, Speaker, Server } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, MapPin, Phone, Mail, Clock, Monitor, Truck, ShieldCheck, MessageCircle, ChevronUp, Cpu, Box, Zap } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Btn, fmt, img } from "../SharedUI";
 import { useCart } from "../../contexts/CartContext";

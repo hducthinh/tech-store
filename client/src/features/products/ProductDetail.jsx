@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, ShoppingCart, Truck, ShieldCheck, Zap, MessageSquare } from "lucide-react";
+import { ArrowLeft, Star, ShoppingCart, MessageSquare } from "lucide-react";
 import { fmt, img, Btn, Badge } from "../../components/SharedUI";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useDocumentMeta } from "../../hooks/useDocumentMeta";
@@ -21,7 +21,7 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState([]);
   
   const { addToCart } = useCart();
-  const { showAlert, showToast } = useAlert();
+  const { showToast } = useAlert();
 
   const fetchReviews = async (productId) => {
     try {

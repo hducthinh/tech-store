@@ -1,6 +1,6 @@
 // server/controllers/ai.controllers.js
-import catchAsync from "../utils/catchAsync.js";
-import AppError from "../utils/appError.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
 
 const SYSTEM_PROMPT = `Bạn là TechStore Copilot — trợ lý tư vấn phần cứng chuyên nghiệp của cửa hàng TechStore Pro Hardware.
 
@@ -17,15 +17,15 @@ Nguyên tắc trả lời:
 - Câu trả lời ngắn gọn, có cấu trúc rõ ràng (dùng gạch đầu dòng nếu cần).
 - Nếu câu hỏi nằm ngoài lĩnh vực phần cứng/công nghệ, hãy lịch sự từ chối và đề nghị hỏi về cấu hình máy tính.`;
 
-export const chat = catchAsync(async (req, res, next) => {
+export const chat = asyncHandler(async (req, res, next) => {
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
   if (!GROQ_API_KEY) {
-    return next(new AppError("GROQ_API_KEY chưa được cấu hình", 500));
+    return next(new ApiError("GROQ_API_KEY chưa được cấu hình", 500));
   }
 
   const { message, history = [] } = req.body;
   if (!message?.trim()) {
-    return next(new AppError("Tin nhắn không được để trống", 400));
+    return next(new ApiError("Tin nhắn không được để trống", 400));
   }
 
   // Chuyển lịch sử chat sang định dạng của OpenAI/Groq API
@@ -117,7 +117,7 @@ export const chat = catchAsync(async (req, res, next) => {
     console.error("[AI] Groq API error:", error);
 
     if (!res.headersSent) {
-      return next(new AppError(error.message || "Lỗi kết nối đến AI. Vui lòng thử lại sau.", 502));
+      return next(new ApiError(error.message || "Lỗi kết nối đến AI. Vui lòng thử lại sau.", 502));
     }
 
     res.write(`data: ${JSON.stringify({ error: "Lỗi kết nối đến AI hoặc bị ngắt quãng." })}\n\n`);

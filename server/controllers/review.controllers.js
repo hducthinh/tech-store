@@ -1,13 +1,13 @@
 import Review from "../models/review.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
-import AppError from "../utils/appError.js";
-import catchAsync from "../utils/catchAsync.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 
 // @desc    Lấy tất cả bình luận của 1 sản phẩm
 // @route   GET /api/v1/reviews/:productId
 // @access  Public
-export const getProductReviews = catchAsync(async (req, res, next) => {
+export const getProductReviews = asyncHandler(async (req, res, next) => {
   const { productId } = req.params;
 
   // Lấy reviews và populate tên user
@@ -30,7 +30,7 @@ export const getProductReviews = catchAsync(async (req, res, next) => {
 // @desc    Viết bình luận & đánh giá mới
 // @route   POST /api/v1/reviews/:productId
 // @access  Private
-export const createReview = catchAsync(async (req, res, next) => {
+export const createReview = asyncHandler(async (req, res, next) => {
   const { productId } = req.params;
   const { rating, comment } = req.body;
   const userId = req.userId; // Lấy từ verifyToken
@@ -38,7 +38,7 @@ export const createReview = catchAsync(async (req, res, next) => {
   // 1. Kiểm tra sản phẩm có tồn tại không
   const product = await Product.findById(productId);
   if (!product) {
-    return next(new AppError("Không tìm thấy sản phẩm này", 404));
+    return next(new ApiError("Không tìm thấy sản phẩm này", 404));
   }
 
   // 2. Kiểm tra xem người dùng đã đánh giá sản phẩm này chưa
@@ -46,7 +46,7 @@ export const createReview = catchAsync(async (req, res, next) => {
   // nhưng kiểm tra thủ công sẽ trả về thông báo lỗi thân thiện hơn
   const existingReview = await Review.findOne({ product: productId, user: userId });
   if (existingReview) {
-    return next(new AppError("Bạn đã đánh giá sản phẩm này rồi", 400));
+    return next(new ApiError("Bạn đã đánh giá sản phẩm này rồi", 400));
   }
 
   // 2.5 Kiểm tra xem user đã mua sản phẩm này chưa (có đơn hàng chứa sản phẩm này)
@@ -56,7 +56,7 @@ export const createReview = catchAsync(async (req, res, next) => {
   });
 
   if (!hasPurchased) {
-    return next(new AppError("Bạn phải mua sản phẩm này mới có thể đánh giá.", 403));
+    return next(new ApiError("Bạn phải mua sản phẩm này mới có thể đánh giá.", 403));
   }
 
   // 2.7 Xử lý ảnh đính kèm (từ Multer Cloudinary)

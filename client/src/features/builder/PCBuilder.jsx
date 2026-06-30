@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Search, RotateCcw, Image as ImageIcon, Download, FileSpreadsheet, Printer, ShoppingCart, Trash2, Edit2, CheckCircle2, CreditCard, AlertTriangle, PhoneCall } from "lucide-react";
+import { Search, RotateCcw, Image as ShoppingCart, Trash2, Edit2, CreditCard, AlertTriangle } from "lucide-react";
 import { fmt, img, Btn } from "../../components/SharedUI";
 import ProductSelectionModal from "../../components/common/ProductSelectionModal";
 import { useCart } from "../../contexts/CartContext";
@@ -31,7 +31,7 @@ export default function PCBuilder() {
     try {
       const saved = localStorage.getItem("pc_builder_config");
       return saved ? JSON.parse(saved) : {};
-    } catch (e) {
+    } catch (_e) {
       return {};
     }
   });
@@ -109,7 +109,7 @@ export default function PCBuilder() {
         setConfig({});
         navigate("/"); // or open cart drawer
       }
-    } catch (error) {
+    } catch (_error) {
       showToast("Có lỗi xảy ra khi thêm vào giỏ hàng", "error");
     }
   };
@@ -135,14 +135,12 @@ export default function PCBuilder() {
         // Không gọi setConfig({}) ở đây để giữ lại dữ liệu nếu khách hàng bấm Back quay lại
         navigate("/checkout", { state: { selectedItemIds: [buildId] } });
       }
-    } catch (error) {
+    } catch (_error) {
       showToast("Có lỗi xảy ra khi chuẩn bị thanh toán", "error");
     }
   };
 
-  const handleNotImplemented = () => {
-    showToast("Tính năng này đang được phát triển!", "info");
-  };
+  
 
   return (
     <div className="bg-[#F5F7FA] min-h-screen pt-4 pb-20">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { useCart } from "../../contexts/CartContext";
 import { Btn, fmt, img } from "../SharedUI";
@@ -12,7 +12,7 @@ export default function CartDrawer({ isOpen, onClose }) {
   useEffect(() => {
     if (cart?.items) {
       const allIds = cart.items.map(i => i.buildId || i.productId?._id).filter(Boolean);
-      // Remove duplicates
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedItemIds([...new Set(allIds)]);
     }
   }, [cart?.items, isOpen]);
@@ -38,7 +38,7 @@ export default function CartDrawer({ isOpen, onClose }) {
       }
     });
     return result;
-  }, [cart?.items]);
+  }, [cart]);
 
   const removeEntireBuild = async (build) => {
     // Để xoá cả bộ, có thể phải gọi xoá từng món, nhưng do await trong vòng lặp chậm, nên ta gọi xoá nhanh.

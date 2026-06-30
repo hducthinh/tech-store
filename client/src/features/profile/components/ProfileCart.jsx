@@ -120,7 +120,7 @@ export default function ProfileCart({
                           if (!isNaN(num)) updateQuantity(item.product.id, num, item.buildId);
                         }
                       }}
-                      onBlur={(e) => {
+                      onBlur={() => {
                         if (item.quantity === "" || item.quantity < 1) updateQuantity(item.product.id, 1, item.buildId);
                       }}
                       className="w-10 text-center font-bold text-sm text-slate-800 border-none focus:ring-0 focus:outline-none p-0 bg-transparent"

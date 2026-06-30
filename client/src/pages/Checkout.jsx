@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, CreditCard, Banknote, MapPin, QrCode } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CreditCard, Banknote, MapPin } from "lucide-react";
 import UserLayout from "../components/layouts/UserLayout";
 import { fmt, img, Btn, Input, Card } from "../components/SharedUI";
 import { Skeleton } from "../components/ui/Skeleton";

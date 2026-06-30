@@ -2,18 +2,14 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import User from "../models/user.model.js";
-import {
-  validateRegisterInput,
-  validateLoginInput,
-} from "../utils/validators.js";
-import AppError from "../utils/appError.js";
-import catchAsync from "../utils/catchAsync.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
 // Tạo JWT token
 const signToken = (id) => {
   if (!process.env.JWT_SECRET) {
-    throw new AppError("JWT_SECRET chưa được cấu hình", 500);
+    throw new ApiError("JWT_SECRET chưa được cấu hình", 500);
   }
 
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -42,19 +38,10 @@ const normalizeValue = (value) =>
 
 const normalizeEmail = (value) => normalizeValue(value).toLowerCase();
 
-const getFirstErrorMessage = (errors) =>
-  Object.values(errors || {})[0] || "Dữ liệu không hợp lệ";
-
 // @desc    Đăng ký tài khoản
 // @route   POST /api/v1/auth/register
 // @access  Public
-export const register = catchAsync(async (req, res, next) => {
-  // 1. Validate input
-  const { isValid, errors } = validateRegisterInput(req.body);
-  if (!isValid) {
-    return next(new AppError(getFirstErrorMessage(errors), 400, errors));
-  }
-
+export const register = asyncHandler(async (req, res, next) => {
   const email = normalizeEmail(req.body.email);
   const password = normalizeValue(req.body.password);
   const fullName = normalizeValue(req.body.fullName);
@@ -63,13 +50,13 @@ export const register = catchAsync(async (req, res, next) => {
   // 2. Kiểm tra email đã tồn tại
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return next(new AppError("Email đã được đăng ký", 400));
+    return next(new ApiError("Email đã được đăng ký", 400));
   }
 
   // 3. Kiểm tra số điện thoại đã tồn tại
   const existingPhone = await User.findOne({ phone });
   if (existingPhone) {
-    return next(new AppError("Số điện thoại đã được đăng ký", 400));
+    return next(new ApiError("Số điện thoại đã được đăng ký", 400));
   }
 
   // 4. Tạo user mới
@@ -89,27 +76,22 @@ export const register = catchAsync(async (req, res, next) => {
 // @desc    Đăng nhập tài khoản
 // @route   POST /api/v1/auth/login
 // @access  Public
-export const login = catchAsync(async (req, res, next) => {
-  const { isValid, errors } = validateLoginInput(req.body);
-  if (!isValid) {
-    return next(new AppError(getFirstErrorMessage(errors), 400, errors));
-  }
-
+export const login = asyncHandler(async (req, res, next) => {
   const email = normalizeEmail(req.body.email);
   const password = normalizeValue(req.body.password);
 
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
-    return next(new AppError("Email hoặc mật khẩu không đúng", 401));
+    return next(new ApiError("Email hoặc mật khẩu không đúng", 401));
   }
 
   if (user.isActive === false) {
-    return next(new AppError("Tài khoản đã bị khóa", 403));
+    return next(new ApiError("Tài khoản đã bị khóa", 403));
   }
 
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
-    return next(new AppError("Email hoặc mật khẩu không đúng", 401));
+    return next(new ApiError("Email hoặc mật khẩu không đúng", 401));
   }
 
   sendTokenResponse(user, 200, res);
@@ -118,10 +100,10 @@ export const login = catchAsync(async (req, res, next) => {
 // @desc    Lấy thông tin tài khoản hiện tại
 // @route   GET /api/v1/auth/profile
 // @access  Private
-export const getProfile = catchAsync(async (req, res, next) => {
+export const getProfile = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.userId);
   if (!user) {
-    return next(new AppError("Không tìm thấy tài khoản", 404));
+    return next(new ApiError("Không tìm thấy tài khoản", 404));
   }
 
   res.status(200).json({
@@ -135,7 +117,7 @@ export const getProfile = catchAsync(async (req, res, next) => {
 // @desc    Cập nhật thông tin tài khoản hiện tại
 // @route   PUT /api/v1/auth/profile
 // @access  Private
-export const updateProfile = catchAsync(async (req, res, next) => {
+export const updateProfile = asyncHandler(async (req, res, next) => {
   const { fullName, phone, address } = req.body;
   
   // Ponytail: chỉ cho phép cập nhật các trường cụ thể, dùng { new: true, runValidators: true }
@@ -146,7 +128,7 @@ export const updateProfile = catchAsync(async (req, res, next) => {
   );
 
   if (!user) {
-    return next(new AppError("Không tìm thấy tài khoản", 404));
+    return next(new ApiError("Không tìm thấy tài khoản", 404));
   }
 
   res.status(200).json({
@@ -160,13 +142,13 @@ export const updateProfile = catchAsync(async (req, res, next) => {
 // @desc    Gửi email đặt lại mật khẩu
 // @route   POST /api/v1/auth/forgot-password
 // @access  Public
-export const forgotPassword = catchAsync(async (req, res, next) => {
+export const forgotPassword = asyncHandler(async (req, res, next) => {
   const email = normalizeEmail(req.body.email);
-  if (!email) return next(new AppError("Vui lòng cung cấp email", 400));
+  if (!email) return next(new ApiError("Vui lòng cung cấp email", 400));
 
   const user = await User.findOne({ email });
   if (!user) {
-    return next(new AppError("Email không tồn tại trong hệ thống", 404));
+    return next(new ApiError("Email không tồn tại trong hệ thống", 404));
   }
 
   // Sinh token ngẫu nhiên an toàn, lưu bản băm vào DB
@@ -198,7 +180,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save({ validateBeforeSave: false });
-    return next(new AppError("Không thể gửi email. Vui lòng thử lại sau.", 500));
+    return next(new ApiError("Không thể gửi email. Vui lòng thử lại sau.", 500));
   }
 
   res.status(200).json({ status: "success", message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi." });
@@ -207,7 +189,7 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
 // @desc    Đặt lại mật khẩu bằng token từ email
 // @route   POST /api/v1/auth/reset-password/:token
 // @access  Public
-export const resetPassword = catchAsync(async (req, res, next) => {
+export const resetPassword = asyncHandler(async (req, res, next) => {
   const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
 
   const user = await User.findOne({
@@ -216,12 +198,12 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   });
 
   if (!user) {
-    return next(new AppError("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn", 400));
+    return next(new ApiError("Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn", 400));
   }
 
   const { password } = req.body;
   if (!password || password.length < 6) {
-    return next(new AppError("Mật khẩu phải có ít nhất 6 ký tự", 400));
+    return next(new ApiError("Mật khẩu phải có ít nhất 6 ký tự", 400));
   }
 
   user.password = password;

@@ -1,10 +1,10 @@
-import Order from "../models/order.model.js";
+ï»¿import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
 import Category from "../models/category.model.js";
 import Setting from "../models/setting.model.js";
 
-export class DashboardRepository {
+class DashboardRepository {
   async countOrders(filter = {}) {
     return await Order.countDocuments(filter);
   }
@@ -28,7 +28,7 @@ export class DashboardRepository {
   async getSalesGoal() {
     let salesGoalSetting = await Setting.findOne({ key: "monthlySalesGoal" });
     if (!salesGoalSetting) {
-      salesGoalSetting = await Setting.create({ key: "monthlySalesGoal", value: 100000000, description: "M?c tiêu doanh thu tháng" });
+      salesGoalSetting = await Setting.create({ key: "monthlySalesGoal", value: 100000000, description: "M?c tiÃªu doanh thu thÃ¡ng" });
     }
     return salesGoalSetting.value;
   }

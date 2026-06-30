@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { User, FileText, LogOut, ShoppingCart, Key, MapPin } from "lucide-react";
+import { User, FileText, LogOut, ShoppingCart } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import UserLayout from "../../components/layouts/UserLayout";
-import { Card, Btn, ORDERS, StatusBadge, fmt, img } from "../../components/SharedUI";
+import { Card, Btn } from "../../components/SharedUI";
 import ProfileOrders from "./components/ProfileOrders";
 import ProfileCart from "./components/ProfileCart";
 import { useDocumentMeta } from "../../hooks/useDocumentMeta";
 import { useAuth } from "../../contexts/AuthContext";
 import { useCart } from "../../contexts/CartContext";
 import { useAlert } from "../../contexts/AlertContext";
-import api from "../../services/api";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -20,11 +18,6 @@ export default function Profile() {
   const { showToast } = useAlert();
   const { cart, removeFromCart, loading: isCartLoading } = useCart();
   const cartItems = cart?.items || [];
-  const [orders, setOrders] = useState([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-  const [orderPage, setOrderPage] = useState(1);
-  const ORDERS_PER_PAGE = 5;
-
   const [profileData, setProfileData] = useState({
     fullName: user?.fullName || "",
     phone: user?.phone || "",
@@ -58,6 +51,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (cart?.items) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedItemIds(cart.items.map(i => i.productId?._id || i.product?.id).filter(Boolean));
     }
   }, [cart?.items]);
@@ -85,26 +79,11 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "orders" && user) {
-      const fetchOrders = async () => {
-        setLoadingOrders(true);
-        try {
-          const res = await api.get("/orders");
-          setOrders(res.data?.data?.orders || []);
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setLoadingOrders(false);
-        }
-      };
-      fetchOrders();
-    }
-  }, [activeTab, user]);
-
-  useEffect(() => {
     if (location.state?.activeTab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(location.state.activeTab);
     } else if (location.state?.openOrderId) {
+       
       setActiveTab("orders");
     }
   }, [location.state]);

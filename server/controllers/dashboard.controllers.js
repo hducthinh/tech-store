@@ -1,11 +1,11 @@
-import catchAsync from "../utils/catchAsync.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import dashboardService from "../services/dashboard.service.js";
 import Order from "../models/order.model.js";
 
 // @desc    Get dashboard summary stats
 // @route   GET /api/v1/dashboard/summary
 // @access  Private/Admin
-export const getSummary = catchAsync(async (req, res, next) => {
+export const getSummary = asyncHandler(async (req, res, next) => {
   const summary = await dashboardService.getSummary();
   res.status(200).json({
     status: "success",
@@ -16,7 +16,7 @@ export const getSummary = catchAsync(async (req, res, next) => {
 // @desc    Get dashboard revenue chart data
 // @route   GET /api/v1/dashboard/revenue
 // @access  Private/Admin
-export const getRevenue = catchAsync(async (req, res, next) => {
+export const getRevenue = asyncHandler(async (req, res, next) => {
   const { timeframe } = req.query;
   const revenueChart = await dashboardService.getRevenue(timeframe);
   res.status(200).json({
@@ -28,7 +28,7 @@ export const getRevenue = catchAsync(async (req, res, next) => {
 // @desc    Get dashboard category revenue data
 // @route   GET /api/v1/dashboard/category-revenue
 // @access  Private/Admin
-export const getCategoryRevenue = catchAsync(async (req, res, next) => {
+export const getCategoryRevenue = asyncHandler(async (req, res, next) => {
   const categoryRevenue = await dashboardService.getCategoryRevenue();
   res.status(200).json({
     status: "success",
@@ -39,7 +39,7 @@ export const getCategoryRevenue = catchAsync(async (req, res, next) => {
 // @desc    Get top products
 // @route   GET /api/v1/dashboard/top-products
 // @access  Private/Admin
-export const getTopProducts = catchAsync(async (req, res, next) => {
+export const getTopProducts = asyncHandler(async (req, res, next) => {
   const topProducts = await Order.aggregate([
     { $match: { status: { $ne: "CANCELLED" } } },
     { $unwind: "$items" },
@@ -86,7 +86,7 @@ export const getTopProducts = catchAsync(async (req, res, next) => {
 // @desc    Get dashboard overview (Batched)
 // @route   GET /api/v1/dashboard/overview
 // @access  Private/Admin
-export const getOverview = catchAsync(async (req, res, next) => {
+export const getOverview = asyncHandler(async (req, res, next) => {
   const { timeframe } = req.query;
   
   const topProductsPromise = Order.aggregate([

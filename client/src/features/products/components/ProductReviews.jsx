@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Star, ThumbsUp, MessageSquare, Image as ImageIcon, X } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useAlert } from "../../../contexts/AlertContext";
 import api from "../../../services/api";

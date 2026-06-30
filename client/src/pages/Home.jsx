@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { ArrowRight, Star, Zap, ShieldCheck, Truck, Clock, ShoppingCart, RefreshCw, X, Laptop, Monitor, Cpu, Mouse, Keyboard, HardDrive, Smartphone, Headphones, Box, Eye, Heart, Flame } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowRight, Star, Zap, ShieldCheck, Truck, ShoppingCart, RefreshCw, X, Box, Eye, Heart, Flame } from "lucide-react";
 import { fmt, img, Btn, Card } from "../components/SharedUI";
 import { Skeleton } from "../components/ui/Skeleton";
 import { ProductSkeleton } from "../components/ui/ProductSkeleton";
@@ -71,26 +71,25 @@ function HomeContent() {
 
   const [heroBannerData, setHeroBannerData] = useState(null);
 
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const calculateTimeLeft = () => {
+    const now = new Date();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+    const difference = endOfDay - now;
+
+    if (difference > 0) {
+      return {
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+    return { hours: 0, minutes: 0, seconds: 0 };
+  };
+
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft);
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-      const difference = endOfDay - now;
-
-      if (difference > 0) {
-        return {
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60)
-        };
-      }
-      return { hours: 0, minutes: 0, seconds: 0 };
-    };
-
-    setTimeLeft(calculateTimeLeft());
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
