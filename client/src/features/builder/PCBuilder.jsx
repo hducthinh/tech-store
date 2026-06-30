@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Search, RotateCcw, Image as ImageIcon, Download, FileSpreadsheet, Printer, ShoppingCart, Trash2, Edit2, CheckCircle2, CreditCard, AlertTriangle, PhoneCall } from "lucide-react";
-import { fmt, img, Btn } from "../components/SharedUI";
-import ProductSelectionModal from "../components/common/ProductSelectionModal";
-import { useCart } from "../contexts/CartContext";
-import { useAlert } from "../contexts/AlertContext";
+import { fmt, img, Btn } from "../../components/SharedUI";
+import ProductSelectionModal from "../../components/common/ProductSelectionModal";
+import { useCart } from "../../contexts/CartContext";
+import { useAlert } from "../../contexts/AlertContext";
 import { useNavigate } from "react-router-dom";
-import { checkCompatibility } from "../utils/compatibility";
+import { checkCompatibility } from "./utils/compatibility";
 
 const PC_CATEGORIES = [
   { id: 'cpu', label: '1. CPU - Bộ vi xử lý', queryKeys: 'CPU,Bộ vi xử lý,Vi xử lý' },

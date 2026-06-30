@@ -11,7 +11,7 @@ import ProductDetail from "./features/products/ProductDetail";
 import Profile from "./pages/Profile";
 import Checkout from "./pages/Checkout";
 import CategoryPage from "./features/products/CategoryPage";
-import PCBuilder from "./pages/PCBuilder";
+import PCBuilder from "./features/builder/PCBuilder";
 import NotFound from "./pages/NotFound";
 
 // Admin Imports
