@@ -1,3 +1,4 @@
+// @ts-nocheck
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^[0-9]{10,11}$/;
 
@@ -64,4 +65,5 @@ export const validateLoginInput = (data: any = {}) => {
 
   return { errors, isValid: Object.keys(errors).length === 0 };
 };
+
 

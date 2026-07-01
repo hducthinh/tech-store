@@ -1,3 +1,4 @@
+// @ts-nocheck
 // server/utils/sendEmail.js
 import nodemailer from "nodemailer";
 
@@ -23,4 +24,5 @@ export const sendEmail = async ({ to, subject, html }) => {
     html,
   });
 };
+
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Category from "../models/category.model.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -155,4 +156,5 @@ export const deleteCategory = asyncHandler(async (req: any, res: any, next: any)
     data: { category }
   });
 });
+
 

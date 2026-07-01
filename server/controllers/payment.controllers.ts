@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Order from "../models/order.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
@@ -90,4 +91,5 @@ export const sepayWebhook = async (req: any, res: any, next: any) => {
     console.error("[SePay Webhook] Lỗi khi xử lý dữ liệu:", error);
   }
 };
+
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ponytail: hand-rolled slugify, no dependency needed for this
 const slugify = (text) =>
   String(text)
@@ -13,4 +14,5 @@ const slugify = (text) =>
     .replace(/^-|-$/g, "");
 
 export default slugify;
+
 

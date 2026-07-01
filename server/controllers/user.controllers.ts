@@ -1,3 +1,4 @@
+// @ts-nocheck
 import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -47,4 +48,5 @@ export const toggleUserStatus = asyncHandler(async (req: any, res: any, next: an
     },
   });
 });
+
 

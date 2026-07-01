@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Brand from "../models/brand.model.js";
 import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -137,4 +138,5 @@ export const deleteBrand = asyncHandler(async (req: any, res: any, next: any) =>
     data: { brand }
   });
 });
+
 

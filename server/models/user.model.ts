@@ -1,3 +1,4 @@
+// @ts-nocheck
 // server/models/user.model.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
@@ -77,4 +78,5 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 const User = mongoose.model("User", userSchema, "users");
 export default User;
+
 

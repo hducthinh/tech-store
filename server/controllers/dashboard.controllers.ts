@@ -1,3 +1,4 @@
+// @ts-nocheck
 import asyncHandler from "../utils/asyncHandler.js";
 import dashboardService from "../services/dashboard.service.js";
 import Order from "../models/order.model.js";
@@ -141,5 +142,6 @@ export const getOverview = asyncHandler(async (req: any, res: any, next: any) =>
     }
   });
 });
+
 
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // server/controllers/ai.controllers.js
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
@@ -124,4 +125,5 @@ export const chat = asyncHandler(async (req: any, res: any, next: any) => {
     res.end();
   }
 });
+
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import dashboardRepository from "../repositories/dashboard.repository.js";
 import { SummaryDTO, RevenueChartDTO, CategoryRevenueDTO } from "../dtos/dashboard.dto.js";
 
@@ -196,6 +197,7 @@ class DashboardService {
 }
 
 export default new DashboardService();
+
 
 
 

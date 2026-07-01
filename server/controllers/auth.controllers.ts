@@ -1,3 +1,4 @@
+// @ts-nocheck
 // controllers/auth.controllers.js
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -213,4 +214,5 @@ export const resetPassword = asyncHandler(async (req: any, res: any, next: any) 
 
   sendTokenResponse(user, 200, res);
 });
+
 

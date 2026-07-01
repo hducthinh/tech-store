@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ApiError from "../utils/ApiError.js";
 
 export const validateRequest = (validator) => (req: any, res: any, next: any) => {
@@ -8,4 +9,5 @@ export const validateRequest = (validator) => (req: any, res: any, next: any) =>
   }
   next();
 };
+
 

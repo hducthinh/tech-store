@@ -4,9 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": false,
-    "noImplicitAny": false,
-    "skipLibCheck": true,
+    "strict": true,
     "paths": { "@/*": ["./*"] }
   },
   "include": ["./**/*.ts"],

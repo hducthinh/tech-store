@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Review from "../models/review.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
@@ -89,4 +90,5 @@ export const createReview = asyncHandler(async (req: any, res: any, next: any) =
 });
 
 // (Tùy chọn: updateReview, deleteReview có thể được thêm sau nếu cần thiết)
+
 

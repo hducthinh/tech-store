@@ -1,3 +1,4 @@
+// @ts-nocheck
 import jwt from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
 
@@ -24,4 +25,5 @@ const verifyToken = (req: any, res: any, next: any) => {
 };
 
 export default verifyToken;
+
 

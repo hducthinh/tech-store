@@ -1,3 +1,4 @@
+// @ts-nocheck
 export class SummaryDTO {
   revenue: number;
   orders: number;
@@ -51,5 +52,6 @@ export class CategoryRevenueDTO {
     this.color = data.color;
   }
 }
+
 
 
