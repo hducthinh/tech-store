@@ -23,3 +23,4 @@ router.patch("/update-quantity", updateCartItemQuantity);
 router.delete("/:productId", removeFromCart);
 
 export default router;
+

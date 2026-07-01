@@ -58,7 +58,7 @@ app.use(express.json({ limit: "10kb" })); // Giới hạn payload size
 
 // 5. Phòng chống NoSQL Query Injection (Sanitize dữ liệu đầu vào)
 // Fix Express 5 error (Cannot set property query which has only a getter)
-app.use((req, res, next) => {
+app.use((req: any, res: any, next: any) => {
   if (req.body) mongoSanitize.sanitize(req.body);
   if (req.params) mongoSanitize.sanitize(req.params);
   if (req.query) mongoSanitize.sanitize(req.query);
@@ -66,20 +66,20 @@ app.use((req, res, next) => {
 });
 
 // Đường dẫn thử nghiệm chạy gốc
-app.get("/", (req, res) => {
+app.get("/", (req: any, res: any) => {
   res.send(
     "Chúc mừng Thịnh! Server Tech_Store đã chạy thành công vù vù rồi nhé!",
   );
 });
 
 // Health check route (Nhẹ nhàng, dùng để ping giữ server luôn thức)
-app.get("/health", (req, res) => {
+app.get("/health", (req: any, res: any) => {
   res.status(200).send("OK");
 });
 
 app.use("/api", apiRoutes);
 
-app.use((req, res) => {
+app.use((req: any, res: any) => {
   res.status(404).json({
     status: "fail",
     message: "Không tìm thấy endpoint.",
@@ -150,3 +150,4 @@ if (!mongoUri) {
 }
 // Trigger nodemon restart
 // 
+

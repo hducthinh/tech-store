@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
 
-const verifyToken = (req, res, next) => {
+const verifyToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
@@ -24,3 +24,4 @@ const verifyToken = (req, res, next) => {
 };
 
 export default verifyToken;
+

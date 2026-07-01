@@ -41,7 +41,7 @@ const normalizeEmail = (value) => normalizeValue(value).toLowerCase();
 // @desc    Đăng ký tài khoản
 // @route   POST /api/v1/auth/register
 // @access  Public
-export const register = asyncHandler(async (req, res, next) => {
+export const register = asyncHandler(async (req: any, res: any, next: any) => {
   const email = normalizeEmail(req.body.email);
   const password = normalizeValue(req.body.password);
   const fullName = normalizeValue(req.body.fullName);
@@ -76,7 +76,7 @@ export const register = asyncHandler(async (req, res, next) => {
 // @desc    Đăng nhập tài khoản
 // @route   POST /api/v1/auth/login
 // @access  Public
-export const login = asyncHandler(async (req, res, next) => {
+export const login = asyncHandler(async (req: any, res: any, next: any) => {
   const email = normalizeEmail(req.body.email);
   const password = normalizeValue(req.body.password);
 
@@ -100,7 +100,7 @@ export const login = asyncHandler(async (req, res, next) => {
 // @desc    Lấy thông tin tài khoản hiện tại
 // @route   GET /api/v1/auth/profile
 // @access  Private
-export const getProfile = asyncHandler(async (req, res, next) => {
+export const getProfile = asyncHandler(async (req: any, res: any, next: any) => {
   const user = await User.findById(req.userId);
   if (!user) {
     return next(new ApiError("Không tìm thấy tài khoản", 404));
@@ -117,7 +117,7 @@ export const getProfile = asyncHandler(async (req, res, next) => {
 // @desc    Cập nhật thông tin tài khoản hiện tại
 // @route   PUT /api/v1/auth/profile
 // @access  Private
-export const updateProfile = asyncHandler(async (req, res, next) => {
+export const updateProfile = asyncHandler(async (req: any, res: any, next: any) => {
   const { fullName, phone, address } = req.body;
   
   // Ponytail: chỉ cho phép cập nhật các trường cụ thể, dùng { new: true, runValidators: true }
@@ -142,7 +142,7 @@ export const updateProfile = asyncHandler(async (req, res, next) => {
 // @desc    Gửi email đặt lại mật khẩu
 // @route   POST /api/v1/auth/forgot-password
 // @access  Public
-export const forgotPassword = asyncHandler(async (req, res, next) => {
+export const forgotPassword = asyncHandler(async (req: any, res: any, next: any) => {
   const email = normalizeEmail(req.body.email);
   if (!email) return next(new ApiError("Vui lòng cung cấp email", 400));
 
@@ -189,7 +189,7 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
 // @desc    Đặt lại mật khẩu bằng token từ email
 // @route   POST /api/v1/auth/reset-password/:token
 // @access  Public
-export const resetPassword = asyncHandler(async (req, res, next) => {
+export const resetPassword = asyncHandler(async (req: any, res: any, next: any) => {
   const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
 
   const user = await User.findOne({
@@ -213,3 +213,4 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
 
   sendTokenResponse(user, 200, res);
 });
+

@@ -12,3 +12,4 @@ router.get("/admin", verifyAdmin, getAdminUsers);
 router.patch("/admin/:id/toggle-status", verifyAdmin, toggleUserStatus);
 
 export default router;
+

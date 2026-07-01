@@ -26,3 +26,4 @@ router.use("/v1/payments", paymentRoutes);
 router.use("/ai", aiRoutes);
 
 export default router;
+

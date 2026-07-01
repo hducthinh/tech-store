@@ -15,3 +15,4 @@ declare global {
     interface ProcessEnv extends EnvVariables {}
   }
 }
+

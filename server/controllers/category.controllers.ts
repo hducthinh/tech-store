@@ -6,7 +6,7 @@ import slugify from "../utils/slugify.js";
 // @desc    Lấy tất cả danh mục cho Admin (Bao gồm danh mục ẩn)
 // @route   GET /api/v1/categories/admin
 // @access  Private (Admin)
-export const getAdminCategories = asyncHandler(async (req, res) => {
+export const getAdminCategories = asyncHandler(async (req: any, res: any) => {
   const categories = await Category.find()
     .sort({ displayOrder: 1, name: 1 })
     .lean();
@@ -21,7 +21,7 @@ export const getAdminCategories = asyncHandler(async (req, res) => {
 // @desc    Lấy tất cả danh mục đang active
 // @route   GET /api/v1/categories
 // @access  Public
-export const getCategories = asyncHandler(async (req, res) => {
+export const getCategories = asyncHandler(async (req: any, res: any) => {
   const categories = await Category.aggregate([
     { $match: { isActive: true } },
     {
@@ -51,7 +51,7 @@ export const getCategories = asyncHandler(async (req, res) => {
 // @desc    Lấy chi tiết danh mục theo slug
 // @route   GET /api/v1/categories/:slug
 // @access  Public
-export const getCategoryBySlug = asyncHandler(async (req, res, next) => {
+export const getCategoryBySlug = asyncHandler(async (req: any, res: any, next: any) => {
   const category = await Category.findOne({
     slug: req.params.slug,
     isActive: true,
@@ -70,7 +70,7 @@ export const getCategoryBySlug = asyncHandler(async (req, res, next) => {
 // @desc    Tạo danh mục mới
 // @route   POST /api/v1/categories
 // @access  Private (Admin)
-export const createCategory = asyncHandler(async (req, res, next) => {
+export const createCategory = asyncHandler(async (req: any, res: any, next: any) => {
   const { name, parentId, description, imageBanner, icon, displayOrder } =
     req.body;
 
@@ -113,7 +113,7 @@ export const createCategory = asyncHandler(async (req, res, next) => {
 // @desc    Cập nhật danh mục
 // @route   PATCH /api/v1/categories/:id
 // @access  Private (Admin)
-export const updateCategory = asyncHandler(async (req, res, next) => {
+export const updateCategory = asyncHandler(async (req: any, res: any, next: any) => {
   const updates = { ...req.body };
 
   // Nếu đổi tên thì tạo lại slug
@@ -139,7 +139,7 @@ export const updateCategory = asyncHandler(async (req, res, next) => {
 // @desc    Xóa mềm danh mục (Toggle isActive)
 // @route   DELETE /api/v1/categories/:id
 // @access  Private (Admin)
-export const deleteCategory = asyncHandler(async (req, res, next) => {
+export const deleteCategory = asyncHandler(async (req: any, res: any, next: any) => {
   const category = await Category.findById(req.params.id);
 
   if (!category) {
@@ -155,3 +155,4 @@ export const deleteCategory = asyncHandler(async (req, res, next) => {
     data: { category }
   });
 });
+

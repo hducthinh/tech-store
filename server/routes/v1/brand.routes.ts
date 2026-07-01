@@ -23,3 +23,4 @@ router.get("/", getBrands);
 router.get("/:slug", getBrandBySlug);
 
 export default router;
+

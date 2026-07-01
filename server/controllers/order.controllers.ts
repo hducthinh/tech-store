@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 // @desc    Tạo đơn hàng mới (Checkout)
 // @route   POST /api/v1/orders
 // @access  Private
-export const createOrder = asyncHandler(async (req, res, next) => {
+export const createOrder = asyncHandler(async (req: any, res: any, next: any) => {
   const { shippingAddress, paymentMethod, selectedItemIds } = req.body;
 
   if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address) {
@@ -124,7 +124,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
 // @desc    Lấy danh sách đơn hàng của user đang đăng nhập
 // @route   GET /api/v1/orders
 // @access  Private
-export const getMyOrders = asyncHandler(async (req, res, next) => {
+export const getMyOrders = asyncHandler(async (req: any, res: any, next: any) => {
   const orders = await Order.find({ userId: req.userId }).sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -139,7 +139,7 @@ export const getMyOrders = asyncHandler(async (req, res, next) => {
 // @desc    Lấy toàn bộ danh sách đơn hàng cho Admin
 // @route   GET /api/v1/orders/admin
 // @access  Private/Admin
-export const getAdminOrders = asyncHandler(async (req, res, next) => {
+export const getAdminOrders = asyncHandler(async (req: any, res: any, next: any) => {
   const orders = await Order.find()
     .populate("userId", "fullName email phone")
     .sort({ createdAt: -1 });
@@ -156,7 +156,7 @@ export const getAdminOrders = asyncHandler(async (req, res, next) => {
 // @desc    Lấy chi tiết 1 đơn hàng của khách hàng
 // @route   GET /api/v1/orders/:id
 // @access  Private
-export const getOrderById = asyncHandler(async (req, res, next) => {
+export const getOrderById = asyncHandler(async (req: any, res: any, next: any) => {
   const order = await Order.findOne({ _id: req.params.id, userId: req.userId });
 
   if (!order) {
@@ -174,7 +174,7 @@ export const getOrderById = asyncHandler(async (req, res, next) => {
 // @desc    Cập nhật trạng thái đơn hàng
 // @route   PATCH /api/v1/orders/admin/:id/status
 // @access  Private/Admin
-export const updateOrderStatus = asyncHandler(async (req, res, next) => {
+export const updateOrderStatus = asyncHandler(async (req: any, res: any, next: any) => {
   const { status } = req.body;
   const validStatuses = ["PENDING_PAYMENT", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED", "CANCELLED"];
 
@@ -215,7 +215,7 @@ export const updateOrderStatus = asyncHandler(async (req, res, next) => {
 // @desc    Khách hàng tự hủy đơn hàng
 // @route   POST /api/v1/orders/:id/cancel
 // @access  Private
-export const cancelOrder = asyncHandler(async (req, res, next) => {
+export const cancelOrder = asyncHandler(async (req: any, res: any, next: any) => {
   const orderId = req.params.id;
   const userId = req.userId;
 
@@ -262,7 +262,7 @@ export const cancelOrder = asyncHandler(async (req, res, next) => {
 // @desc    Admin xác nhận đã nhận tiền (chuyển khoản thủ công)
 // @route   PATCH /api/v1/orders/admin/:id/confirm-payment
 // @access  Private/Admin
-export const confirmPayment = asyncHandler(async (req, res, next) => {
+export const confirmPayment = asyncHandler(async (req: any, res: any, next: any) => {
   const order = await Order.findById(req.params.id);
   
   if (!order) {
@@ -299,3 +299,4 @@ export const confirmPayment = asyncHandler(async (req, res, next) => {
     },
   });
 });
+

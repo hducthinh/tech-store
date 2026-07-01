@@ -13,3 +13,4 @@ const slugify = (text) =>
     .replace(/^-|-$/g, "");
 
 export default slugify;
+

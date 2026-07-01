@@ -7,7 +7,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 // @desc    Lấy tất cả bình luận của 1 sản phẩm
 // @route   GET /api/v1/reviews/:productId
 // @access  Public
-export const getProductReviews = asyncHandler(async (req, res, next) => {
+export const getProductReviews = asyncHandler(async (req: any, res: any, next: any) => {
   const { productId } = req.params;
 
   // Lấy reviews và populate tên user
@@ -30,7 +30,7 @@ export const getProductReviews = asyncHandler(async (req, res, next) => {
 // @desc    Viết bình luận & đánh giá mới
 // @route   POST /api/v1/reviews/:productId
 // @access  Private
-export const createReview = asyncHandler(async (req, res, next) => {
+export const createReview = asyncHandler(async (req: any, res: any, next: any) => {
   const { productId } = req.params;
   const { rating, comment } = req.body;
   const userId = req.userId; // Lấy từ verifyToken
@@ -89,3 +89,4 @@ export const createReview = asyncHandler(async (req, res, next) => {
 });
 
 // (Tùy chọn: updateReview, deleteReview có thể được thêm sau nếu cần thiết)
+

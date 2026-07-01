@@ -29,3 +29,4 @@ router.get("/:slug", getProductBySlug);
 router.get("/", getProducts);
 
 export default router;
+

@@ -52,3 +52,4 @@ categorySchema.index({ parentId: 1 });
 
 const Category = mongoose.model("Category", categorySchema, "categories");
 export default Category;
+

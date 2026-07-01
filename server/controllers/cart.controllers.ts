@@ -7,7 +7,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 // @desc    Lấy giỏ hàng của user hiện tại
 // @route   GET /api/v1/cart
 // @access  Private
-export const getCart = asyncHandler(async (req, res, next) => {
+export const getCart = asyncHandler(async (req: any, res: any, next: any) => {
   let cart = await Cart.findOne({ userId: req.userId }).populate("items.productId", "name price images thumbnail stock slug");
 
   // Nếu user chưa có giỏ hàng, tạo mới một giỏ trống
@@ -26,7 +26,7 @@ export const getCart = asyncHandler(async (req, res, next) => {
 // @desc    Thêm sản phẩm vào giỏ hàng
 // @route   POST /api/v1/cart
 // @access  Private
-export const addToCart = asyncHandler(async (req, res, next) => {
+export const addToCart = asyncHandler(async (req: any, res: any, next: any) => {
   const { productId, quantity = 1, buildId = null } = req.body;
 
   if (!productId) {
@@ -85,7 +85,7 @@ export const addToCart = asyncHandler(async (req, res, next) => {
 // @desc    Cập nhật số lượng sản phẩm trong giỏ
 // @route   PATCH /api/v1/cart/update-quantity
 // @access  Private
-export const updateCartItemQuantity = asyncHandler(async (req, res, next) => {
+export const updateCartItemQuantity = asyncHandler(async (req: any, res: any, next: any) => {
   const { productId, quantity, buildId = null } = req.body;
 
   if (!productId || quantity === undefined) {
@@ -137,7 +137,7 @@ export const updateCartItemQuantity = asyncHandler(async (req, res, next) => {
 // @desc    Xóa sản phẩm khỏi giỏ hàng
 // @route   DELETE /api/v1/cart/:productId
 // @access  Private
-export const removeFromCart = asyncHandler(async (req, res, next) => {
+export const removeFromCart = asyncHandler(async (req: any, res: any, next: any) => {
   const { productId } = req.params;
   const { buildId = null } = req.query;
 
@@ -165,7 +165,7 @@ export const removeFromCart = asyncHandler(async (req, res, next) => {
 // @desc    Xóa toàn bộ giỏ hàng
 // @route   DELETE /api/v1/cart
 // @access  Private
-export const clearCart = asyncHandler(async (req, res, next) => {
+export const clearCart = asyncHandler(async (req: any, res: any, next: any) => {
   const cart = await Cart.findOne({ userId: req.user.id });
   
   if (cart) {
@@ -181,3 +181,4 @@ export const clearCart = asyncHandler(async (req, res, next) => {
     },
   });
 });
+

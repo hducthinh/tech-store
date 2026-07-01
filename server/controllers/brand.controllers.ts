@@ -6,7 +6,7 @@ import slugify from "../utils/slugify.js";
 // @desc    Lấy tất cả thương hiệu cho Admin (Bao gồm thương hiệu ẩn)
 // @route   GET /api/v1/brands/admin
 // @access  Private (Admin)
-export const getAdminBrands = asyncHandler(async (req, res) => {
+export const getAdminBrands = asyncHandler(async (req: any, res: any) => {
   const brands = await Brand.aggregate([
     {
       $lookup: {
@@ -42,7 +42,7 @@ export const getAdminBrands = asyncHandler(async (req, res) => {
 // @desc    Lấy tất cả thương hiệu đang active
 // @route   GET /api/v1/brands
 // @access  Public
-export const getBrands = asyncHandler(async (req, res) => {
+export const getBrands = asyncHandler(async (req: any, res: any) => {
   const brands = await Brand.find({ isActive: true })
     .sort({ displayOrder: 1, name: 1 })
     .lean();
@@ -57,7 +57,7 @@ export const getBrands = asyncHandler(async (req, res) => {
 // @desc    Lấy chi tiết thương hiệu theo slug
 // @route   GET /api/v1/brands/:slug
 // @access  Public
-export const getBrandBySlug = asyncHandler(async (req, res, next) => {
+export const getBrandBySlug = asyncHandler(async (req: any, res: any, next: any) => {
   const brand = await Brand.findOne({
     slug: req.params.slug,
     isActive: true,
@@ -76,7 +76,7 @@ export const getBrandBySlug = asyncHandler(async (req, res, next) => {
 // @desc    Tạo thương hiệu mới
 // @route   POST /api/v1/brands
 // @access  Private (Admin)
-export const createBrand = asyncHandler(async (req, res) => {
+export const createBrand = asyncHandler(async (req: any, res: any) => {
   const { name, description, logo, displayOrder } = req.body;
 
   const brand = await Brand.create({
@@ -96,7 +96,7 @@ export const createBrand = asyncHandler(async (req, res) => {
 // @desc    Cập nhật thương hiệu
 // @route   PATCH /api/v1/brands/:id
 // @access  Private (Admin)
-export const updateBrand = asyncHandler(async (req, res, next) => {
+export const updateBrand = asyncHandler(async (req: any, res: any, next: any) => {
   const updates = { ...req.body };
 
   if (updates.name) {
@@ -121,7 +121,7 @@ export const updateBrand = asyncHandler(async (req, res, next) => {
 // @desc    Xóa mềm thương hiệu (Toggle isActive)
 // @route   DELETE /api/v1/brands/:id
 // @access  Private (Admin)
-export const deleteBrand = asyncHandler(async (req, res, next) => {
+export const deleteBrand = asyncHandler(async (req: any, res: any, next: any) => {
   const brand = await Brand.findById(req.params.id);
 
   if (!brand) {
@@ -137,3 +137,4 @@ export const deleteBrand = asyncHandler(async (req, res, next) => {
     data: { brand }
   });
 });
+

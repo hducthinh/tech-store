@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import ApiError from "../utils/ApiError.js";
 
-const verifyAdmin = async (req, res, next) => {
+const verifyAdmin = async (req: any, res: any, next: any) => {
   try {
     const user = await User.findById(req.userId);
     
@@ -22,3 +22,4 @@ const verifyAdmin = async (req, res, next) => {
 };
 
 export default verifyAdmin;
+

@@ -17,7 +17,7 @@ Nguyên tắc trả lời:
 - Câu trả lời ngắn gọn, có cấu trúc rõ ràng (dùng gạch đầu dòng nếu cần).
 - Nếu câu hỏi nằm ngoài lĩnh vực phần cứng/công nghệ, hãy lịch sự từ chối và đề nghị hỏi về cấu hình máy tính.`;
 
-export const chat = asyncHandler(async (req, res, next) => {
+export const chat = asyncHandler(async (req: any, res: any, next: any) => {
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
   if (!GROQ_API_KEY) {
     return next(new ApiError("GROQ_API_KEY chưa được cấu hình", 500));
@@ -124,3 +124,4 @@ export const chat = asyncHandler(async (req, res, next) => {
     res.end();
   }
 });
+

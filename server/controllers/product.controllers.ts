@@ -23,7 +23,7 @@ const getCloudinaryPublicId = (imageUrl) => {
 // @desc    Lấy danh sách sản phẩm (hỗ trợ lọc, sắp xếp)
 // @route   GET /api/v1/products
 // @access  Public
-export const getProducts = asyncHandler(async (req, res, next) => {
+export const getProducts = asyncHandler(async (req: any, res: any, next: any) => {
   const { category, categoryId, brandId, minPrice, maxPrice, sortBy, search, page = 1, limit = 12 } = req.query;
   const pageNum = parseInt(page, 10) || 1;
   const limitNum = parseInt(limit, 10) || 12;
@@ -142,7 +142,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
 // @desc    Lấy danh sách sản phẩm nổi bật
 // @route   GET /api/v1/products/featured
 // @access  Public
-export const getFeaturedProducts = asyncHandler(async (req, res, next) => {
+export const getFeaturedProducts = asyncHandler(async (req: any, res: any, next: any) => {
   const products = await Product.find({ isActive: true, isFeatured: true })
     .sort({ createdAt: -1 })
     .limit(10) // Lấy tối đa 10 sản phẩm nổi bật nhất
@@ -160,7 +160,7 @@ export const getFeaturedProducts = asyncHandler(async (req, res, next) => {
 // @desc    Lấy chi tiết sản phẩm theo slug
 // @route   GET /api/v1/products/:slug
 // @access  Public
-export const getProductBySlug = asyncHandler(async (req, res, next) => {
+export const getProductBySlug = asyncHandler(async (req: any, res: any, next: any) => {
   const { slug } = req.params;
 
   let query = { slug, isActive: true };
@@ -193,7 +193,7 @@ export const getProductBySlug = asyncHandler(async (req, res, next) => {
 // @desc    Lấy toàn bộ sản phẩm cho Admin (Bao gồm cả sản phẩm đã xóa mềm)
 // @route   GET /api/v1/products/admin
 // @access  Private/Admin
-export const getAdminProducts = asyncHandler(async (req, res, next) => {
+export const getAdminProducts = asyncHandler(async (req: any, res: any, next: any) => {
   const products = await Product.find()
     .sort({ createdAt: -1 })
     .populate("categoryId", "name")
@@ -211,7 +211,7 @@ export const getAdminProducts = asyncHandler(async (req, res, next) => {
 // @desc    Tạo sản phẩm mới (Admin)
 // @route   POST /api/v1/products
 // @access  Private/Admin
-export const createProduct = asyncHandler(async (req, res, next) => {
+export const createProduct = asyncHandler(async (req: any, res: any, next: any) => {
   const { name, categoryId, brandId, price, stock, description } = req.body;
 
   // Xử lý ảnh upload
@@ -276,7 +276,7 @@ export const createProduct = asyncHandler(async (req, res, next) => {
 // @desc    Cập nhật sản phẩm (Admin)
 // @route   PATCH /api/v1/products/:id
 // @access  Private/Admin
-export const updateProduct = asyncHandler(async (req, res, next) => {
+export const updateProduct = asyncHandler(async (req: any, res: any, next: any) => {
   const { id } = req.params;
 
   // 1. Tìm sản phẩm cũ để lấy URL ảnh cũ
@@ -379,7 +379,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
 // @desc    Xóa mềm / Khôi phục sản phẩm (Toggle isActive) (Admin)
 // @route   DELETE /api/v1/products/:id
 // @access  Private/Admin
-export const deleteProduct = asyncHandler(async (req, res, next) => {
+export const deleteProduct = asyncHandler(async (req: any, res: any, next: any) => {
   const { id } = req.params;
   const product = await Product.findById(id);
 
@@ -403,7 +403,7 @@ export const deleteProduct = asyncHandler(async (req, res, next) => {
 // @desc    Lấy sản phẩm tương tự
 // @route   GET /api/v1/products/:slug/similar
 // @access  Public
-export const getSimilarProducts = asyncHandler(async (req, res, next) => {
+export const getSimilarProducts = asyncHandler(async (req: any, res: any, next: any) => {
   const { slug } = req.params;
 
   const currentProduct = await Product.findOne({ slug, isActive: true });
@@ -431,3 +431,4 @@ export const getSimilarProducts = asyncHandler(async (req, res, next) => {
     },
   });
 });
+

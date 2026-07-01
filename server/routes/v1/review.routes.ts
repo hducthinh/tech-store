@@ -15,3 +15,4 @@ router.get("/:productId", getProductReviews);
 router.post("/:productId", verifyToken, upload.array("images", 5), createReview);
 
 export default router;
+

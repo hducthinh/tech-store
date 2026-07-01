@@ -4,7 +4,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 // @desc    Xử lý Webhook từ SePay khi có giao dịch
 // @route   POST /api/v1/payments/sepay-webhook
 // @access  Public
-export const sepayWebhook = async (req, res, next) => {
+export const sepayWebhook = async (req: any, res: any, next: any) => {
   console.log("[SePay Webhook] Nhận dữ liệu:", req.body);
 
   // Bảo mật: Kiểm tra API Key từ SePay
@@ -90,3 +90,4 @@ export const sepayWebhook = async (req, res, next) => {
     console.error("[SePay Webhook] Lỗi khi xử lý dữ liệu:", error);
   }
 };
+

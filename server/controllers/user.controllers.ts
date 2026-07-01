@@ -5,7 +5,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 // @desc    Lấy toàn bộ danh sách người dùng cho Admin
 // @route   GET /api/v1/users/admin
 // @access  Private/Admin
-export const getAdminUsers = asyncHandler(async (req, res, next) => {
+export const getAdminUsers = asyncHandler(async (req: any, res: any, next: any) => {
   const users = await User.find().select("-password").sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -20,7 +20,7 @@ export const getAdminUsers = asyncHandler(async (req, res, next) => {
 // @desc    Khóa / Mở khóa tài khoản người dùng
 // @route   PATCH /api/v1/users/admin/:id/toggle-status
 // @access  Private/Admin
-export const toggleUserStatus = asyncHandler(async (req, res, next) => {
+export const toggleUserStatus = asyncHandler(async (req: any, res: any, next: any) => {
   // Không cho phép Admin tự khóa tài khoản của chính mình
   if (req.user.id === req.params.id) {
     return next(new ApiError("Bạn không thể tự khóa tài khoản của chính mình", 400));
@@ -47,3 +47,4 @@ export const toggleUserStatus = asyncHandler(async (req, res, next) => {
     },
   });
 });
+
