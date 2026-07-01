@@ -71,20 +71,20 @@ reviewSchema.statics.calcAverageRatings = async function (productId) {
 // Gọi hàm tính toán SAU KHI lưu đánh giá mới
 reviewSchema.post("save", function () {
   // this.constructor trỏ đến Model Review hiện tại
-  this.constructor.calcAverageRatings(this.product);
+  (this.constructor as any).calcAverageRatings(this.product);
 });
 
 // Xử lý khi UPDATE hoặc DELETE (findOneAnd...)
-reviewSchema.pre(/^findOneAnd/, async function (next) {
+reviewSchema.pre(/^findOneAnd/, async function (next: any) {
   // Gắn document hiện tại vào this để truyền sang middleware post
-  this.r = await this.clone().findOne();
+  (this as any).r = await (this as any).clone().findOne();
   next();
 });
 
 reviewSchema.post(/^findOneAnd/, async function () {
-  if (this.r) {
+  if ((this as any).r) {
     // await this.findOne(); KHÔNG work ở đây vì query đã execute rồi
-    await this.r.constructor.calcAverageRatings(this.r.product);
+    await (this as any).r.constructor.calcAverageRatings((this as any).r.product);
   }
 });
 
