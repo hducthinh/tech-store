@@ -15,5 +15,10 @@ export default defineConfig({
       '/api': 'http://localhost:5000',
     },
   },
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
 })
 
