@@ -16,6 +16,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
+    // @ts-expect-error cloudinary params typing issue
     folder: (req, file) => {
       // Tự động phân loại thư mục lưu trữ dựa trên endpoint được gọi
       if (req.originalUrl.includes("/products")) return "tech-store/products";

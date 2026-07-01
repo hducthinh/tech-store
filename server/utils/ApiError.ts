@@ -1,4 +1,10 @@
 class ApiError extends Error {
+  statusCode: number;
+  status: string;
+  isOperational: boolean;
+  errors: any;
+  code: any;
+
   constructor(message, statusCode = 500, errors = null, code = null) {
     if (typeof message === 'object' && message !== null) {
       // Support object payload: new ApiError({ message, status, code, errors })

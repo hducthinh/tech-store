@@ -4,8 +4,8 @@ const PHONE_REGEX = /^[0-9]{10,11}$/;
 const normalizeValue = (value) =>
   typeof value === "string" ? value.trim() : "";
 
-export const validateRegisterInput = (data = {}) => {
-  const errors = {};
+export const validateRegisterInput = (data: any = {}) => {
+  const errors: any = {};
 
   const email = normalizeValue(data.email);
   const password = normalizeValue(data.password);
@@ -46,8 +46,8 @@ export const validateRegisterInput = (data = {}) => {
   return { errors, isValid: Object.keys(errors).length === 0 };
 };
 
-export const validateLoginInput = (data = {}) => {
-  const errors = {};
+export const validateLoginInput = (data: any = {}) => {
+  const errors: any = {};
 
   const email = normalizeValue(data.email);
   const password = normalizeValue(data.password);
