@@ -189,14 +189,14 @@ export default function ProductDetail() {
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === "") {
-                            setQuantity("");
+                            setQuantity("" as any);
                             return;
                           }
                           const num = parseInt(val.replace(/\D/g, ''));
                           if (!isNaN(num)) setQuantity(Math.min(product.stock || 100, num));
                         }}
                         onBlur={() => {
-                          if (quantity === "" || quantity < 1) setQuantity(1);
+                          if (quantity === "" as any || quantity < 1) setQuantity(1);
                         }}
                         className="w-12 h-full font-bold text-gray-900 text-sm text-center border-none focus:ring-0 focus:outline-none p-0 bg-transparent"
                       />
@@ -245,7 +245,7 @@ export default function ProductDetail() {
                       Object.entries(product.specs).map(([key, value], idx) => (
                         <tr key={key} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                           <td className="py-3 px-4 font-semibold border-b border-gray-100 w-2/5 leading-snug">{key}</td>
-                          <td className="py-3 px-4 border-b border-gray-100 leading-snug">{value}</td>
+                          <td className="py-3 px-4 border-b border-gray-100 leading-snug">{value as any}</td>
                         </tr>
                       ))
                     ) : (

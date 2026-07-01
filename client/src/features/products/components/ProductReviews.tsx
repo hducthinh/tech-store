@@ -23,7 +23,7 @@ export default function ProductReviews({ product, reviews, fetchReviews }) {
     setReviewError("");
     try {
       const formData = new FormData();
-      formData.append("rating", reviewRating);
+      formData.append("rating", String(reviewRating));
       formData.append("comment", reviewComment);
       
       reviewImages.forEach((imgObj) => {

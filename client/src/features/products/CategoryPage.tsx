@@ -193,7 +193,7 @@ export default function CategoryPage() {
         if (maxPrice) params.append("maxPrice", maxPrice);
         if (sortBy) params.append("sortBy", sortBy);
         if (searchQuery) params.append("search", searchQuery);
-        params.append("page", currentPage);
+        params.append("page", currentPage.toString());
 
         const prodRes = await api.get(`/products?${params.toString()}`);
         setProducts(prodRes.data?.data?.products || []);
