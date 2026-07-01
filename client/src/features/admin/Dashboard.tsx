@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {topProductsData.length > 0 ? topProductsData.map((prod, idx) => {
-                      const prodProgress = Math.min(((prod.revenue / (salesGoal || 100000000)) * 100).toFixed(1), 100);
+                      const prodProgress = Math.min(Number(((prod.revenue / (salesGoal || 100000000)) * 100).toFixed(1)), 100);
                       const imgUrl = (prod.thumbnail || (prod.images && prod.images[0])) ? (prod.thumbnail || prod.images[0]) : img("1610945415295-d9bbf067e59c");
                       return (
                         <tr key={prod._id || idx} className="hover:bg-blue-50/30 transition-colors group">
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                       );
                     }) : (
                       <tr>
-                        <td colSpan="4" className="px-6 py-12 text-center">
+                        <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                           <div className="flex flex-col items-center justify-center text-gray-400">
                             <Package size={40} className="mb-3 opacity-20" />
                             <p className="font-medium text-sm text-gray-500">Chưa có dữ liệu sản phẩm</p>

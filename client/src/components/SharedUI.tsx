@@ -139,7 +139,7 @@ function AnimatedNumber({ value }) {
   return displayValue;
 }
 
-export function StatCard({ label, value, change, icon, color = "blue", subtext, suffix = "vs last month" }) {
+export function StatCard({ label, value, change, icon, color = "blue", subtext, suffix = "vs last month" }: any) {
   // Mock change if not provided
   const displayChange = change || "+12.5%";
   const isPositive = !displayChange.startsWith("-");
@@ -231,7 +231,7 @@ export function StatCard({ label, value, change, icon, color = "blue", subtext, 
   );
 }
 
-export function EmptyState({ icon, title, description, primaryAction, secondaryAction }) {
+export function EmptyState({ icon, title, description, primaryAction, secondaryAction }: any) {
   return (
     <Card className="flex flex-col items-center justify-center p-12 text-center shadow-layered border-gray-100 min-h-[400px]">
       <div className="relative mb-8 group">

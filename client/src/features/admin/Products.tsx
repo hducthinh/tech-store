@@ -25,8 +25,8 @@ export default function AdminProducts() {
     };
   }, []);
 
-  const { data, loading, refetch: fetchData } = useFetchData(fetcher, { products: [], categories: [], brands: [] });
-  const { products, categories, brands } = data;
+  const { data, loading, refetch: fetchData } = useFetchData(fetcher, { products: [], categories: [], brands: [] } as any);
+  const { products, categories, brands } = data as any;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -140,7 +140,7 @@ export default function AdminProducts() {
               src={(p.thumbnail || (p.images && p.images[0])) ? (p.thumbnail || p.images[0]) : img("1610945415295-d9bbf067e59c")} 
               alt={p.name} 
               className="w-full h-full object-cover" 
-              onError={(e) => { e.target.src = "https://placehold.co/400x400/e2e8f0/64748b?text=No+Image" }} 
+              onError={(e) => { (e.target as any).src = "https://placehold.co/400x400/e2e8f0/64748b?text=No+Image" }} 
             />
           </div>
           <div>
@@ -277,7 +277,7 @@ export default function AdminProducts() {
                 <label className="block text-sm font-semibold mb-1">Ảnh đại diện (Thumbnail)</label>
                 {formData.previewThumbnail && (
                   <div className="mb-3 w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center">
-                    <img src={formData.previewThumbnail} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.src = "https://placehold.co/400x400/e2e8f0/64748b?text=No+Image" }} />
+                    <img src={formData.previewThumbnail} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as any).src = "https://placehold.co/400x400/e2e8f0/64748b?text=No+Image" }} />
                   </div>
                 )}
                 <input type="file" accept="image/*" className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500" onChange={e => {

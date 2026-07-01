@@ -183,7 +183,7 @@ export default function AdminOrders() {
                     </tbody>
                     <tfoot className="bg-gray-50 border-t border-gray-200">
                       <tr>
-                        <td colSpan="3" className="px-4 py-3 text-right font-bold text-gray-700">Tổng cộng:</td>
+                        <td colSpan={3} className="px-4 py-3 text-right font-bold text-gray-700">Tổng cộng:</td>
                         <td className="px-4 py-3 text-right font-black text-red-600 text-lg">{fmt(selectedOrder.totalAmount)}</td>
                       </tr>
                     </tfoot>
