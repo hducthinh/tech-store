@@ -205,7 +205,8 @@ export default function CategoryPage() {
       }
     };
     fetchProducts();
-  }, [slug, searchParams, currentPage, maxPrice, minPrice, searchQuery, selectedBrands, sortBy]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, searchParams.toString()]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
