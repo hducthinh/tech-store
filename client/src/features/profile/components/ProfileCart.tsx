@@ -12,7 +12,7 @@ export default function ProfileCart({
   toggleAllSelection, 
   getSelectedTotal,
   isLoading
-}) {
+}: any) {
   const navigate = useNavigate();
 
   return (

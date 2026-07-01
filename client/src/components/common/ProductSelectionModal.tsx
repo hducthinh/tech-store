@@ -4,7 +4,7 @@ import { checkItemCompatibility } from "../../features/builder/utils/compatibili
 import api from "../../services/api";
 import { fmt, img } from "../SharedUI";
 
-export default function ProductSelectionModal({ isOpen, onClose, categoryKey, categoryId, currentConfig, onSelect }) {
+export default function ProductSelectionModal({ isOpen, onClose, categoryKey, categoryId, categoryName, currentConfig, onSelect }: any) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");

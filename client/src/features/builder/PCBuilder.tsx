@@ -81,7 +81,7 @@ export default function PCBuilder() {
   };
 
   const totalPrice = useMemo(() => {
-    return Object.values(config).reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    return Object.values(config).reduce((sum: any, item: any) => sum + (item.product.price * item.quantity), 0);
   }, [config]);
 
   const { warnings, totalTDP } = useMemo(() => {
@@ -97,7 +97,7 @@ export default function PCBuilder() {
     try {
       const buildId = "PCBUILD-" + Date.now().toString();
       let allSuccess = true;
-      for (const item of items) {
+      for (const item of items as any[]) {
         const success = await addToCart(item.product._id, item.quantity, buildId);
         if (!success) {
           allSuccess = false;
@@ -123,7 +123,7 @@ export default function PCBuilder() {
     try {
       const buildId = "PCBUILD-" + Date.now().toString();
       let allSuccess = true;
-      for (const item of items) {
+      for (const item of items as any[]) {
         const success = await addToCart(item.product._id, item.quantity, buildId);
         if (!success) {
           allSuccess = false;

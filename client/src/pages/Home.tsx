@@ -74,7 +74,7 @@ function HomeContent() {
   const calculateTimeLeft = () => {
     const now = new Date();
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-    const difference = endOfDay - now;
+    const difference = endOfDay.getTime() - now.getTime();
 
     if (difference > 0) {
       return {
@@ -562,7 +562,7 @@ function HomeContent() {
   );
 }
 
-export default function Home({ children }) {
+export default function Home({ children }: any = {}) {
   useDocumentMeta(
     "Trang chủ - DucThinh TechShop",
     "Hệ thống phân phối thiết bị máy chủ, workstation và linh kiện cao cấp dành riêng cho Data Engineer, Developer."
