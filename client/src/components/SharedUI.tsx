@@ -74,7 +74,7 @@ export function Btn({
 
 export function Input({
   label, type = "text", placeholder, value, onChange, icon, className = "",
-}) {
+}: any) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && <label className="text-sm font-semibold text-gray-900">{label}</label>}

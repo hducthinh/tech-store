@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function PasswordField({ label = "Mật khẩu", placeholder = "••••••••", value, onChange, forgotPassword }) {
+export default function PasswordField({ label = "Mật khẩu", placeholder = "Nhập mật khẩu", value, onChange, forgotPassword }: any) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
