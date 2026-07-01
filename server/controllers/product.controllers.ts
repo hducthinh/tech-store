@@ -75,13 +75,13 @@ export const getProducts = asyncHandler(async (req: any, res: any, next: any) =>
         sortObj = { price: 1 };
         break;
       case "price_desc":
-        sort = { price: -1 };
+        sortObj = { price: -1 };
         break;
       case "soldCount_desc":
-        sort = { soldCount: -1 };
+        sortObj = { soldCount: -1 };
         break;
       case "rating_desc":
-        sort = { rating: -1 };
+        sortObj = { rating: -1 };
         break;
       default:
         break;
@@ -117,7 +117,7 @@ export const getProducts = asyncHandler(async (req: any, res: any, next: any) =>
     await Product.populate(products, { path: "categoryId", select: "name slug" });
   } else {
     products = await Product.find(filter)
-      .sort(sort)
+      .sort(sortObj)
       .skip(skip)
       .limit(limitNum)
       .select("-costPrice")
