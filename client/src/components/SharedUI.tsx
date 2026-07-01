@@ -48,7 +48,7 @@ export function StatusBadge({ status }) {
 
 export function Btn({
   children, onClick, variant = "primary", size = "md", className = "", type = "button", disabled, ...props
-}) {
+}: any) {
   const v = {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
     secondary: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200",
@@ -61,8 +61,8 @@ export function Btn({
   };
   return (
     <button
-      type={type}
-      onClick={onClick}
+      type={type as any}
+      onClick={onClick as any}
       disabled={disabled}
       className={`inline-flex items-center gap-2 rounded-lg font-semibold transition-all duration-200 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100 ${v[variant]} ${s[size]} ${className}`}
       {...props}
@@ -276,8 +276,8 @@ export function EmptyState({ icon, title, description, primaryAction, secondaryA
 // ─── Skeleton Primitives ──────────────────────────────────────────────────────
 const shimmerClass = "relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent";
 
-function Skeleton({ className = "" }) {
-  return <div className={`bg-gray-100 rounded-lg ${shimmerClass} ${className}`} />;
+function Skeleton({ className = "", style }: { className?: string, style?: any }) {
+  return <div className={`bg-gray-100 rounded-lg ${shimmerClass} ${className}`} style={style} />;
 }
 
 function AvatarSkeleton({ size = "w-10 h-10" }) {

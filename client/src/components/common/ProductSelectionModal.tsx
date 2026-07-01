@@ -159,7 +159,7 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
               <div className="mb-8">
                 <h4 className="font-bold text-[#1a2b49] text-[15px] uppercase mb-4">Hãng sản xuất</h4>
                 <div className="flex flex-col gap-3">
-                  {availableBrands.map(brand => (
+                  {availableBrands.map((brand: any) => (
                     <label key={brand} className="flex items-center gap-3 cursor-pointer text-base text-[#4a5568] hover:text-[#1a2b49] transition-colors">
                       <input 
                         type="checkbox" 
@@ -179,7 +179,7 @@ export default function ProductSelectionModal({ isOpen, onClose, categoryKey, ca
               <div className="mb-8">
                 <h4 className="font-bold text-[#1a2b49] text-[15px] uppercase mb-4">Loại RAM</h4>
                 <div className="flex flex-col gap-3">
-                  {availableRamTypes.map(type => (
+                  {availableRamTypes.map((type: any) => (
                     <label key={type} className="flex items-center gap-3 cursor-pointer text-base text-[#4a5568] hover:text-[#1a2b49] transition-colors">
                       <input 
                         type="checkbox" 
