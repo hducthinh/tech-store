@@ -1,4 +1,16 @@
 export class SummaryDTO {
+  revenue: number;
+  orders: number;
+  products: number;
+  customers: number;
+  revenueGrowth: string;
+  orderGrowth: string;
+  customerGrowth: string;
+  productGrowth: string;
+  salesGoal: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  currentMonthUsers: number;
   constructor(data) {
     this.revenue = data.totalRevenue || 0;
     this.orders = data.totalOrders || 0;
@@ -17,6 +29,9 @@ export class SummaryDTO {
 }
 
 export class RevenueChartDTO {
+  date: string;
+  revenue: number;
+  orders: number;
   constructor(data) {
     this.date = data.date;
     this.revenue = data.revenue;
@@ -25,6 +40,10 @@ export class RevenueChartDTO {
 }
 
 export class CategoryRevenueDTO {
+  name: string;
+  revenue: number;
+  percentage: number;
+  color: string;
   constructor(data) {
     this.name = data.name;
     this.revenue = data.revenue;
