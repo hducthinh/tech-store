@@ -4,7 +4,7 @@ import api from "../services/api";
 import { useAuth } from "./AuthContext";
 import { useAlert } from "./AlertContext";
 
-const CartContext = createContext();
+const CartContext = createContext<any>(null);
 
 export const useCart = () => useContext(CartContext);
 

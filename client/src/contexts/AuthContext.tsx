@@ -9,7 +9,7 @@ import {
 } from "react";
 import api from "../services/api";
 
-const AuthContext = createContext();
+export const AuthContext = createContext<any>(null);
 
 export const useAuth = () => useContext(AuthContext);
 

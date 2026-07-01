@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState } from "react";
 import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 
-const AlertContext = createContext();
+export const AlertContext = createContext<any>(null);
 
 export const useAlert = () => useContext(AlertContext);
 
