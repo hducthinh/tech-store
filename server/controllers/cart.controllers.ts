@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Cart from "../models/cart.model.js";
 import Product from "../models/product.model.js";
 import ApiError from "../utils/ApiError.js";

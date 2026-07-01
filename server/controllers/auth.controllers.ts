@@ -12,8 +12,8 @@ const signToken = (id) => {
     throw new ApiError("JWT_SECRET chưa được cấu hình", 500);
   }
 
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  return jwt.sign({ id }, process.env.JWT_SECRET as string, {
+    expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as any,
   });
 };
 
@@ -89,7 +89,7 @@ export const login = asyncHandler(async (req, res, next) => {
     return next(new ApiError("Tài khoản đã bị khóa", 403));
   }
 
-  const isMatch = await user.comparePassword(password);
+  const isMatch = await (user as any).comparePassword(password);
   if (!isMatch) {
     return next(new ApiError("Email hoặc mật khẩu không đúng", 401));
   }
