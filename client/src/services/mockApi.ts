@@ -3,7 +3,7 @@
 const USERS_KEY = "mock_users";
 const SESSIONS_KEY = "mock_sessions";
 
-const loadJson = (key, fallback) => {
+const loadJson = (key: string, fallback: any) => {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
@@ -12,17 +12,17 @@ const loadJson = (key, fallback) => {
   }
 };
 
-const saveJson = (key, value) => {
+const saveJson = (key: string, value: any) => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
-const createError = (status, message) => {
-  const error = new Error(message);
+const createError = (status: number, message: string) => {
+  const error = new Error(message) as any;
   error.response = { status, data: { message } };
   return error;
 };
 
-const getTokenFromDefaults = (api) => {
+const getTokenFromDefaults = (api: any) => {
   const authHeader = api?.defaults?.headers?.common?.Authorization;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     return authHeader.slice(7);
@@ -30,22 +30,22 @@ const getTokenFromDefaults = (api) => {
   return localStorage.getItem("token");
 };
 
-const getUserByToken = (token) => {
+const getUserByToken = (token: string | null) => {
   if (!token) return null;
   const sessions = loadJson(SESSIONS_KEY, {});
   const userId = sessions[token];
   if (!userId) return null;
   const users = loadJson(USERS_KEY, []);
-  return users.find((u) => u.id === userId) || null;
+  return users.find((u: any) => u.id === userId) || null;
 };
 
-const normalizeEmail = (email) =>
+const normalizeEmail = (email: any) =>
   String(email || "")
     .trim()
     .toLowerCase();
 
 const createMockApi = () => {
-  const api = {
+  const api: any = {
     defaults: {
       headers: {
         common: {},
@@ -53,7 +53,7 @@ const createMockApi = () => {
     },
   };
 
-  api.post = async (url, payload = {}) => {
+  api.post = async (url: string, payload: any = {}) => {
     if (url === "/auth/register") {
       const fullName = String(payload.fullName || "").trim();
       const email = normalizeEmail(payload.email);
@@ -70,7 +70,7 @@ const createMockApi = () => {
       }
 
       const users = loadJson(USERS_KEY, []);
-      const exists = users.some((u) => u.email === email);
+      const exists = users.some((u: any) => u.email === email);
       if (exists) {
         throw createError(409, "Email da ton tai.");
       }
@@ -97,7 +97,7 @@ const createMockApi = () => {
       }
 
       const users = loadJson(USERS_KEY, []);
-      const match = users.find((u) => u.email === email);
+      const match = users.find((u: any) => u.email === email);
       if (!match || match.password !== password) {
         throw createError(401, "Sai email hoac mat khau.");
       }
@@ -120,7 +120,7 @@ const createMockApi = () => {
     throw createError(404, "Mock API chua ho tro endpoint nay.");
   };
 
-  api.get = async (url) => {
+  api.get = async (url: string) => {
     if (url === "/auth/profile") {
       const token = getTokenFromDefaults(api);
       const user = getUserByToken(token);

@@ -21,13 +21,13 @@ if (!useMock) {
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error: any) => Promise.reject(error)
   );
 
   // Interceptor xử lý lỗi
   api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    (error: any) => {
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         // Chỉ redirect nếu không phải đang ở trang login, để tránh việc bị load lại trang làm mất input

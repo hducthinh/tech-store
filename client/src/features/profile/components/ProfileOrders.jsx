@@ -25,7 +25,7 @@ export default function ProfileOrders({ user, setActiveTab }) {
                 let dot = "bg-slate-500";
                 let statusText = o.status;
                 
-                let rawStatus = o.status;
+                const rawStatus = o.status;
                 if (o.status === "PENDING_PAYMENT") {
                   statusColor = "bg-orange-100 text-orange-700";
                   dot = "bg-orange-500";

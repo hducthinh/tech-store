@@ -104,7 +104,7 @@ function AnimatedNumber({ value }) {
   const [displayValue, setDisplayValue] = React.useState(0);
   
   React.useEffect(() => {
-    let start = 0;
+    const start = 0;
     const end = typeof value === "number" ? value : parseInt(value?.toString().replace(/\D/g, '')) || 0;
     if (start === end) {
       // eslint-disable-next-line react-hooks/set-state-in-effect

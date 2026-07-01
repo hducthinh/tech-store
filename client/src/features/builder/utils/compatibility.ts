@@ -1,5 +1,5 @@
 // Extract Socket string from specs
-const extractSocket = (specs) => {
+const extractSocket = (specs: Record<string, any> | undefined) => {
   if (!specs) return null;
   // Look through values for socket keywords like LGA1700, AM4, AM5, LGA1200, LGA 1700
   const values = Object.values(specs).map(v => String(v).toUpperCase());
@@ -14,7 +14,7 @@ const extractSocket = (specs) => {
 };
 
 // Extract DDR type from specs
-const extractRAMType = (specs) => {
+const extractRAMType = (specs: Record<string, any> | undefined) => {
   if (!specs) return null;
   const values = Object.values(specs).map(v => String(v).toUpperCase());
   for (const v of values) {
@@ -26,7 +26,7 @@ const extractRAMType = (specs) => {
 };
 
 // Extract TDP/Power from specs (returns number in Watts)
-const extractWattage = (specs) => {
+const extractWattage = (specs: Record<string, any> | undefined) => {
   if (!specs) return 0;
   const values = Object.values(specs).map(v => String(v).toUpperCase());
   for (const v of values) {
@@ -37,8 +37,8 @@ const extractWattage = (specs) => {
   return 0;
 };
 
-export const checkCompatibility = (config) => {
-  const warnings = [];
+export const checkCompatibility = (config: Record<string, any>) => {
+  const warnings: string[] = [];
 
   const cpu = config['cpu']?.product;
   const mainboard = config['mainboard']?.product;
@@ -93,7 +93,7 @@ export const checkCompatibility = (config) => {
   return { warnings, totalTDP };
 };
 
-export const checkItemCompatibility = (itemProduct, categoryId, currentConfig) => {
+export const checkItemCompatibility = (itemProduct: any, categoryId: string, currentConfig: Record<string, any>) => {
   // itemProduct is the product being browsed in the Modal
   // categoryId is 'cpu', 'mainboard', 'ram', etc.
   
